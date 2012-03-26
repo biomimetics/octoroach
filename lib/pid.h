@@ -40,6 +40,5 @@ void pidSetInputSameRuntime(int pid_num, int input_val);
 void pidSetGains(int pid_num, int Kp, int Ki, int Kd, int Kaw, int ff);
 unsigned char* pidGetTelemetry(void);
 void pidOn(int pid_num);
-void calibBatteryOffset(int spindown_ms);
 
 #endif // __PID_H
