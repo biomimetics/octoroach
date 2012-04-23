@@ -62,5 +62,6 @@ SOFTWARE_RESET     =        0x88
 SPECIAL_TELEMETRY  =        0x89
 ERASE_SECTORS      =        0x8A
 FLASH_READBACK     =        0x8B
+SLEEP              =        0x8C
 
 # CMD values of 0xF0(240) - 0xFF(255) are reserved for future use

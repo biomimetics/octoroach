@@ -4,10 +4,21 @@
 #include "queue.h"
 #include "pid.h"
 
+enum moveSegT{
+	MOVE_SEG_CONSTANT,
+	MOVE_SEG_RAMP,
+	MOVE_SEG_SIN,
+	MOVE_SEG_TRI,
+	MOVE_SEG_SAW,
+	MOVE_SEG_IDLE
+};
+
 typedef struct
 {
 	int inputL, inputR;
 	unsigned long duration;
+	enum moveSegT type;
+	int params[3];
 } moveCmdStruct;
 
 typedef moveCmdStruct* moveCmdT;
