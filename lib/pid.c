@@ -14,27 +14,26 @@
 #include "move_queue.h"
 #include "math.h"
 #include "steering.h"
+#include<dsp.h>
+#include "pid_hw.h"
 
 #include <stdlib.h> // for malloc
 
-//#define HALFTHROT 10000
 #define HALFTHROT 2000
 #define FULLTHROT 2*HALFTHROT
-//#define MAXTHROT 19878
-#define MAXTHROT 3976
-#define UINT_MAX 65535
+//#define MAXTHROT 3976
+#define MAXTHROT (int)((3976.0/4000.0)*(float)FULLTHROT)
+
+//Choose between software PID and DSP core hardware PID
+#define PID_HARDWARE
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
-
+//PID container objects
 pidT pidObjs[NUM_PIDS];
 volatile unsigned long t1_ticks;
-unsigned long currentMoveStart, moveExpire;
-int seqIndex;
-volatile int ADC_OffsetL, ADC_OffsetR;
 
-unsigned long offsetAccumulatorL, offsetAccumulatorR;
-unsigned int offsetAccumulatorCounter;
+//Counter for blinking the red LED during motion
 int blinkCtr;
 
 //This is an option to force the PID outputs back to zero when there is no input.
@@ -42,18 +41,27 @@ int blinkCtr;
 //It may not be needed anymore.
 #define PID_ZEROING_ENABLE 1
 
+//Move queue variables, global
+//TODO: move these into a move queue interface module
 MoveQueue moveq;
 moveCmdT currentMove, idleMove;
+unsigned long currentMoveStart, moveExpire;
 
 int bemf[NUM_PIDS]; //used to store the true, unfiltered speed
-int bemfLast[NUM_PIDS];
-
+int bemfLast[NUM_PIDS]; // Last post-median-filter value
+int bemfHist[NUM_PIDS][3]; //This is ONLY for applying the median filter to
+int medianFilter3(int*);
 
 volatile char inMotion;
 
 //Local scope functions
-void serviceMoveQueue(void);
+//TIMER1 driven
+static void serviceMoveQueue(void);
 static void moveSynth();
+static void serviceMotionPID();
+
+//DSP PID stuff
+extern tPID PIDs[NUM_PIDS];
 
 static struct piddata {
     int output[NUM_PIDS];
@@ -75,10 +83,14 @@ void pidSetup()
 	pidObjs[0].OUTPUT_CHANNEL = MC_CHANNEL_PWM1;
 	pidObjs[1].OUTPUT_CHANNEL = MC_CHANNEL_PWM2;
 
-	SetupTimer1();
-	ADC_OffsetL = 1; //prevent divide by zero errors
-	ADC_OffsetR = 1;
+	//special DSP PID structures setup; gains should be carried through from above
+	dspPIDSetup();
 
+	SetupTimer1(); //this should be decoupled from the PID controllers
+	//ADC_OffsetL = 1; //prevent divide by zero errors
+	//ADC_OffsetR = 1;
+
+	
 	moveq = mqInit(8);
 	idleMove = malloc(sizeof(moveCmdStruct));
 	idleMove->inputL = 0;
@@ -100,6 +112,14 @@ void pidSetup()
 	pidSetInput(1,0,0);
 	pidObjs[0].onoff = 0;
 	pidObjs[1].onoff = 0;
+
+	//Set up filters and histories
+	int j;
+	for(j = 0; j < NUM_PIDS; j++){
+		bemfLast[j] = 0;  
+		bemfHist[j][0] = 0;bemfHist[j][1] = 0;bemfHist[j][2] = 0;
+	}
+	
 }
 
 void UpdatePID(pidT *pid, int y)
@@ -149,7 +169,7 @@ void initPIDObj(pidT *pid, int Kp, int Ki, int Kd, int Kaw, int ff)
     pid->error = 0;
 }
 
-void pidSetInput(int pid_num, int input_val, unsigned int run_time){
+void pidSetInput(unsigned int pid_num, int input_val, unsigned int run_time){
 	pidObjs[pid_num].input = input_val;
     pidObjs[pid_num].run_time = run_time;
     pidObjs[pid_num].start_time = t1_ticks;
@@ -164,7 +184,7 @@ void pidSetInput(int pid_num, int input_val, unsigned int run_time){
 	bemfLast[pid_num] = input_val;
 }
 
-void pidSetInputSameRuntime(int pid_num, int input_val){
+void pidSetInputSameRuntime(unsigned int pid_num, int input_val){
     pidObjs[pid_num].input = input_val;
     //zero out running PID values
     pidObjs[pid_num].iState = 0;
@@ -174,12 +194,23 @@ void pidSetInputSameRuntime(int pid_num, int input_val){
     pidObjs[pid_num].d = 0;
 }
 
-void pidSetGains(int pid_num, int Kp, int Ki, int Kd, int Kaw, int ff){
-    pidObjs[pid_num].Kp  = Kp;
+void pidSetGains(unsigned int pid_num, int Kp, int Ki, int Kd, int Kaw, int ff){	
+	//Gains to our pidObj are always set
+	pidObjs[pid_num].Kp  = Kp;
     pidObjs[pid_num].Ki  = Ki;
     pidObjs[pid_num].Kd  = Kd;
     pidObjs[pid_num].Kaw = Kaw;
 	pidObjs[pid_num].feedforward = ff;
+
+	//If we are using the DSP core PID, we need to recalculate gain coeffs
+	#ifdef PID_HARDWARE
+	//unsigned int* test1 = (unsigned int*)(&PIDs[0]);
+	//unsigned int* test2 = (unsigned int*)(&PIDs[1]);
+	//pidSetFracCoeffs(&(PIDs[pid_num]), pidObjs[pid_num].Kp, pidObjs[pid_num].Ki,
+	//pidSetFracCoeffs(&(PIDs[0]), pidObjs[0].Kp, pidObjs[0].Ki,
+	pidSetFracCoeffs(pid_num, pidObjs[0].Kp, pidObjs[0].Ki,
+					 pidObjs[0].Kd);
+	#endif
 }
 
 unsigned char* pidGetTelemetry(void){
@@ -212,12 +243,23 @@ void SetupTimer1(void)
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
-    int command[NUM_PIDS];
-
 	serviceMoveQueue();
 	moveSynth();
 
-	//applySteeringCorrection();
+	serviceMotionPID();
+
+	//Timer1 runs at 1kHz; t1_ticks is a ms counter
+	t1_ticks++;
+
+    //Clear Timer1 interrupt flag
+    _T1IF = 0;
+}
+
+
+
+// Runs the PID controllers for the legs
+void serviceMotionPID(){
+
 	int presteer[2] = { pidObjs[0].input, pidObjs[1].input};
 	int poststeer[2] = {0,0};
 	steeringApplyCorrection(presteer, poststeer);
@@ -233,15 +275,28 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	//This **REQUIRES** that the divider on the battery & BEMF circuits have the same ratio.
 	bemf[0] = adcGetVBatt() - adcGetBEMFL();
 	bemf[1] = adcGetVBatt() - adcGetBEMFR();
+	//NOTE: at this point, we should have a proper correspondance between
+	//   the order of all the structured variable; bemf[i] associated with
+	//   pidObjs[i], bemfLast[i], etc.
+	//   Any "jumbling" of the inputs can be done in the above assignments.
 
-    //Negative ADC measures mean nothing and screw up the math, maybe?
+    //Negative ADC measures mean nothing and should never happen anyway
     if(bemf[0] < 0) { bemf[0] = 0;}
     if(bemf[1] < 0) { bemf[1] = 0;}
 
-	// IIR filter: y[n] = 0.8 * y[n-1] + 0.2 * x[n]
+	//Apply median filter
+	int i;
+	for(i = 0; i< NUM_PIDS; i++){
+		bemfHist[i][2] = bemfHist[i][1]; //rotate first
+		bemfHist[i][1] = bemfHist[i][0];
+		bemfHist[i][0] = bemf[i];		//include newest value
+		bemf[i] = medianFilter3(bemfHist[i]); //Apply median filter
+	}
+
+	// IIR filter on BEMF: y[n] = 0.8 * y[n-1] + 0.2 * x[n]
 	bemf[0] = (8 * (long)bemfLast[0] / 10) + 2 * (long)bemf[0] / 10;
 	bemf[1] = (8 * (long)bemfLast[1] / 10) + 2 * (long)bemf[1] / 10;
-	bemfLast[0] = bemf[0];
+	bemfLast[0] = bemf[0]; //bemfLast will not be used after here, OK to set
 	bemfLast[1] = bemf[1];
 
 	//Simple indicator if a leg is "in motion", via the yellow LED.
@@ -250,7 +305,11 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
             LED_YELLOW = 1;}
     else{
             LED_YELLOW = 0;}
-    
+   
+	/////////// PID Section //////////
+#ifdef PID_SOFTWARE
+
+	int command[NUM_PIDS];
 	int j;
     for(j=0; j < NUM_PIDS; j++){
 
@@ -279,22 +338,43 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
             //Set PWM duty cycle
 			SetDCMCPWM(pidObjs[j].OUTPUT_CHANNEL, command[j], 0);
-
         } //end of if (on / off)
         else if(PID_ZEROING_ENABLE){ //if PID loop is off
 			SetDCMCPWM(pidObjs[j].OUTPUT_CHANNEL, 0, 0);
         }
 
     } // end of for(j)
+	Nop();
+	
+#elif defined PID_HARDWARE
+	int temp = 0;
+	int j=0;
+	for(j=0; j < NUM_PIDS; j++){
+		if(pidObjs[j].onoff){
+			//pidSetReference(&PID1, pidObjs[0].input);
+			PIDs[j].controlReference = 32*pidObjs[j].input;
+			temp = pidRun(&(PIDs[j]), 32*bemf[j] );
 
-	//Timer1 runs at 1kHz; t1_ticks is a ms counter
-	t1_ticks++;
+			//Saturation
+			if((int)(PIDs[j].controlOutput) < 0) {
+				temp = 0;
+			}
+			if((int)(PIDs[j].controlOutput) > MAXTHROT){
+				temp = MAXTHROT;
+			}
+			SetDCMCPWM(pidObjs[j].OUTPUT_CHANNEL, temp, 0);
+		}
+		else if(PID_ZEROING_ENABLE){ //Zero DC
+			SetDCMCPWM(pidObjs[j].OUTPUT_CHANNEL, 0, 0);
+		}
 
-    //Clear Timer1 interrupt flag
-    _T1IF = 0;
+	} //end for(j)
+	Nop();
+#endif //PID_SOFTWWARE vs PID_HARDWARE
 }
 
-void pidOn(int pid_num){
+
+void pidOn(unsigned int pid_num){
 	pidObjs[pid_num].onoff = 1;
 }
 
@@ -368,16 +448,26 @@ static void moveSynth(){
 			yR = rateR*((long)t1_ticks - (long)currentMoveStart)/1000 + ySR;
 		}
 		if(currentMove->type == MOVE_SEG_SIN){
+			//float temp = 1.0/1000.0;
 			float amp = (float)currentMove->params[0];
-			float F = (float)currentMove->params[1] / 1000;
+			//float F = (float)currentMove->params[1] / 1000;
+			float F = (float)currentMove->params[1] * 0.001;
 			#define BAMS16_TO_FLOAT 1/10430.367658761737
 			float phase = BAMS16_TO_FLOAT*(float)currentMove->params[2]; //binary angle
 			//Must be very careful about underflow & overflow here!
 			//long arg = 2*BAMS16_PI*mF/100;
 			//arg = arg*(t1_ticks - currentMoveStart)/10 - phase;
-			float fyL = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySL;
-			float fyR = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySR;
+			//float fyL = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySL;
+			//float fyR = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySR;
+			float fyL = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)*0.001  - phase) + ySL;
+			float fyR = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)*0.001  - phase) + ySR;
 
+			
+			//fractional arg = 2*(long)F*((long)t1_ticks-(long)currentMoveStart) * 
+			//fractional temp = _Q15sinPI(arg);
+			//fractional wave = (int)((long)temp*(long)amp >> 15);
+
+			//Clipping
 			int temp = (int)fyL;
 			if(temp < 0){temp = 0;}
 			yL = (unsigned int)temp;
@@ -395,4 +485,23 @@ static void moveSynth(){
 	}
 	//Note hhere that pidObjs[n].input is not set if !inMotion, in case another behavior wants to
 	// set it.
+}
+
+//Poor implementation of a median filter for a 3-array of values
+int medianFilter3(int* a){
+	int b[3] = {a[0], a[1], a[2]};
+	int temp;
+
+	//Implemented through 3 compare-exchange operations, increasing index
+	if(b[0] > b[1]){
+		temp = b[1];b[1] = b[0];b[0] = temp;
+	}
+	if(a[0] > a[2]){
+		temp = b[2];b[2] = b[0];b[0] = temp;
+	}
+	if(a[1] > a[2]){
+		temp = b[2];b[2] = b[1];b[1] = temp;
+	}
+
+	return b[1];
 }
