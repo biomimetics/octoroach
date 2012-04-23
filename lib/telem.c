@@ -167,5 +167,5 @@ int telemISRHandler(){
 }
 
 void telemErase(unsigned long numSamples){
-	dfMemEraseSectorsForSamples(numSamples, sizeof(telemU));
+	dfmemEraseSectorsForSamples(numSamples, sizeof(telemU));
 }
