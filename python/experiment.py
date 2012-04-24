@@ -23,7 +23,7 @@ imudata_file_name = 'imudata.txt'
 
 try:
     ser = serial.Serial(shared.BS_COMPORT, shared.BS_BAUDRATE, \
-                    timeout=3, rtscts=0)
+                    timeout=3, rtscts=1)
 except serial.serialutil.SerialException:
     print "Could not open serial port:",shared.BS_COMPORT
     sys.exit()
@@ -61,7 +61,7 @@ def findFileName():
 
 def writeFileHeader(dataFileName):
     global angRateDeg, angRate, motorgains, steeringGains, runtime, \
-            n, fthrust
+            n, moveq
     now = datetime.datetime.now()
     
     fileout = open(dataFileName,'w')
@@ -74,9 +74,9 @@ def writeFileHeader(dataFileName):
     fileout.write('%  steeringGains = ' + repr(steeringGains) + '\n')
     fileout.write('%  runtime       = ' + repr(runtime) + '\n')
     fileout.write('%  n             = ' + repr(n) + '\n')
-    fileout.write('%  fthrust       = ' + repr(fthrust) + '\n')
+    fileout.write('%  moveq         = ' + repr(moveq) + '\n')
     fileout.write('% Columns: \n')
-    fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut | Vbatt | SteerAngle\n')
+    fileout.write('% time | Rlegs | Llegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut\n')
     fileout.close()
     
 def dlProgress(current, total):
@@ -93,7 +93,7 @@ def dlProgress(current, total):
 
 def main():
     global angRateDeg, angRate, motorgains, steeringGains, runtime, \
-            n, fthrust
+            n, fthrust, moveq
             
     if SAVE_DATA:
         dataFileName = findFileName();   
@@ -107,81 +107,62 @@ def main():
         resetRobot()
         time.sleep(1)  
     
-    #~ shared.awake = 0;
-    #~ while not(shared.awake):
-        #~ print "Waking robot ... "
-        #~ xb_send(0, command.SLEEP, pack('b',0))
-        #~ time.sleep(0.2)
-        
-    #~ time.sleep(1)
-    #~ print "Sleeping robot ... "
-    #~ xb_send(0, command.SLEEP, pack('b',1))
-    #~ time.sleep(1)
-
-    #~ xb.halt()
-    #~ ser.close()
-    #~ sys.exit()
 
     angRateDeg = 0
     angRate = round( angRateDeg / shared.count2deg)
     while not(shared.steering_rate_set):
         print "Setting steering rate..."
         xb_send(0, command.SET_CTRLD_TURN_RATE, pack('h',angRate))
-        time.sleep(0.25)
+        time.sleep(0.5)
 
     motorgains = [200,2,0,2,0,    200,2,0,2,0]
     while not(shared.motor_gains_set):
         print "Setting motor gains..."
         xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
-        time.sleep(0.25)
+        time.sleep(0.5)
 
-    steeringGains = [0,0,0,0,0,  1]
-    #steeringGains = [5,1,0,1,0,  0]
-    #steeringGains = [2,1,0,1,0,  1]
+    #steeringGains = [0,0,0,0,0]
+    steeringGains = [5,1,0,1,0]
+    #steeringGains = [2,1,0,1,0]
     while not (shared.steering_gains_set):
         print "Setting steering gains..."
-        xb_send(0, command.SET_STEERING_GAINS, pack('6h',*steeringGains))
-        time.sleep(0.25)
+        xb_send(0, command.SET_STEERING_GAINS, pack('5h',*steeringGains))
+        time.sleep(0.5)
         
 
-    runtime = 1000; #in milliseconds, whole numbers only
-    leadinTime = 300;
-    leadoutTime = 300;
+    runtime = 9000; #in milliseconds, whole numbers only
+    leadinTime = 500;
+    leadoutTime = 500;
     #calculate the number of telemetry packets we expect
     
     n = int(ceil(150 * (runtime + leadinTime + leadoutTime) / 1000.0))
+    
     #allocate an array to write the downloaded telemetry data into
     shared.imudata = [ [] ] * n
     print "Samples: ",n
+    delay = 0.025
     
-    time.sleep(0.25)
-    
-    eraseStartTime = time.time()
     if SAVE_DATA:
-        xb_send(0, command.ERASE_SECTORS, pack('L',n))
-        print "started flash erase ...",
-        while not (shared.flash_erased):
-            time.sleep(0.25)
-            sys.stdout.write('.')
-	    if (time.time() - eraseStartTime) > 8:
-		print"\nFlash erase timeout, retrying;"
-		xb_send(0, command.ERASE_SECTORS, pack('L',n))
-		eraseStartTime = time.time()
-        print "\nFlash erase done."
+        xb_send(0, command.ERASE_SECTORS, pack('H',n))
+        print "started erase, 3 second dwell"
+        time.sleep(3)
     
     raw_input("Press enter to start run ...")
-    time.sleep(0.5)
     
 
-    fthrust = 0
-    moves = 1
+    #fthrust = 0
+    #moves = 1
+    #moveq = [moves, \
+    #         fthrust, fthrust, runtime]
+    moves = 3
     moveq = [moves, \
-             fthrust, fthrust, runtime]
-
+             50, 50, 3000,
+             75, 75, 3000,
+             125, 125, 3000]
 
     if SAVE_DATA:
         print "started save"
-        xb_send(0, command.SPECIAL_TELEMETRY, pack('L',n))
+        xb_send(0, command.SPECIAL_TELEMETRY, pack('H',n))
         time.sleep(leadinTime / 1000.0)
         
     xb_send(0, command.SET_MOVE_QUEUE, pack('=h'+moves*'hhL', *moveq))
@@ -195,21 +176,11 @@ def main():
         time.sleep((runtime + leadinTime + leadoutTime)/1000.0 + 1)
         raw_input("Press any key to start readback ...")
         print "started readback"
-        xb_send(0, command.FLASH_READBACK, pack('=L',n))
+        xb_send(0, command.FLASH_READBACK, pack('=H',n))
 
         # While waiting, write parameters to start of file
         writeFileHeader(dataFileName)
   
-        #time.sleep(delay*n + 3)
-        #while shared.pkts != n:
-        #    print "Retry"
-        #    shared.imudata = [ [] ] * n
-        #    shared.pkts = 0
-        #    xb_send(0, command.FLASH_READBACK, pack('=h',n))
-        #    time.sleep(delay*n + 3)
-        #    if shared.pkts > n:
-        #        print "too many packets"
-        #        break
         dlStart = time.time()
         shared.last_packet_time = dlStart
         shared.bytesIn = 0
@@ -220,11 +191,9 @@ def main():
             if (time.time() - shared.last_packet_time) > shared.readback_timeout:
                 print "\nReadback timeout exceeded, restarting."
                 raw_input("Press any key to start readback ...")
-                shared.imudata = [ [] ] * n
                 print "started readback"
                 dlStart = time.time()
-                shared.last_packet_time = dlStart
-                xb_send(0, command.FLASH_READBACK, pack('=L',n))
+                xb_send(0, command.FLASH_READBACK, pack('=H',n))
                 
         dlEnd = time.time()
         dlProgress(n-shared.imudata.count([]) , n)
@@ -265,12 +234,11 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         xb.halt()
         ser.close()
-    except Exception as args:
-        print "\nGeneral exception:",args
-        print "Attemping to exit cleanly..."
-        xb.halt()
-        ser.close()
-        sys.exit()
+    #except Exception as args:
+    #    print "\nGeneral exception:",args
+    #    print "Attemping to exit cleanly..."
+    #    xb.halt()
+    #    ser.close()
     except serial.serialutil.SerialException:
         xb.halt()
         ser.close()

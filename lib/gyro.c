@@ -70,9 +70,7 @@ static union {
 } GyroOffset;
 
 int offsx, offsy, offsz;
-static int gyroAvg[3];
-static int gyroWindow[3][GYRO_AVG_SAMPLES];
-static int windowIdx = 0;
+
 
 /*-----------------------------------------------------------------------------
  *          Declaration of static functions
@@ -110,7 +108,7 @@ void gyroSetup(void) {
     gyroWrite(0x3e, 0x03);
     delay_ms(1);   // PLL Settling time
 
-    gyroRunCalib(300);  // quick calibration. better to run this with > 1000.
+    gyroRunCalib(200);  // quick calibration. better to run this with > 1000.
 	Nop();
 }
 
@@ -144,8 +142,6 @@ void gyroRunCalib(unsigned int count){
     y = 0;
     z = 0;
 
-	delay_ms(6); //From datasheet, standard settling time
-
     // throw away first 200 data. sometimes they are bad at the beginning.
     for (i = 0; i < 200; ++i) {
         gyroReadXYZ();
@@ -157,7 +153,7 @@ void gyroRunCalib(unsigned int count){
         x += GyroData.int_data[1];
         y += GyroData.int_data[2];
         z += GyroData.int_data[3];
-        delay_us(200);
+        delay_us(100);
     }
 	offsx = x/count;
 	offsy = y/count;
@@ -281,45 +277,7 @@ void gyroGetXYZ(unsigned char *data) {
 
 }
 
-void gyroCalcAverage(){
-	unsigned long gyro_accum[3];
-	int gdata[3];
-	int i;
 
-	//Get latest values from the chip
-	gyroGetXYZ((unsigned char*)gdata);
-
-	gyroWindow[0][windowIdx] = gdata[0] - offsx;
-	gyroWindow[1][windowIdx] = gdata[1] - offsy;
-	gyroWindow[2][windowIdx] = gdata[2] - offsz;
-	windowIdx = (windowIdx + 1) % GYRO_AVG_SAMPLES;
-
-	gyro_accum[0] = 0; gyro_accum[1] = 0; gyro_accum[2] = 0;
-	for( i =0; i < GYRO_AVG_SAMPLES; i++){
-		gyro_accum[0] += gyroWindow[0][i];
-		gyro_accum[1] += gyroWindow[1][i];
-		gyro_accum[2] += gyroWindow[2][i];
-	}
-	//gyroAvg[0] = (gyro_accum[0] - GYRO_AVG_SAMPLES*offsz) / GYRO_AVG_SAMPLES;
-	//gyroAvg[1] = (gyro_accum[1] - GYRO_AVG_SAMPLES*offsz) / GYRO_AVG_SAMPLES;
-	//gyroAvg[2] = (gyro_accum[2] - GYRO_AVG_SAMPLES*offsz) / GYRO_AVG_SAMPLES;
-	gyroAvg[0] = gyro_accum[0] / GYRO_AVG_SAMPLES;
-	gyroAvg[1] = gyro_accum[1] / GYRO_AVG_SAMPLES;
-	gyroAvg[2] = gyro_accum[2] / GYRO_AVG_SAMPLES;
-	
-}
-
-void gyroGetAvg(int* data){
-	data[0] = gyroAvg[0];
-	data[1] = gyroAvg[1];
-	data[2] = gyroAvg[2];
-}
-
-void gyroGetOffsets(int* data){
-	data[0] = offsx;
-	data[1] = offsy;
-	data[2] = offsz;
-}
 
 /*-----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------
@@ -450,3 +408,7 @@ static inline void gyroSetupPeripheral(void) {
     OpenI2C2(I2C2CONvalue, I2C2BRGvalue);
     IdleI2C2();
 }
+
+
+
+
