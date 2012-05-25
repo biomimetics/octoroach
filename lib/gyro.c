@@ -42,12 +42,13 @@
 
 
 #include "ports.h"      // for external interrupt
-#include "i2c.h"
+#include "i2c_driver.h"
 #include "gyro.h"
 #include "utils.h"
 
 #define GYRO_ADDR_RD        0b11010001    
-#define GYRO_ADDR_WR        0b11010000    
+#define GYRO_ADDR_WR        0b11010000  
+#define GYRO_I2C_CHAN 		2  
 
 #define LSB2DEG             0.0695652174        // 14.375 LSB/(deg/s)
 #define LSB2RAD             0.00121414209          
@@ -79,13 +80,6 @@ static int windowIdx = 0;
 -----------------------------------------------------------------------------*/
 static void gyroWrite(unsigned char regaddr, unsigned char data );
 static void gyroHandleISR(void);
-static inline unsigned int gyroReadString(unsigned length, unsigned char * data,
-                                   unsigned int data_wait);
-static inline void gyroSendByte( unsigned char byte );
-static inline unsigned char gyroReceiveByte(void);
-static inline void gyroSendNACK(void);
-static inline void gyroStartTx(void);
-static inline void gyroEndTx(void);
 static inline void gyroSetupPeripheral(void);
 
 
@@ -184,14 +178,22 @@ int gyroGetIntTemp(void) {
 void gyroReadTemp(void) {
     unsigned char temp_data[2];
 
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_WR);
-    gyroSendByte(0x1b);
-    gyroEndTx();
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_RD);
-    gyroReadString(2, temp_data, 1000);
-    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_WR);
+//    gyroSendByte(0x1b);
+//    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_RD);
+//    gyroReadString(2, temp_data, 1000);
+//    gyroEndTx();
+	i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_WR);
+    i2cSendByte(GYRO_I2C_CHAN, 0x1b);
+    i2cEndTx(GYRO_I2C_CHAN);
+    i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_RD);
+    i2cReadString(GYRO_I2C_CHAN, 2, temp_data, 1000);
+    i2cEndTx(GYRO_I2C_CHAN);
 
     GyroData.chr_data[0] = temp_data[1];
     GyroData.chr_data[1] = temp_data[0];
@@ -241,14 +243,22 @@ void gyroDumpData(unsigned char* buffer) {
 
 unsigned char* gyroReadXYZ(void) {
     unsigned char gyro_data[6];
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_WR);
-    gyroSendByte(0x1d);
-    gyroEndTx();
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_RD);
-    gyroReadString(6, gyro_data, 1000);
-    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_WR);
+//    gyroSendByte(0x1d);
+//    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_RD);
+//    gyroReadString(6, gyro_data, 1000);
+//    gyroEndTx();
+	i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_WR);
+    i2cSendByte(GYRO_I2C_CHAN, 0x1d);
+    i2cEndTx(GYRO_I2C_CHAN);
+    i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_RD);
+    i2cReadString(GYRO_I2C_CHAN, 6, gyro_data, 1000);
+    i2cEndTx(GYRO_I2C_CHAN);
 
     GyroData.chr_data[2] = gyro_data[1];
     GyroData.chr_data[3] = gyro_data[0];    
@@ -263,14 +273,22 @@ unsigned char* gyroReadXYZ(void) {
 void gyroGetXYZ(unsigned char *data) {
 
     unsigned char gyro_data[6];
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_WR);
-    gyroSendByte(0x1d);
-    gyroEndTx();
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_RD);
-    gyroReadString(6, gyro_data, 1000);
-    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_WR);
+//    gyroSendByte(0x1d);
+//    gyroEndTx();
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_RD);
+//    gyroReadString(6, gyro_data, 1000);
+//    gyroEndTx();
+	i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_WR);
+    i2cSendByte(GYRO_I2C_CHAN, 0x1d);
+    i2cEndTx(GYRO_I2C_CHAN);
+    i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_RD);
+    i2cReadString(GYRO_I2C_CHAN, 6, gyro_data, 1000);
+    i2cEndTx(GYRO_I2C_CHAN);
 
     data[0] = gyro_data[1];
     data[1] = gyro_data[0];    
@@ -337,101 +355,6 @@ void __attribute__((interrupt, no_auto_psv)) _INT1Interrupt(void) {
 }
 
 /*****************************************************************************
-* Function Name : gyroHandleISR
-* Description   : Need to implement this function if interrupt is used.
-* Parameters    : None
-* Return Value  : None
-*****************************************************************************/
-static void gyroHandleISR(void) {
-    return;
-}
-
-
-/*****************************************************************************
-* Function Name : gyroWrite
-* Description   : Write a data to a register
-* Parameters    : regaddr - address of register
-*                 data - value to be written to the register
-* Return Value  : None
-*****************************************************************************/
-static void gyroWrite(unsigned char regaddr, unsigned char data ){
-    gyroStartTx();
-    gyroSendByte(GYRO_ADDR_WR);
-    gyroSendByte(regaddr);
-    gyroSendByte(data);
-    gyroEndTx();
-}
-
-/*****************************************************************************
-* Function Name : gyroReadString
-* Description   : It reads predetermined data string length from the I2C bus.
-* Parameters    : length is the string length to read
-*                 data is the storage for received gyro data
-*                 data_wait is the timeout value
-* Return Value  : Number of bytes read before timeout.
-*****************************************************************************/
-static inline unsigned int gyroReadString(unsigned length, unsigned char * data,
-                                   unsigned int data_wait) {
-    return MastergetsI2C2(length, data, data_wait);
-}
-
-
-/*****************************************************************************
-* Function Name : gyroSendByte
-* Description   : Send a byte to gyroscope
-* Parameters    : byte - a byte to send
-* Return Value  : None
-*****************************************************************************/
-static inline void gyroSendByte( unsigned char byte ) {
-    MasterWriteI2C2(byte);
-    while(I2C2STATbits.TRSTAT);
-    while(I2C2STATbits.ACKSTAT);
-}
-
-/*****************************************************************************
-* Function Name : gyroReceiveByte
-* Description   : Receive a byte from gyroscope
-* Parameters    : None
-* Return Value  : None
-*****************************************************************************/
-static inline unsigned char gyroReceiveByte(void) {
-    return MasterReadI2C2();
-}
-
-/*****************************************************************************
-* Function Name : gyroSendNACK
-* Description   : Send NACK to gyroscope
-* Parameters    : None
-* Return Value  : None
-*****************************************************************************/
-static inline void gyroSendNACK(void){
-    NotAckI2C2();
-    while(I2C2CONbits.ACKEN);
-}
-
-/*****************************************************************************
-* Function Name : gyroStartTx
-* Description   : Start I2C transmission
-* Parameters    : None
-* Return Value  : None
-*****************************************************************************/
-static inline void gyroStartTx(void){
-    StartI2C2();
-    while(I2C2CONbits.SEN);
-}
-
-/*****************************************************************************
-* Function Name : gyroEndTx
-* Description   : End I2C transmission
-* Parameters    : None
-* Return Value  : None
-*****************************************************************************/
-static inline void gyroEndTx(void){
-    StopI2C2();
-    while(I2C2CONbits.PEN);
-}
-
-/*****************************************************************************
 * Function Name : gyroSetupPeripheral
 * Description   : Setup I2C for gyroscope
 * Parameters    : None
@@ -450,3 +373,103 @@ static inline void gyroSetupPeripheral(void) {
     OpenI2C2(I2C2CONvalue, I2C2BRGvalue);
     IdleI2C2();
 }
+
+/*****************************************************************************
+* Function Name : gyroHandleISR
+* Description   : Need to implement this function if interrupt is used.
+* Parameters    : None
+* Return Value  : None
+*****************************************************************************/
+static void gyroHandleISR(void) {
+    return;
+}
+
+
+/*****************************************************************************
+* Function Name : gyroWrite
+* Description   : Write a data to a register
+* Parameters    : regaddr - address of register
+*                 data - value to be written to the register
+* Return Value  : None
+*****************************************************************************/
+static void gyroWrite(unsigned char regaddr, unsigned char data ){
+//    gyroStartTx();
+//    gyroSendByte(GYRO_ADDR_WR);
+//    gyroSendByte(regaddr);
+//    gyroSendByte(data);
+//    gyroEndTx();
+	i2cStartTx(GYRO_I2C_CHAN);
+    i2cSendByte(GYRO_I2C_CHAN, GYRO_ADDR_WR);
+    i2cSendByte(GYRO_I2C_CHAN, regaddr);
+    i2cSendByte(GYRO_I2C_CHAN, data);
+    i2cEndTx(GYRO_I2C_CHAN);
+}
+
+///*****************************************************************************
+//* Function Name : gyroReadString
+//* Description   : It reads predetermined data string length from the I2C bus.
+//* Parameters    : length is the string length to read
+//*                 data is the storage for received gyro data
+//*                 data_wait is the timeout value
+//* Return Value  : Number of bytes read before timeout.
+//*****************************************************************************/
+//static inline unsigned int gyroReadString(unsigned length, unsigned char * data,
+//                                   unsigned int data_wait) {
+//    return MastergetsI2C2(length, data, data_wait);
+//}
+//
+//
+///*****************************************************************************
+//* Function Name : gyroSendByte
+//* Description   : Send a byte to gyroscope
+//* Parameters    : byte - a byte to send
+//* Return Value  : None
+//*****************************************************************************/
+//static inline void gyroSendByte( unsigned char byte ) {
+//    MasterWriteI2C2(byte);
+//    while(I2C2STATbits.TRSTAT);
+//    while(I2C2STATbits.ACKSTAT);
+//}
+//
+///*****************************************************************************
+//* Function Name : gyroReceiveByte
+//* Description   : Receive a byte from gyroscope
+//* Parameters    : None
+//* Return Value  : None
+//*****************************************************************************/
+//static inline unsigned char gyroReceiveByte(void) {
+//    return MasterReadI2C2();
+//}
+//
+///*****************************************************************************
+//* Function Name : gyroSendNACK
+//* Description   : Send NACK to gyroscope
+//* Parameters    : None
+//* Return Value  : None
+//*****************************************************************************/
+//static inline void gyroSendNACK(void){
+//    NotAckI2C2();
+//    while(I2C2CONbits.ACKEN);
+//}
+//
+///*****************************************************************************
+//* Function Name : gyroStartTx
+//* Description   : Start I2C transmission
+//* Parameters    : None
+//* Return Value  : None
+//*****************************************************************************/
+//static inline void gyroStartTx(void){
+//    StartI2C2();
+//    while(I2C2CONbits.SEN);
+//}
+//
+///*****************************************************************************
+//* Function Name : gyroEndTx
+//* Description   : End I2C transmission
+//* Parameters    : None
+//* Return Value  : None
+//*****************************************************************************/
+//static inline void gyroEndTx(void){
+//    StopI2C2();
+//    while(I2C2CONbits.PEN);
+//}
