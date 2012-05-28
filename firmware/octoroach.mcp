@@ -48,9 +48,9 @@ file_020=.
 file_021=lib
 file_022=lib
 file_023=lib
-file_024=lib
-file_025=imageproc-lib
-file_026=lib
+file_024=imageproc-lib
+file_025=lib
+file_026=imageproc-lib
 file_027=imageproc-lib
 file_028=imageproc-lib
 file_029=imageproc-lib
@@ -77,9 +77,9 @@ file_049=imageproc-lib
 file_050=lib
 file_051=lib
 file_052=lib
-file_053=lib
-file_054=imageproc-lib
-file_055=lib
+file_053=imageproc-lib
+file_054=lib
+file_055=imageproc-lib
 file_056=imageproc-lib
 file_057=.
 [GENERATED_FILES]
@@ -225,10 +225,10 @@ file_020=source\main.c
 file_021=..\lib\sensors.c
 file_022=..\lib\estop.c
 file_023=..\lib\telem.c
-file_024=..\lib\orient.c
-file_025=..\..\imageproc-lib\dfmem.c
-file_026=..\lib\pid_hw.c
-file_027=..\..\imageproc-lib\i2c_driver.c
+file_024=..\..\imageproc-lib\dfmem.c
+file_025=..\lib\pid_hw.c
+file_026=..\..\imageproc-lib\i2c_driver.c
+file_027=..\..\imageproc-lib\filter-avg.c
 file_028=..\..\imageproc-lib\xl.h
 file_029=..\..\imageproc-lib\utils.h
 file_030=..\..\imageproc-lib\stopwatch.h
@@ -254,10 +254,10 @@ file_049=..\..\imageproc-lib\init_default.h
 file_050=..\lib\sensors.h
 file_051=..\lib\estop.h
 file_052=..\lib\telem.h
-file_053=..\lib\orient.h
-file_054=..\..\imageproc-lib\dfmem.h
-file_055=..\lib\pid_hw.h
-file_056=..\..\imageproc-lib\i2c_driver.h
+file_053=..\..\imageproc-lib\dfmem.h
+file_054=..\lib\pid_hw.h
+file_055=..\..\imageproc-lib\i2c_driver.h
+file_056=..\..\imageproc-lib\filter-avg.h
 file_057=C:\Program Files (x86)\Microchip\MPLAB C30\lib\libdsp-coff.a
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
@@ -267,12 +267,12 @@ TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}=-g
 TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}=-g -Wall -D__IMAGEPROC2
 TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}=--heap=4096 --stack=256 -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
 TS{509E5861-1E2A-483B-8B6B-CA8DB7F2DD78}=
-TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}026=-g
-TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}026=-g -Wall -D__IMAGEPROC2 -mlarge-data
-TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}026=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
-TS{509E5861-1E2A-483B-8B6B-CA8DB7F2DD78}026=
+TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}025=-g
+TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}025=-g -Wall -D__IMAGEPROC2 -mlarge-data
+TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}025=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
+TS{509E5861-1E2A-483B-8B6B-CA8DB7F2DD78}025=
 [ACTIVE_FILE_SETTINGS]
-TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}026_active=yes
+TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}025_active=yes
 [INSTRUMENTED_TRACE]
 enable=0
 transport=0
