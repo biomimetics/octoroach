@@ -11,7 +11,7 @@
 #include "stopwatch.h"
 #include "pid.h"
 #include "orient.h"
-#include "filter-avg.h"
+#include "dfilter_avg.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY

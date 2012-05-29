@@ -8,7 +8,7 @@
 #include "move_queue.h"
 #include "xl.h"
 //#include "orient.h"
-#include "filter-avg.h"
+#include "dfilter_avg.h"
 
 long gyro_accum;
 int j;
