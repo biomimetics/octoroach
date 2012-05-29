@@ -11,6 +11,7 @@
 #include "stopwatch.h"
 #include "pid.h"
 #include "orient.h"
+#include "filter-avg.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -30,6 +31,9 @@ extern pidT steeringPID;
 
 //global flag from radio module to know if last packet was ACK'd
 extern volatile char g_last_ackd;
+
+//Filter stuctures for gyro variables
+extern filterAvgInt_t gyroZavg;
 
 //Private variables
 static unsigned long samplesToSave;
@@ -119,9 +123,7 @@ void telemSaveData(telemU *data){
 int telemISRHandler(){
 	int samplesaved = 0;
 	telemU data;
-	int gyroAvg[3];
-	int gyroData[3];
-	int gyroOffsets[3];
+	int gyroAvg[3]; int gyroData[3]; int gyroOffsets[3];
 	int xldata[3];
 
 	//float orZ[3];
@@ -130,11 +132,14 @@ int telemISRHandler(){
 	if( telemSkip == 0){
 		if( samplesToSave > 0)
 		{
-			//Get last average value, without recalculating it
-			gyroGetAvg(gyroAvg);
-			gyroGetOffsets(gyroOffsets);
+			/////// Get Gyro data and calc average via filter
 			gyroGetXYZ((unsigned char*)gyroData);
-			//Get last XL value
+			gyroGetOffsets(gyroOffsets);
+			filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
+			//Only average for Z
+			gyroAvg[2] = filterAvgCalc(&gyroZavg);
+	
+			/////// Get XL data
 			xlGetXYZ((unsigned char*)xldata);
 
 			//Stopwatch was already started in the cmdSpecialTelemetry function
