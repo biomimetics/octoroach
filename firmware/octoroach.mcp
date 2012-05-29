@@ -228,7 +228,7 @@ file_023=..\lib\telem.c
 file_024=..\..\imageproc-lib\dfmem.c
 file_025=..\lib\pid_hw.c
 file_026=..\..\imageproc-lib\i2c_driver.c
-file_027=..\..\imageproc-lib\filter-avg.c
+file_027=..\..\imageproc-lib\dfilter_avg.c
 file_028=..\..\imageproc-lib\xl.h
 file_029=..\..\imageproc-lib\utils.h
 file_030=..\..\imageproc-lib\stopwatch.h
@@ -257,7 +257,7 @@ file_052=..\lib\telem.h
 file_053=..\..\imageproc-lib\dfmem.h
 file_054=..\lib\pid_hw.h
 file_055=..\..\imageproc-lib\i2c_driver.h
-file_056=..\..\imageproc-lib\filter-avg.h
+file_056=..\..\imageproc-lib\dfilter_avg.h
 file_057=C:\Program Files (x86)\Microchip\MPLAB C30\lib\libdsp-coff.a
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
