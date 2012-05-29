@@ -2,3 +2,7 @@
 /*.hex
 /*.map
 /*.mcs
+*.pyc
+build
+dist
+nbproject
