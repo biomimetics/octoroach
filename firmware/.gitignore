@@ -2,3 +2,6 @@
 /*.hex
 /*.map
 /*.mcs
+build
+dist
+nbproject
