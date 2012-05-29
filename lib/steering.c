@@ -7,27 +7,36 @@
 #include "telem.h"
 #include "move_queue.h"
 #include "xl.h"
-#include "orient.h"
+//#include "orient.h"
+#include "dfilter_avg.h"
 
 long gyro_accum;
 int j;
 pidT steeringPID;
 int steeringIsOn;
 
-unsigned int orientSkip = 0;
+//Averaging filter structures for gyroscope data
+//Initialzied in setup.
+filterAvgInt_t gyroXavg, gyroYavg, gyroZavg;
+#define GYRO_AVG_SAMPLES 	32
+
+#define GYRO_DRIFT_THRESH 3
+
+//unsigned int orientSkip = 0;
 
 unsigned int steeringMode; 
 
-extern int offsx, offsy, offsz;
+//Gyro offsets
+//extern int offsx, offsy, offsz;
 
 extern pidT pidObjs[NUM_PIDS];
 //extern int bemf[NUM_PIDS];
 
 extern moveCmdT currentMove, idleMove;
 
+//This should be replaced by a proper system clock, and a getter functions
 extern unsigned long t1_ticks; //needed to calculate new runtimes
 
-#define GYRO_DRIFT_THRESH 3
 
 void steeringSetup(void) {
 
@@ -54,6 +63,10 @@ void steeringSetup(void) {
 	steeringMode = STEERMODE_DECREASE;
 
 	//orientSetup();
+	//Averaging filter setup:
+	filterAvgCreate(&gyroXavg, GYRO_AVG_SAMPLES);
+	filterAvgCreate(&gyroYavg, GYRO_AVG_SAMPLES);
+	filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 }
 
 void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
@@ -82,7 +95,7 @@ void setSteeringAngRate(int angRate)
 	_T5IE = 1;
 }
 
-//I need a better solution than this
+//This should be updated to use a generic PID module, DSP PID.
 void UpdatePIDSteering(pidT *pid, int y)
 {
     pid->p = (long)pid->Kp * pid->error;
@@ -123,10 +136,21 @@ void steeringSetMode(unsigned int sm){
 void steeringHandleISR(){
 	
 	int gyroAvg[3];
+	int gyroData[3];
+	int gyroOffsets[3];
+
+	gyroGetXYZ((unsigned char*)gyroData);
+	gyroGetOffsets(gyroOffsets);
+
+	filterAvgUpdate(&gyroXavg,gyroData[0] - gyroOffsets[0]);
+	filterAvgUpdate(&gyroYavg,gyroData[1] - gyroOffsets[1]);
+	filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
+	
+	gyroAvg[0] = filterAvgCalc(&gyroXavg);
+	gyroAvg[1] = filterAvgCalc(&gyroYavg);
+	gyroAvg[2] = filterAvgCalc(&gyroZavg);
 
 	//Running filter on gyro
-	gyroCalcAverage();
-	gyroGetAvg(gyroAvg);
 	int i;
 	for(i=0; i< 3; i++){
 		if(gyroAvg[i] < 0){
