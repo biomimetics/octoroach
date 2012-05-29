@@ -4,3 +4,5 @@
 *.hex
 *.map
 *.cof
+build
+dist
