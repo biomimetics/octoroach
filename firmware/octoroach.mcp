@@ -9,7 +9,7 @@ dir_bin=
 dir_tmp=.\obj
 dir_sin=
 dir_inc=..\lib;..\..\imageproc-lib
-dir_lib=C:\Program Files\Microchip\MPLAB C30\lib
+dir_lib=
 dir_lkr=
 [CAT_FILTERS]
 filter_src=*.s;*.c
@@ -81,7 +81,6 @@ file_053=imageproc-lib
 file_054=lib
 file_055=imageproc-lib
 file_056=imageproc-lib
-file_057=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -140,7 +139,6 @@ file_053=no
 file_054=no
 file_055=no
 file_056=no
-file_057=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -199,7 +197,6 @@ file_053=no
 file_054=no
 file_055=no
 file_056=no
-file_057=no
 [FILE_INFO]
 file_000=..\..\imageproc-lib\xl.c
 file_001=..\..\imageproc-lib\battery.c
@@ -258,14 +255,14 @@ file_053=..\lib\pid_hw.h
 file_054=..\..\imageproc-lib\i2c_driver.h
 file_055=..\..\imageproc-lib\dfilter_avg.h
 file_056=..\..\imageproc-lib\gyro.h
-file_057=C:\Program Files (x86)\Microchip\MPLAB C30\lib\libdsp-coff.a
 [SUITE_INFO]
 suite_guid={479DDE59-4D56-455E-855E-FFF59A3DB57E}
 suite_state=
 [TOOL_SETTINGS]
 TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}=-g
 TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}=-g -Wall -D__IMAGEPROC2
-TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}=--heap=4096 --stack=256 -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)"
+TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}=--heap=4096 --stack=256 -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem -o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -ldsp-coff
+TS{7DAC9A1D-4C45-45D6-B25A-D117C74E8F5A}_alt=yes
 TS{509E5861-1E2A-483B-8B6B-CA8DB7F2DD78}=
 TS{7D9C6ECE-785D-44CB-BA22-17BF2E119622}024=-g
 TS{25AC22BD-2378-4FDB-BFB6-7345A15512D3}024=-g -Wall -D__IMAGEPROC2 -mlarge-data
