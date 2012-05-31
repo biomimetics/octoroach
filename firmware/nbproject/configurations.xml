@@ -89,7 +89,7 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>C:\Users\pullin\Desktop\GIT code\octoroach\firmware</Elem>
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -106,7 +106,6 @@
       <compileType>
         <linkerTool>
           <linkerLibItems>
-            <linkerLibFileItem>C:/Program Files (x86)/Microchip/MPLAB C30/lib/libdsp-elf.a</linkerLibFileItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -199,10 +198,6 @@
           <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
-      <ASM30-AS>
-      </ASM30-AS>
-      <ASM30-LD>
-      </ASM30-LD>
       <C30>
         <property key="code-model" value="default"/>
         <property key="const-model" value="default"/>
@@ -255,8 +250,7 @@
         <property key="enable-default-isr" value="true"/>
         <property key="enable-handles" value="true"/>
         <property key="enable-pack-data" value="true"/>
-        <property key="extra-lib-directories"
-                  value="../../../../../../Program Files/Microchip/MPLAB C30/lib;"/>
+        <property key="extra-lib-directories" value=""/>
         <property key="general-code-protect" value="no_code_protect"/>
         <property key="general-write-protect" value="no_write_protect"/>
         <property key="generate-cross-reference-file" value="false"/>
@@ -275,6 +269,7 @@
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>
+        <appendMe value="-ldsp-elf"/>
       </C30-LD>
       <C30Global>
         <property key="fast-math" value="true"/>

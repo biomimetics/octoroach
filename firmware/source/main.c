@@ -32,8 +32,6 @@
 
 extern unsigned char id[4];
 
-unsigned char framebuf[160][60] __attribute__((far));;
-
 extern volatile unsigned long t1_ticks;
 volatile unsigned long wakeTime;
 extern volatile char g_radio_duty_cycle;
