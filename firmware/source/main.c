@@ -37,13 +37,12 @@ volatile unsigned long wakeTime;
 extern volatile char g_radio_duty_cycle;
 extern volatile char inMotion;
 
-
 int dcCounter;
 
 int main(void) {
 	
-	wakeTime = 0;
-	dcCounter = 0;
+    wakeTime = 0;
+    dcCounter = 0;
 
     WordVal src_addr_init = {SRC_ADDR};
     WordVal src_pan_id_init = {SRC_PAN_ID};

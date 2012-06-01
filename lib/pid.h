@@ -17,12 +17,13 @@
 #define DEFAULT_KD  150
 #define DEFAULT_KAW 0
 #define DEFAULT_FF  0
+#define MOTOR_PID_ERR_SCALER 32
 #endif
 
 //Software PID only
 #define GAIN_SCALER         100
 //#ifndef ADC_MAX
-#define ADC_MAX             1024
+//#define ADC_MAX             1024
 //#endif
 
 #define NUM_PIDS	2
@@ -30,19 +31,19 @@
 
 //Structures and enums
 //PID Continer structure
-typedef struct
-{
-	int input;
+
+typedef struct {
+    int input;
     long dState, iState, preSat, p, i, d;
     int Kp, Ki, Kd, Kaw, y_old, output;
     unsigned char N;
-	char onoff; //boolean
-	long error;
-	unsigned long run_time;
-	unsigned long start_time;
-	int inputOffset;
-	int feedforward;
-	char OUTPUT_CHANNEL;
+    char onoff; //boolean
+    long error;
+    unsigned long run_time;
+    unsigned long start_time;
+    int inputOffset;
+    int feedforward;
+    char OUTPUT_CHANNEL;
 } pidT;
 
 //Functions
@@ -56,4 +57,4 @@ void pidSetGains(unsigned int pid_num, int Kp, int Ki, int Kd, int Kaw, int ff);
 unsigned char* pidGetTelemetry(void);
 void pidOn(unsigned int pid_num);
 
-#endif // __PID_H
+#endif

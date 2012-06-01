@@ -44,7 +44,7 @@ except serial.serialutil.SerialException:
 xb = XBee(ser, callback = xbee_received)
 
 ###### Operation Flags ####
-SAVE_DATA = False
+SAVE_DATA = True
 RESET_ROBOT = True
 
 

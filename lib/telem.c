@@ -12,6 +12,7 @@
 #include "pid.h"
 #include "orient.h"
 #include "dfilter_avg.h"
+#include "adc_pid.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -25,7 +26,7 @@
 
 
 //This should get a getter function, and not use an extern
-extern pidT pidObjs[NUM_PIDS];
+extern pidT motor_pidObjs[NUM_PIDS];
 extern int bemf[NUM_PIDS];
 extern pidT steeringPID;
 
@@ -144,8 +145,8 @@ int telemISRHandler(){
 
 			//Stopwatch was already started in the cmdSpecialTelemetry function
 			data.telemStruct.timeStamp = (long)swatchTic(); 
-			data.telemStruct.inputL = pidObjs[0].input;  
-			data.telemStruct.inputR = pidObjs[1].input;
+			data.telemStruct.inputL = motor_pidObjs[0].input;
+			data.telemStruct.inputR = motor_pidObjs[1].input;
 			data.telemStruct.dcL = PDC1;
 			data.telemStruct.dcR = PDC2;
 			data.telemStruct.gyroX = gyroData[0] - gyroOffsets[0];
@@ -158,11 +159,8 @@ int telemISRHandler(){
 			data.telemStruct.bemfL = bemf[0];
 			data.telemStruct.bemfR = bemf[1];
 			data.telemStruct.sOut = steeringPID.output;
-			data.telemStruct.Vbatt = pidObjs[0].inputOffset; //equal to adc_battery, see pid.c
+			data.telemStruct.Vbatt = adcGetVBatt();
 			data.telemStruct.steerAngle = steeringPID.input;
-			//data.telemStruct.orient[0] = orZ[0];
-			//data.telemStruct.orient[1] = orZ[1];
-			//data.telemStruct.orient[2] = orZ[2];
 			telemSaveData(&data); 
 			samplesaved = 1;
 		}
