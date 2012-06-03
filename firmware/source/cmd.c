@@ -23,6 +23,7 @@
 #include "move_queue.h"
 #include "steering.h"
 #include "telem.h"
+#include "leg_ctrl.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -352,10 +353,12 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 	int chan2 = frame[4] + (frame[5] << 8);
 	unsigned int run_time_ms2 = frame[6] + (frame[7] << 8);
 	//currentMove = manualMove;
-	pidSetInput(0 ,chan1, run_time_ms1);
-	pidOn(0);
-	pidSetInput(1 ,chan2, run_time_ms2);
-	pidOn(1);
+	//pidSetInput(0 ,chan1, run_time_ms1);
+        legCtrlSetInput(0, chan1);
+	legCtrlOnOff(0, 1); //Motor PID #1 -> ON
+	//pidSetInput(1 ,chan2, run_time_ms2);
+        legCtrlSetInput(0, chan2);
+	legCtrlOnOff(1, 1); //Motor PID #2 -> ON
 	//delay_ms(2);
 
 	i=0;
@@ -365,8 +368,6 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 	}
 
 	unsigned int telem_samples = frame[8] + (frame[9] << 8);
-
-	
 	
 	//unsigned char temp[2];
 	//*(unsigned int*)temp = 1000;
@@ -407,7 +408,8 @@ static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned 
 }
 
 static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsigned char *frame){
-	unsigned int count;
+    //Obsolete, not maintained
+    /*	unsigned int count;
 	unsigned long tic;
     unsigned char *tic_char = (unsigned char*)&tic;
 	//unsigned long sampNum = 0;
@@ -423,7 +425,7 @@ static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsig
 	while(count){
 		pld = payCreateEmpty(36);  // data length = 12
 	
-		//*(long*)(pld->pld_data + idx) = tic;
+		// *(long*)(pld->pld_data + idx) = tic;
 		pld->pld_data[2] = tic_char[0];
         pld->pld_data[3] = tic_char[1];
         pld->pld_data[4] = tic_char[2];
@@ -447,13 +449,14 @@ static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsig
 		delay_ms(10);
         tic = swatchTic();
 	}
+  */
 }
 
 static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsigned char *frame){
 	int rate;
 	Payload pld;
 	rate = frame[0] + (frame[1] << 8);
-	setSteeringAngRate(rate);
+	steeringSetAngRate(rate);
 	
 	//Send confirmation packet
 	pld = payCreateEmpty(2);

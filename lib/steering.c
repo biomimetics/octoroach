@@ -10,15 +10,13 @@
 //#include "orient.h"
 #include "dfilter_avg.h"
 #include "pid_hw.h"
+#include "leg_ctrl.h"
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
-long gyro_accum;
-int j;
-pidT steeringPID;
+pidObj steeringPID;
 int steeringIsOn;
 
-tPID steering_hwPID;
 fractional steering_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
 fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
 
@@ -37,40 +35,28 @@ unsigned int steeringMode;
 //Gyro offsets
 //extern int offsx, offsy, offsz;
 
-//extern pidT pidObjs[NUM_PIDS];
+//extern pidObj pidObjs[NUM_PIDS];
 //extern int bemf[NUM_PIDS];
 
 extern moveCmdT currentMove, idleMove;
 
-//This should be replaced by a proper system clock, and a getter functions
-extern unsigned long t1_ticks; //needed to calculate new runtimes
+static void setupTimer5();
 
 void steeringSetup(void) {
 
-    gyro_accum = 0;
-    j = 0;
-
 #ifdef PID_HARDWARE
     //Create PID controller object
-    pidCreate(&steering_hwPID, steering_abcCoeffs, steering_controlHists);
-    initPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
-#else
-    initPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
+    steeringPID.dspPID.abcCoefficients = steering_abcCoeffs;
+    steeringPID.dspPID.controlHistory = steering_controlHists;
 #endif
-    setSteeringAngRate(0);
+    pidInitPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
+    steeringPID.satVal = STEERING_SAT;
+    steeringPID.maxVal = STEERING_SAT;
+    steeringPID.minVal = 0;
 
-    ///// Timer 5 setup, Steering ISR, 300Hz /////
-    // period value = Fcy/(prescale*Ftimer)
-    unsigned int con_reg, period;
-    // prescale 1:64
-    con_reg = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
-    // Period is set so that period = 5ms (200Hz), MIPS = 40
-    //period = 3125; // 200Hz
-    period = 2083; // ~300Hz
-    OpenTimer5(con_reg, period);
-    ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
-    //////////////////////////////////////////////
+    steeringSetAngRate(0);
 
+    setupTimer5(); //T5 ISR will update the steering controller
 
     //Averaging filter setup:
     //filterAvgCreate(&gyroXavg, GYRO_AVG_SAMPLES);
@@ -81,6 +67,8 @@ void steeringSetup(void) {
     steeringMode = STEERMODE_DECREASE;
 }
 
+
+///////////////////   Timer 5   ///////////////////////////
 void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
 
     // Steering update ISR handler
@@ -93,49 +81,28 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
     _T5IF = 0;
 }
 
-void setSteeringAngRate(int angRate) {
-    _T5IE = 0;
-    steeringPID.input = angRate;
-    _T5IE = 1;
+void setupTimer5(){
+    ///// Timer 5 setup, Steering ISR, 300Hz /////
+    // period value = Fcy/(prescale*Ftimer)
+    unsigned int con_reg, period;
+    // prescale 1:64
+    con_reg = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
+    // Period is set so that period = 5ms (200Hz), MIPS = 40
+    //period = 3125; // 200Hz
+    period = 2083; // ~300Hz
+    OpenTimer5(con_reg, period);
+    ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
+////////////////////////////////////////////////////////////
 
-//This should be updated to use a generic PID module, DSP PID.
 
-void UpdatePIDSteering(pidT *pid, int y) {
-    pid->p = (long) pid->Kp * pid->error;
-    pid->i = (long) pid->Ki * pid->iState;
-    //Filtered derivative action applied directly to measurement
-    pid->d = ((long) pid->Kd * (long) pid->d * (long) STEERING_GAIN_SCALER) / ((long) pid->Kd + (long) pid->Kp * (long) pid->N) -
-            ((long) pid->Kd * (long) pid->Kp * (long) pid->N * ((long) y - (long) pid->y_old)) /
-            ((long) pid->Kd + (long) pid->Kp * (long) pid->N);
-    pid->d = 0;
 
-    pid->preSat = (pid->p + pid->i + pid->d) / (long) STEERING_GAIN_SCALER;
-
-    if (pid->preSat > STEERING_SAT) {
-        pid->output = STEERING_SAT;
-    } else {
-        pid->output = pid->preSat;
-    }
-
-    pid->iState += (long) (pid->error) + ((long) (pid->Kaw) *
-            ((long) (pid->output) - (long) (pid->preSat))) / (long) STEERING_GAIN_SCALER;
-    pid->y_old = y;
+void steeringSetAngRate(int angRate) {
+    steeringPID.input = angRate;
 }
 
 void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
-    steeringPID.Kp = Kp;
-    steeringPID.Ki = Ki;
-    steeringPID.Kd = Kd;
-    steeringPID.Kaw = Kaw;
-    steeringPID.feedforward = ff;
-    //If we are using the DSP core PID, we need to recalculate gain coeffs
-#ifdef PID_HARDWARE
-    //Gains are retrieved from the PID container object,
-    //and need special setup for the DSP type PID calculation
-    pidSetFracCoeffs(&steering_hwPID, steeringPID.Kp, steeringPID.Ki,
-    steeringPID.Kd);
-#endif
+    pidSetGains(&steeringPID, Kp, Ki, Kd, Kaw, ff);
 }
 
 void steeringSetMode(unsigned int sm) {
@@ -161,15 +128,6 @@ void steeringHandleISR() {
     gyroAvgZ = filterAvgCalc(&gyroZavg);
 
     //Threshold filter on gyro to account for minor drift
-    /*int i;
-    for(i=0; i< 3; i++){
-            if(gyroAvg[i] < 0){
-                    if(-gyroAvg[i] < GYRO_DRIFT_THRESH){ gyroAvg[i] = 0;}
-            }
-            else{
-                    if(gyroAvg[i] < GYRO_DRIFT_THRESH){ gyroAvg[i] = 0;}
-            }
-    }*/
     if (ABS(gyroAvgZ < GYRO_DRIFT_THRESH)) {
         gyroAvgZ = 0;
     }
@@ -179,23 +137,14 @@ void steeringHandleISR() {
     if (currentMove != idleMove) {
         //Only update steering controller if we are in motion
 #ifdef PID_SOFTWARE
-        steeringPID.error = steeringPID.input - gyroAvg[2];
-        UpdatePIDSteering(&steeringPID, gyroAvg[2]);
+        pidUpdate(&steeringPID, gyroAvg[2])
 #elif defined PID_HARDWARE
         int temp = 0;
-        steering_hwPID.controlReference =
-                STEERING_PID_ERR_SCALER * steeringPID.input;
-        temp = pidRun(&steering_hwPID, STEERING_PID_ERR_SCALER * gyroAvgZ);
-        //Saturation
-        if ((int) (steering_hwPID.controlOutput) < 0) {
-            temp = 0;
-        }
-        if ((int) (steering_hwPID.controlOutput) > STEERING_SAT) {
-            temp = STEERING_SAT;
-        }
-        //Manually update the output tracking variable in the container,
-        //since we are using the DSP controller for calculation
-        steeringPID.output = temp;
+        temp = steeringPID.input; //Save unscaled input val
+        steeringPID.input *= STEERING_PID_ERR_SCALER; //Scale input
+        pidUpdate(&steeringPID,
+                 STEERING_PID_ERR_SCALER * gyroAvgZ); //Update with scaled feedback
+       steeringPID.input = temp;  //Reset unscaled input
 #endif   //PID_SOFTWWARE vs PID_HARDWARE
     }
     //Now the output correction is stored in steeringPID.output,

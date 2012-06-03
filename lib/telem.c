@@ -13,6 +13,7 @@
 #include "orient.h"
 #include "dfilter_avg.h"
 #include "adc_pid.h"
+#include "leg_ctrl.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -26,9 +27,9 @@
 
 
 //This should get a getter function, and not use an extern
-extern pidT motor_pidObjs[NUM_PIDS];
-extern int bemf[NUM_PIDS];
-extern pidT steeringPID;
+extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
+extern int bemf[NUM_MOTOR_PIDS];
+extern pidObj steeringPID;
 
 //global flag from radio module to know if last packet was ACK'd
 extern volatile char g_last_ackd;
