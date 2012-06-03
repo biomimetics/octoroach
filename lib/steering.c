@@ -159,7 +159,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
     left = inputs[0];
     right = inputs[1];
 
-    if (steeringPID.onoff == 1) {
+    if (steeringPID.onoff == PID_ON) {
         int delta = steeringPID.output;
 
         if (steeringMode == STEERMODE_DECREASE) {
@@ -217,7 +217,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
 }
 
 void steeringOff() {
-    steeringPID.onoff = 0;
+    steeringPID.onoff = PID_OFF;
     steeringPID.p = 0;
     steeringPID.i = 0;
     steeringPID.d = 0;
@@ -225,7 +225,7 @@ void steeringOff() {
 }
 
 void steeringOn() {
-    steeringPID.onoff = 1;
+    steeringPID.onoff = PID_ON;
     steeringPID.p = 0;
     steeringPID.i = 0;
     steeringPID.d = 0;

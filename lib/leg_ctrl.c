@@ -153,8 +153,8 @@ void legCtrlSetup() {
     //External function used here since it will zero out the state
     pidSetInput(&(motor_pidObjs[0]), 0);
     pidSetInput(&(motor_pidObjs[1]), 0);
-    motor_pidObjs[0].onoff = 0;
-    motor_pidObjs[1].onoff = 0;
+    motor_pidObjs[0].onoff = PID_OFF;
+    motor_pidObjs[1].onoff = PID_OFF;
 
     //Set up filters and histories
     for (i = 0; i < NUM_MOTOR_PIDS; i++) {
@@ -296,8 +296,8 @@ void serviceMoveQueue(void) {
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {
-                motor_pidObjs[0].onoff = 1;
-                motor_pidObjs[1].onoff = 1;
+                motor_pidObjs[0].onoff = PID_ON;
+                motor_pidObjs[1].onoff = PID_ON;
             }
         }
     }    //Move Queue is empty
@@ -305,9 +305,9 @@ void serviceMoveQueue(void) {
         //No more moves, go back to idle
         currentMove = idleMove;
         pidSetInput(&(motor_pidObjs[0]), 0);
-        motor_pidObjs[0].onoff = 0;
+        motor_pidObjs[0].onoff = PID_OFF;
         pidSetInput(&(motor_pidObjs[1]), 0);
-        motor_pidObjs[1].onoff = 0;
+        motor_pidObjs[1].onoff = PID_OFF;
         moveExpire = 0;
         inMotion = 0; //for sleep, synthesis
         steeringOff();

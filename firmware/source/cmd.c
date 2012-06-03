@@ -355,10 +355,10 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 	//currentMove = manualMove;
 	//pidSetInput(0 ,chan1, run_time_ms1);
         legCtrlSetInput(0, chan1);
-	legCtrlOnOff(0, 1); //Motor PID #1 -> ON
+	legCtrlOnOff(0, PID_ON); //Motor PID #1 -> ON
 	//pidSetInput(1 ,chan2, run_time_ms2);
         legCtrlSetInput(0, chan2);
-	legCtrlOnOff(1, 1); //Motor PID #2 -> ON
+	legCtrlOnOff(1, PID_ON); //Motor PID #2 -> ON
 	//delay_ms(2);
 
 	i=0;
