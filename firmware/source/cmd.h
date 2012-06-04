@@ -89,6 +89,7 @@ typedef struct{
 //cmdSetSteeringGains
 typedef struct{
 	int Kp, Ki, Kd, Kaw, ff;
+        int steerMode;
 } _args_cmdSetSteeringGains;
 
 //cmdSoftwareReset

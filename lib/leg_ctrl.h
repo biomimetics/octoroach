@@ -8,9 +8,11 @@
 
 #define NUM_MOTOR_PIDS 2
 
+void legCtrlSetup();
 void SetupTimer1(void);
 unsigned long getT1_ticks();
 void legCtrlSetInput(unsigned int num, int val);
 void legCtrlOnOff(unsigned int num, unsigned char state);
+void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff);
 
 #endif

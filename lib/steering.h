@@ -26,12 +26,12 @@ void steeringOn();
 
 #elif defined PID_HARDWARE
 //Hardware PID
-#define STEERING_KP  1000
-#define STEERING_KI  100
-#define STEERING_KD  10
+#define STEERING_KP  10
+#define STEERING_KI  1
+#define STEERING_KD  0
 #define STEERING_KAW 0
 #define STEERING_FF  0
-#define STEERING_PID_ERR_SCALER 32
+#define STEERING_PID_ERR_SCALER 1
 
 #endif
 

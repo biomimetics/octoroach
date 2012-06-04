@@ -19,17 +19,17 @@ PATH_TO_IDE_BIN=C:/Program Files (x86)/Microchip/MPLABX/mplab_ide/mplab_ide/modu
 # Adding MPLAB X bin directory to path.
 PATH:=C:/Program Files (x86)/Microchip/MPLABX/mplab_ide/mplab_ide/modules/../../bin/:$(PATH)
 # Path to java used to run MPLAB X when this makefile was created
-MP_JAVA_PATH="C:\Program Files\Java\jre6/bin/"
+MP_JAVA_PATH="C:\Program Files (x86)\Java\jre6/bin/"
 OS_CURRENT="$(shell uname -s)"
-MP_CC="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin\pic30-gcc.exe"
+MP_CC="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN\pic30-gcc.exe"
 # MP_BC is not defined
-MP_AS="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin\pic30-as.exe"
-MP_LD="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin\pic30-ld.exe"
-MP_AR="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin\pic30-ar.exe"
+MP_AS="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN\pic30-as.exe"
+MP_LD="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN\pic30-ld.exe"
+MP_AR="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN\pic30-ar.exe"
 DEP_GEN=${MP_JAVA_PATH}java -jar "C:/Program Files (x86)/Microchip/MPLABX/mplab_ide/mplab_ide/modules/../../bin/extractobjectdependencies.jar" 
-MP_CC_DIR="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin"
+MP_CC_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN"
 # MP_BC_DIR is not defined
-MP_AS_DIR="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin"
-MP_LD_DIR="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin"
-MP_AR_DIR="C:\Program Files (x86)\Microchip\mplabc30\v3.30b\bin"
+MP_AS_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN"
+MP_LD_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN"
+MP_AR_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\MPLAB C30\BIN"
 # MP_BC_DIR is not defined

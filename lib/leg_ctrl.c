@@ -106,6 +106,12 @@ unsigned long getT1_ticks(){
 
 void legCtrlSetup() {
     int i;
+    motor_abcCoeffs[0][0] = 1;
+    motor_abcCoeffs[0][1] = 2;
+    motor_abcCoeffs[0][2] = 3;
+    motor_abcCoeffs[1][0] = 1;
+    motor_abcCoeffs[1][1] = 2;
+    motor_abcCoeffs[2][2] = 3;
     for (i = 0; i < NUM_MOTOR_PIDS; i++) {
 #ifdef PID_HARDWARE
         //THe user is REQUIRED to set up these pointers before initializing
@@ -413,4 +419,8 @@ void legCtrlSetInput(unsigned int num, int val){
 
 void legCtrlOnOff(unsigned int num, unsigned char state){
     motor_pidObjs[num].onoff = state;
+}
+
+void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
+    pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
 }

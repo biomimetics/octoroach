@@ -349,9 +349,9 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame){
 	int i;
 	int chan1 = frame[0] + (frame[1] << 8);
-	unsigned int run_time_ms1 = frame[2] + (frame[3] << 8);
+//	unsigned int run_time_ms1 = frame[2] + (frame[3] << 8);
 	int chan2 = frame[4] + (frame[5] << 8);
-	unsigned int run_time_ms2 = frame[6] + (frame[7] << 8);
+//	unsigned int run_time_ms2 = frame[6] + (frame[7] << 8);
 	//currentMove = manualMove;
 	//pidSetInput(0 ,chan1, run_time_ms1);
         legCtrlSetInput(0, chan1);
@@ -383,21 +383,9 @@ static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned 
 	//Unpack unsigned char* frame into structured values
 	_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*)(frame);
 	
-	pidSetGains(0 , argsPtr->Kp1 , argsPtr->Ki1 , argsPtr->Kd1 , argsPtr->Kaw1 , argsPtr->ff1);
-	pidSetGains(0 , argsPtr->Kp2 , argsPtr->Ki2 , argsPtr->Kd2 , argsPtr->Kaw2 , argsPtr->ff2);
+	legCtrlSetGains(0 , argsPtr->Kp1 , argsPtr->Ki1 , argsPtr->Kd1 , argsPtr->Kaw1 , argsPtr->ff1);
+	legCtrlSetGains(1 , argsPtr->Kp2 , argsPtr->Ki2 , argsPtr->Kd2 , argsPtr->Kaw2 , argsPtr->ff2);
 
-	/*Kp = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Ki = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kd = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kaw = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	ff = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	pidSetGains(0,Kp,Ki,Kd,Kaw, ff);
-	Kp = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Ki = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kd = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kaw = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	ff = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	pidSetGains(1,Kp,Ki,Kd,Kaw, ff);*/
 	//Send confirmation packet
 	Payload pld;
 	pld = payCreateEmpty(20);
@@ -563,27 +551,34 @@ static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned
 
 //Format for steering gains:
 // [Kp, Ki, Kd, Kaw, feedforward, steeringMode]
-// 
-static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsigned char *frame){
-	int Kp, Ki, Kd, Kaw, ff;
-	int steerMode;
-	int idx = 0;
-	Payload pld;
-	Kp = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Ki = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kd = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	Kaw = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	ff = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	steeringSetGains(Kp,Ki,Kd,Kaw, ff);
-	//Get the steering mode from the packet, too
-	steerMode = frame[idx] + (frame[idx+1] << 8); idx+=2;
-	steeringSetMode(steerMode);
-	//Send confirmation packet, which is the same data that we recieved
-	pld = payCreateEmpty(12);
-	pld->pld_data[0] = status;
+//
+static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsigned char *frame) {
+    //int Kp, Ki, Kd, Kaw, ff;
+  //  int steerMode;
+//    int idx = 0;
+    Payload pld;
+
+    _args_cmdSetSteeringGains* argsPtr = (_args_cmdSetSteeringGains*) (frame);
+
+    steeringSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->ff);
+    steeringSetMode(argsPtr->steerMode);
+
+    /*Kp = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    Ki = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    Kd = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    Kaw = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    ff = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    steeringSetGains(Kp,Ki,Kd,Kaw, ff);
+    //Get the steering mode from the packet, too
+    steerMode = frame[idx] + (frame[idx+1] << 8); idx+=2;
+    steeringSetMode(steerMode);*/
+    //Send confirmation packet, which is the same data that we recieved
+
+    pld = payCreateEmpty(12);
+    pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_STEERING_GAINS;
-	memcpy((pld->pld_data)+2, frame, 12);
-	radioSendPayload((WordVal)macGetDestAddr(), pld);
+    memcpy((pld->pld_data) + 2, frame, 12);
+    radioSendPayload((WordVal) macGetDestAddr(), pld);
 
 }
 
