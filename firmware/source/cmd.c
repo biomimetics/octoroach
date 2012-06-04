@@ -32,12 +32,19 @@ unsigned char tx_frame_[127];
 extern MoveQueue moveq;
 extern int offsz;
 
-extern moveCmdT currentMove, idleMove;
+extern TelemStruct TelemControl;
+extern unsigned long t1_ticks;
+extern int samplesToSave;
+extern long motor_count[2];
+
+extern moveCmdT currentMove, idleMove, manualMove;
+// updated version string to identify robot
+extern unsigned char version[];
 
 // use an array of function pointer to avoid a number of case statements
 // CMD_VECTOR_SIZE is defined in cmd_const.h
 void (*cmd_func[CMD_VECTOR_SIZE])(unsigned char, unsigned char, unsigned char*);
-
+void cmdError(void);
 /*-----------------------------------------------------------------------------
  *          Declaration of static functions
 -----------------------------------------------------------------------------*/
@@ -69,6 +76,10 @@ static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigne
 static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdEraseSector(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdStartTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame);
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -78,7 +89,7 @@ void cmdSetup(void) {
     unsigned int i;
 
     // initialize the array of func pointers with Nop()
-    for(i = 0; i < MAX_CMD_FUNC; ++i) {
+    for(i = 0; i < CMD_VECTOR_SIZE; ++i) {
         cmd_func[i] = &cmdNop;
     }
 
@@ -104,6 +115,10 @@ void cmdSetup(void) {
 	cmd_func[CMD_SPECIAL_TELEMETRY] = &cmdSpecialTelemetry;
 	cmd_func[CMD_ERASE_SECTORS] = &cmdEraseSector;
 	cmd_func[CMD_FLASH_READBACK] = &cmdFlashReadback;
+	cmd_func[CMD_SET_VEL_PROFILE] = &cmdSetVelProfile;
+	cmd_func[CMD_WHO_AM_I] = &cmdWhoAmI;
+	cmd_func[CMD_START_TELEM] = &cmdStartTelemetry;
+	cmd_func[CMD_ZERO_POS] = &cmdZeroPos;
 }
 
 
@@ -113,19 +128,39 @@ void cmdHandleRadioRxBuffer(void) {
     unsigned char command, status;  
 
     if ((pld = radioReceivePayload()) != NULL) {
-
         status = payGetStatus(pld);
        command = payGetType(pld);      
-        
-        cmd_func[command](status, pld->data_length, payGetData(pld));
+
+        if( command < CMD_VECTOR_SIZE)
+	{        cmd_func[command](status, pld->data_length, payGetData(pld)); }
+//	else { cmdError(); }
+	else 
+	{  cmdNop(status, pld->data_length, payGetData(pld));
+	    cmdError();
+	}
 
         payDelete(pld);
     } 
+ 
 
     return;
 }
 
-
+// handle bad command packets
+// we might be in the middle of a dangerous maneuver- better to stop and signal we need resent command
+// wait for command to be resent
+void cmdError()
+{ int i;
+ 	EmergencyStop();
+	for(i= 0; i < 10; i++)
+	 {	LED_1 ^= 1;
+			delay_ms(200);
+			LED_2 ^= 1;
+			delay_ms(200);
+			LED_3 ^= 1;
+			delay_ms(200);
+          }
+}
 
 /*-----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------
@@ -333,27 +368,26 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
 }
 
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame){
-	int i;
-	int chan1 = frame[0] + (frame[1] << 8);
+	//int i;
+	int thrust1 = frame[0] + (frame[1] << 8);
 	unsigned int run_time_ms1 = frame[2] + (frame[3] << 8);
-	int chan2 = frame[4] + (frame[5] << 8);
+	int thrust2 = frame[4] + (frame[5] << 8);
 	unsigned int run_time_ms2 = frame[6] + (frame[7] << 8);
 	//currentMove = manualMove;
-	pidSetInput(0 ,chan1, run_time_ms1);
+	pidSetInput(0 ,thrust1, run_time_ms1);
 	pidOn(0);
-	pidSetInput(1 ,chan2, run_time_ms2);
+	pidSetInput(1 ,thrust2, run_time_ms2);
 	pidOn(1);
 	//delay_ms(2);
 
+/* left over from testing?
 	i=0;
 	if((chan1 > 0) || (chan2 > 0)){
 		i++;
 		i++;
 	}
-
+*/
 	unsigned int telem_samples = frame[8] + (frame[9] << 8);
-
-	
 	
 	//unsigned char temp[2];
 	//*(unsigned int*)temp = 1000;
@@ -445,10 +479,7 @@ static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsi
 
 
 static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame) {
-
-    unsigned int count;
-    unsigned long tic;
-    unsigned char *tic_char;
+    unsigned int count;     unsigned long tic;   unsigned char *tic_char;
     Payload pld;
     //int perpacket = 10;
 	int perpacket = 2;
@@ -460,12 +491,8 @@ static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsig
 	unsigned char gdata[6];
 	unsigned char* gdatap = gdata;
 	int* zp = (int*)(gdatap + 4);
-	
-
     count = frame[0] + (frame[1] << 8);
-
     tic_char = (unsigned char*)&tic;
-    	
     swatchReset();
 
     while (count) {
@@ -560,10 +587,14 @@ static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigne
 
 static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsigned char *frame){
 	unsigned int count;
+	unsigned long temp;
 	count = frame[0] + (frame[1] << 8);
 	if(count != 0){
 		swatchReset();
 		setSampleSaveCount(count);
+	       temp = t1_ticks;  // need atomic read due to interrupt 
+		TelemControl.start = temp; // start recording now
+		TelemControl.skip = 1; // every other sample (150 Hz)
 	} 
 	//This functionality has been removed to accomodate large numbers of samples
 	//else{ //start a readback over the radio
@@ -585,4 +616,77 @@ static void cmdEraseSector(unsigned char status, unsigned char length, unsigned 
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame){
 	unsigned int count = frame[0] + (frame[1] << 8);
 	readDFMemBySample(count);
+}
+
+
+// set up velocity profile structure  - assume 4 set points for now, generalize later
+static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigned char *frame){
+	int interval[NUM_VELS], delta[NUM_VELS], vel[NUM_VELS];
+	int idx = 0, i = 0;
+	Payload pld;
+	for(i = 0; i < NUM_VELS; i ++)
+	{ interval[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2;	}
+	for(i = 0; i < NUM_VELS; i ++)
+	{ delta[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2; 	}
+	for(i = 0; i < NUM_VELS; i ++)
+	{ vel[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2; 	}
+	setPIDVelProfile(0, interval, delta, vel);
+	for(i = 0; i < NUM_VELS; i ++)
+	{ interval[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2;	}
+	for(i = 0; i < NUM_VELS; i ++)
+	{ delta[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2; 	}
+	for(i = 0; i < NUM_VELS; i ++)
+	{ vel[i] = frame[idx]+ (frame[idx+1]<<8);
+	 	idx+=2; 	}
+	setPIDVelProfile(1, interval, delta, vel);
+	//Send confirmation packet
+	pld = payCreateEmpty(48);
+	pld->pld_data[0] = status;
+    pld->pld_data[1] = CMD_SET_VEL_PROFILE;
+// packet length = 48 bytes (24 ints)
+	memcpy((pld->pld_data)+2, frame, 48);
+	radioSendPayload((WordVal)macGetDestAddr(), pld);
+}
+
+// send robot info when queried
+void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame) {
+unsigned char i, string_length;
+// maximum string length to avoid packet size limit
+	i = 0;
+	while((i < 127) && version[i] != '\n')
+	{ i++;}
+	string_length=i;     
+    radioSendPayload(macGetDestAddr(), payCreate(string_length, version, status, CMD_WHO_AM_I));
+}
+
+// report motor position and  reset motor position (from Hall effect sensors)
+// note motor_count is long (4 bytes)
+void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame) 
+{ 
+    radioSendPayload(macGetDestAddr(), payCreate(sizeof(motor_count), (unsigned char *) motor_count, status, CMD_ZERO_POS));
+    pidZeroPos(0); pidZeroPos(1);
+}
+
+// alternative telemetry which runs at 1 kHz rate inside PID loop
+static void cmdStartTelemetry(unsigned char status, unsigned char length, unsigned char *frame){
+	int idx=0;
+       unsigned long temp;
+     TelemControl.count = frame[idx] + (frame[idx+1] << 8); idx+=2;
+   // start time is relative to current t1_ticks
+	temp = t1_ticks; // need atomic read due to interrupts
+	TelemControl.start = 
+		(unsigned long) (frame[idx] + (frame[idx+1] << 8) )
+						+ temp;
+	idx+=2;
+      samplesToSave = TelemControl.count; // **** this runs sample capture in T5 interrupt
+	TelemControl.skip = frame[idx]+(frame[idx+1]<<8); 
+	swatchReset();
+	if(TelemControl.count > 0) 
+	{ TelemControl.onoff = 1;   // use just steering servo sample capture
+	 } // enable telemetry last 
 }

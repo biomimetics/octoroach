@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include "stdlib.h"
 
-extern unsigned char id[4];
+/* unsigned char id[4];  defined in at86rf.c */
 
 //char framebuf[80][120] __attribute__((far));;
 
@@ -60,9 +60,9 @@ int main(void) {
 	
     //radioReadTrxId(id);
 
-    LED_RED = 1;
+    LED_GREEN = 1;
+    LED_RED = 0;
     LED_BLUE = 0;
-	LED_YELLOW = 0;
 
 	//while(1);
 
@@ -71,6 +71,9 @@ int main(void) {
     //print("Ready");	
 
 	//readDFMemBySample(5);
+
+// *****************  try out PID loop ********* //
+//	pidTest(); 
 
     while(1) {
      	cmdHandleRadioRxBuffer();

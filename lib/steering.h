@@ -3,6 +3,7 @@ void setSteeringAngRate(int angRate);
 void UpdatePIDSteering(pidT *pid, int y);
 void steeringSetGains(int Kp,int Ki,int Kd,int Kawm, int ff);
 void setSampleSaveCount(int count);
+void pidSaveTelemetry(void);
 
 //#define GYRO_AVG_SAMPLES 128
 #define GYRO_AVG_SAMPLES 32

@@ -1,30 +1,11 @@
 from lib import command
 from struct import pack,unpack
-import time
 
 import shared
 
-#Dictionary of packet formats, for unpack()
-pktFormat = { \
-    command.TX_DUTY_CYCLE:          'l3f', \
-    command.GET_IMU_DATA:           'l6h', \
-    command.TX_SAVED_STATE_DATA:    'l3f', \
-    command.SET_THRUST_OPEN_LOOP:   '', \
-    command.SET_THRUST_CLOSED_LOOP: '', \
-    command.SET_PID_GAINS:          '10h', \
-    command.GET_PID_TELEMETRY:      '', \
-    command.SET_CTRLD_TURN_RATE:    '=h', \
-    command.GET_IMU_LOOP_ZGYRO:     '='+2*'Lhhh', \
-    command.SET_MOVE_QUEUE:         '', \
-    command.SET_STEERING_GAINS:     '5h', \
-    command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+14*'h', \
-    command.ERASE_SECTORS:          '', \
-    command.FLASH_READBACK:         '', \
-    }
-               
-#XBee callback function, called every time a packet is recieved
 def xbee_received(packet):
+    #global shared.shared.pkts, shared.motor_gains_set, shared.steering_gains_set, \
+    #       shared.steering_rate_set, shared.count2deg
     rf_data = packet.get('rf_data')
     #rssi = ord(packet.get('rssi'))
     #(src_addr, ) = unpack('H', packet.get('source_addr'))
@@ -35,61 +16,69 @@ def xbee_received(packet):
     type = ord(rf_data[1])
     data = rf_data[2:]
     
-    #Record the time the packet is received, so command timeouts
-    # can be done
-    shared.last_packet_time = time.time()
-    
-    pattern = pktFormat[type]
-    
     if (type == command.GET_IMU_DATA):
-        datum = unpack(pattern, data)
+        datum = unpack('l6h', data)
+        #datum = unpack('l3f', data)
         if (datum[0] != -1):
             shared.imudata.append(datum)
             print "got datum:",datum
     elif (type == command.TX_SAVED_STATE_DATA):
-        datum = unpack(pattern, data)
+        datum = unpack('l3f', data)
         if (datum[0] != -1):
             statedata.append(datum)
     elif (type == command.TX_DUTY_CYCLE):
-        datum = unpack(pattern, data)
+        datum = unpack('lf', data)
         if (datum[0] != -1):
             dutycycles.append(datum)
     elif (type == command.ECHO):
         print "echo:",status, type, data
+    elif (type == command.WHO_AM_I):
+       # print "whoami:",status, hex(type), data
+        print "whoami:",data
     elif (type == command.SET_PID_GAINS):
         print "Set PID gains"
-        gains = unpack(pattern, data)
+        gains = unpack('10h', data)
         print gains
         shared.motor_gains_set = True 
     elif (type == command.SET_STEERING_GAINS):
         print "Set Steering gains"
-        gains = unpack(pattern, data)
+        gains = unpack('5h', data)
         print gains
         shared.steering_gains_set = True
+ ###  commands related to Hall effect position control
+    elif (type == command.SET_VEL_PROFILE):
+        print "Set Velocity Profile readback"
+ #      print "length data =",len(data)
+        temp = unpack('24h', data)
+      #  print temp
+    elif (type == command.ZERO_POS):
+        print 'Previous motor positions:',
+        motor = unpack('=2l',data)
+        print motor
     elif (type == command.SET_CTRLD_TURN_RATE):
         print "Set turning rate"
-        rate = unpack(pattern, data)[0]
+        rate = unpack('=h', data)[0]
         print "degrees: ",shared.count2deg * rate
         print "counts: ", rate
         shared.steering_rate_set = True
     elif (type == command.GET_IMU_LOOP_ZGYRO):
         pp = 2;
         print "Z Gyro Data Packet"
-        datum = unpack(pattern, data)
+        datum = unpack('='+pp*'Lhhh', data)
+        #print datum
         if (datum[0] != -1):
             for i in range(pp):
                 shared.imudata.append(datum[4*i:4*(i+1)] )
     elif (type == command.SPECIAL_TELEMETRY):
         shared.pkts = shared.pkts + 1
-        #print "Special Telemetry Data Packet, ",shared.pkts
+        print "pkt ",shared.pkts,
+        pattern = '=L'+14*'h'
         datum = unpack(pattern, data)
-        datum = list(datum)
-        telem_index = datum.pop(0)
-        #print "Special Telemetry Data Packet #",telem_index
-        if (datum[0] != -1) and (telem_index) >= 0:
-            shared.imudata[telem_index] = datum
-            shared.bytesIn = shared.bytesIn + (2*4 + 14*2)
-                
+ # diagnostic
+ #       if (shared.pkts < 20):
+ #           print "datum =", datum
+        if (datum[0] != -1):
+            shared.imudata.append(datum)                   
     else:    
         pass
 

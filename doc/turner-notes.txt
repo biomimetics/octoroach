@@ -1,0 +1,129 @@
+Notes on OCtoRoach crawler software
+haydn: com3
+
+set paths in .mcp to relative
+
+/* add dfmem.c from lib-rf to search path - changed to source 2/2012 */
+
+
+// Payload structure
+typedef struct {
+    unsigned char data_length;
+    unsigned char* pld_data;
+    unsigned char iter_index;
+} PayloadStruct;
+
+Crawler radio address:
+//Define constants used for radio init
+#define SRC_ADDR        0x2052
+#define SRC_PAN_ID      0x2060
+#define MY_CHAN         0x13
+#define DST_ADDR        0x2011
+
+
+Destination address (on base station):
+//Define constants used for radio init
+Base Station:
+#define SRC_ADDR            0x2011
+#define SRC_PAN_ID          0x2060
+#define MY_CHAN             0x13
+
+
+dest addr (set by python) =0x2052
+_________________________________________
+
+pidObjs:modified to use p_error, v_error, i_error
+
+____________________________
+
+PWM sampling of A/D using Special event feature
+Runs at 20 kHz PWM rate, so should not need busy wait
+
+
+research -> OctoRaoch -> trunk -> basestation
+___________________________
+
+cmdSetThrustClosedLoop:
+[right_vel rticks left_vel lticks num_pid_packets?]
+last number seems unused, and lastMoveTime=lticks
+
+___________________________
+
+PDC1 = left = pid0
+but PWM1 = right
+
+_________________
+
+MAXTHROT = 3976 to allow sampling back EMF, 12 bit PWM
+_____________
+Have velocity interrupt higher priority than steering interrupt so get atomic reads of variables???
+
+V_input should be in back emf A/D units
+
+
+________________
+
+hall effect
+20 Hz * 23.1 gear ratio * 3 events/rev = 1200 / sec,
+say 400 us low, 400 us high (close to velocity limit for hhall sensor)
+
+Maybe software can't keep up?- try using only rising edge rather than every edge
+
+problem is Hall Effect sensor- equivalent sampling at 3 KHz, but with 60 us on window.
+Thus min period has to be greater than 600 uS. (More if mag field is not symmetric.)
+Switch to only 1 magnet, and 2 counts per motor rev.
+
+____
+
+duration: should be 1 less than cycle time 0...960 to avoid extra step
+
+_________
+
+
+Gains can be set in debug mode but not in release?
+
+________________
+
+gains depend on state of battery charge - need more gain with less charge....
+
+
+___________________
+
+Compile time build options for DF_MEM
+__DFMEM_8MBIT / __DFMEM_16MBIT / __DFMEM_32MBIT:
+project -> buildoptions -> project -> MPlab c30
+__DFMEM_8MBIT
+
+Need to change to shared dfmem.c to handle different Flash sizes.
+
+______________________________________
+
+Saving telemetry data in Flash-   1 kHz is too fast. Need to use sampling in steering.c
+
+Interrupt priority? Can Timer 1 for PID interrupt timer 5 for steering (then may get corrupted PID data).
+
+
+____________________________
+
+accelerometer data from telemetry- why only 8 bits (range 0-255) and wraps?
+using old version of steering.c: xl_data is *char, but need to read int.
+chanegd to int xldata[3]
+
+________________________
+
+using velocity inetrpolation in pid-rf.c: delta[0] should be set _after_ first expire time,
+so get smooth interpolation of positon from p_input = 0, and that last setpoint (delta[3])
+is set at end of leg cycle.
+Also, period of 213 ms caused loss of last set point (fence post error)
+
+duration = 200 ms ? something wrong with last_move_time. Adding expire time from wrong index
+
+
+_______________________
+
+4/5/2012
+
+problem with losing hall effect counts at low speed on OctoRoach: motor goes backwards due to
+joint/transmission stiffness.
+pid-rf3.c code assumes measurements are non-negative and truncates at zero.
+Don't truncate as negative back emf may be useful for disambiguating hall sensor.

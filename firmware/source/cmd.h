@@ -21,6 +21,10 @@
 #define CMD_SPECIAL_TELEMETRY       0x89
 #define CMD_ERASE_SECTORS           0x8A
 #define CMD_FLASH_READBACK          0x8B
+# define CMD_SET_VEL_PROFILE	0x8C
+#define CMD_WHO_AM_I 0x8D
+#define CMD_START_TELEM 0x8E
+#define CMD_ZERO_POS 0x8f
 
 void cmdSetup(void);
 void cmdHandleRadioRxBuffer(void);
