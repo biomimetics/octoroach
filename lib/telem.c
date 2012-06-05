@@ -12,6 +12,7 @@
 #include "pid.h"
 #include "orient.h"
 #include "dfilter_avg.h"
+#include "adc_pid.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -158,7 +159,8 @@ int telemISRHandler(){
 			data.telemStruct.bemfL = bemf[0];
 			data.telemStruct.bemfR = bemf[1];
 			data.telemStruct.sOut = steeringPID.output;
-			data.telemStruct.Vbatt = pidObjs[0].inputOffset; //equal to adc_battery, see pid.c
+			//data.telemStruct.Vbatt = pidObjs[0].inputOffset; //equal to adc_battery, see pid.c
+			data.telemStruct.Vbatt = adcGetVBatt();
 			data.telemStruct.steerAngle = steeringPID.input;
 			//data.telemStruct.orient[0] = orZ[0];
 			//data.telemStruct.orient[1] = orZ[1];
