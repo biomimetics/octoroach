@@ -20,8 +20,6 @@
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
-
-
 //PID container objects
 pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 //DSP PID stuff
@@ -123,7 +121,8 @@ void legCtrlSetup() {
 #endif
         pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_FF);
         //Set up max's and saturation values
-        motor_pidObjs[i].satVal = SATTHROT;
+        motor_pidObjs[i].satValPos = SATTHROT;
+        motor_pidObjs[i].satValNeg = 0;
         motor_pidObjs[i].maxVal = FULLTHROT;
         motor_pidObjs[i].minVal = 0;
     }

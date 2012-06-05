@@ -12,7 +12,7 @@
 #include "pid_hw.h"
 #include "leg_ctrl.h"
 
-#define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
+#define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 pidObj steeringPID;
 int steeringIsOn;
@@ -50,9 +50,10 @@ void steeringSetup(void) {
     steeringPID.dspPID.controlHistory = steering_controlHists;
 #endif
     pidInitPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
-    steeringPID.satVal = STEERING_SAT;
+    steeringPID.satValPos = STEERING_SAT;
+    steeringPID.satValNeg = -STEERING_SAT;
     steeringPID.maxVal = STEERING_SAT;
-    steeringPID.minVal = 0;
+    steeringPID.minVal = -STEERING_SAT;
 
     steeringSetAngRate(0);
 
@@ -64,6 +65,8 @@ void steeringSetup(void) {
     filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
     steeringIsOn = 1;
+    steeringPID.onoff = PID_ON;
+
     steeringMode = STEERMODE_DECREASE;
 }
 
@@ -128,7 +131,7 @@ void steeringHandleISR() {
     gyroAvgZ = filterAvgCalc(&gyroZavg);
 
     //Threshold filter on gyro to account for minor drift
-    if (ABS(gyroAvgZ < GYRO_DRIFT_THRESH)) {
+    if (ABS(gyroAvgZ) < GYRO_DRIFT_THRESH) {
         gyroAvgZ = 0;
     }
 

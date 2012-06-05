@@ -142,15 +142,15 @@ def main():
         xb_send(0, command.SET_CTRLD_TURN_RATE, pack('h',angRate))
         time.sleep(0.25)
 
-    motorgains = [10000,4500,25,0,0 , 10000,4500,25,0,0] #Hardware PID
+    motorgains = [15000,500,150,0,0 , 15000,500,150,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]  #Software PID
     while not(shared.motor_gains_set):
         print "Setting motor gains..."
         xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
         time.sleep(0.25)
 
-    steeringGains = [0,0,0,0,0,  1]
-    #steeringGains = [1000,0,0,0,0,  STEER_MODE_DECREASE]
+    #steeringGains = [0,0,0,0,0,  1]
+    steeringGains = [1000,100,0,0,0,  STEER_MODE_DECREASE]
     #steeringGains = [20,1,0,1,0,  STEER_MODE_SPLIT]
     while not (shared.steering_gains_set):
         print "Setting steering gains..."
@@ -158,18 +158,18 @@ def main():
         time.sleep(0.25)
 
     #Constant example
-    moves = 3
-    moveq = [moves, \
-             500, 500, 1500,   MOVE_SEG_CONSTANT, 0, 0, 0,
-             0, 0, 500,   MOVE_SEG_CONSTANT, 0, 0, 0,
-             500, 500, 1500,   MOVE_SEG_CONSTANT, 0, 0, 0]
-
-    #Ramp example
     #moves = 3
     #moveq = [moves, \
-    #    0,   0,   3000,   MOVE_SEG_RAMP,    300, 300, 0,
-    #    900, 900, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-    #    900, 900, 3000,   MOVE_SEG_RAMP, -300,  -300,  0]
+    #         0, 0, 1000,   MOVE_SEG_CONSTANT, 1000, 1000, 0,
+    #         100, 100, 5000,   MOVE_SEG_CONSTANT, 0, 0, 0,
+    #         100, 100, 1000,   MOVE_SEG_CONSTANT, -1000, -1000, 0]
+
+    #Ramp example
+    moves = 3
+    moveq = [moves, \
+        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+        150, 150, 4000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
