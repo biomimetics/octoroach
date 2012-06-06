@@ -14,10 +14,6 @@
 #include<dsp.h>
 #include <stdlib.h> // for malloc
 
-
-//Choose between software PID and DSP core hardware PID
-#define PID_HARDWARE
-
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
 //PID container objects
@@ -119,7 +115,7 @@ void legCtrlSetup() {
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
 #endif
-        pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_FF);
+        pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_KFF);
         //Set up max's and saturation values
         motor_pidObjs[i].satValPos = SATTHROT;
         motor_pidObjs[i].satValNeg = 0;
@@ -218,9 +214,9 @@ void serviceMotionPID() {
             //pidHWSetReference(&(motor_pidObjs[j].dspPID), 
             //        MOTOR_PID_ERR_SCALER * motor_pidObjs[j].input);
             temp = motor_pidObjs[j].input; //Save unscaled input val
-            motor_pidObjs[j].input *= MOTOR_PID_ERR_SCALER; //Scale input
+            motor_pidObjs[j].input *= MOTOR_PID_SCALER; //Scale input
             pidUpdate(&(motor_pidObjs[j]),
-                     MOTOR_PID_ERR_SCALER * bemf[j]); //Update with scaled feedback
+                     MOTOR_PID_SCALER * bemf[j]); //Update with scaled feedback
             motor_pidObjs[j].input = temp;  //Reset unscaled input
 
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);

@@ -142,7 +142,7 @@ def main():
         xb_send(0, command.SET_CTRLD_TURN_RATE, pack('h',angRate))
         time.sleep(0.25)
 
-    motorgains = [15000,500,150,0,0 , 15000,500,150,0,0] #Hardware PID
+    motorgains = [5000,100,0,0,20 , 5000,100,0,0,20] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]  #Software PID
     while not(shared.motor_gains_set):
         print "Setting motor gains..."
@@ -150,7 +150,7 @@ def main():
         time.sleep(0.25)
 
     #steeringGains = [0,0,0,0,0,  1]
-    steeringGains = [1000,100,0,0,0,  STEER_MODE_DECREASE]
+    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE]
     #steeringGains = [20,1,0,1,0,  STEER_MODE_SPLIT]
     while not (shared.steering_gains_set):
         print "Setting steering gains..."

@@ -383,8 +383,8 @@ static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned 
 	//Unpack unsigned char* frame into structured values
 	_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*)(frame);
 	
-	legCtrlSetGains(0 , argsPtr->Kp1 , argsPtr->Ki1 , argsPtr->Kd1 , argsPtr->Kaw1 , argsPtr->ff1);
-	legCtrlSetGains(1 , argsPtr->Kp2 , argsPtr->Ki2 , argsPtr->Kd2 , argsPtr->Kaw2 , argsPtr->ff2);
+	legCtrlSetGains(0 , argsPtr->Kp1 , argsPtr->Ki1 , argsPtr->Kd1 , argsPtr->Kaw1 , argsPtr->Kff1);
+	legCtrlSetGains(1 , argsPtr->Kp2 , argsPtr->Ki2 , argsPtr->Kd2 , argsPtr->Kaw2 , argsPtr->Kff2);
 
 	//Send confirmation packet
 	Payload pld;
@@ -550,7 +550,7 @@ static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned
 }
 
 //Format for steering gains:
-// [Kp, Ki, Kd, Kaw, feedforward, steeringMode]
+// [Kp, Ki, Kd, Kaw, Kff, steeringMode]
 //
 static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsigned char *frame) {
     //int Kp, Ki, Kd, Kaw, ff;
@@ -560,7 +560,7 @@ static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsi
 
     _args_cmdSetSteeringGains* argsPtr = (_args_cmdSetSteeringGains*) (frame);
 
-    steeringSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->ff);
+    steeringSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->Kff);
     steeringSetMode(argsPtr->steerMode);
 
     /*Kp = frame[idx] + (frame[idx+1] << 8); idx+=2;

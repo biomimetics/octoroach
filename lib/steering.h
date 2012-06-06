@@ -13,10 +13,6 @@ void steeringOff();
 void steeringOn();
 
 #define STEERING_SAT       5000
-#define STEERING_GAIN_SCALER 512 //Software PID specific; TODO
-
-//Select DSP core PID
-#define PID_HARDWARE
 
 #ifdef PID_SOFTWARE
 #define STEERING_KP  0

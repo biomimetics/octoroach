@@ -7,11 +7,11 @@
 #include "telem.h"
 #include "move_queue.h"
 #include "xl.h"
-//#include "orient.h"
 #include "dfilter_avg.h"
 #include "pid_hw.h"
 #include "leg_ctrl.h"
 
+//Inline functions
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 pidObj steeringPID;

@@ -63,8 +63,8 @@ typedef struct{
 
 //cmdSetPIDGains
 typedef struct{
-	int Kp1, Ki1, Kd1, Kaw1, ff1;
-	int Kp2, Ki2, Kd2, Kaw2, ff2;
+	int Kp1, Ki1, Kd1, Kaw1, Kff1;
+	int Kp2, Ki2, Kd2, Kaw2, Kff2;
 } _args_cmdSetPIDGains;
 
 //cmdGetPIDTelemetry
@@ -88,7 +88,7 @@ typedef struct{
 
 //cmdSetSteeringGains
 typedef struct{
-	int Kp, Ki, Kd, Kaw, ff;
+	int Kp, Ki, Kd, Kaw, Kff;
         int steerMode;
 } _args_cmdSetSteeringGains;
 
