@@ -111,7 +111,7 @@ def xbee_received(packet):
             pass
     
     except Exception as args:
-        print "\nGeneral exception:",args
+        print "\nGeneral exception from callbackfunc:",args
         print "Attemping to exit cleanly..."
         self.xb.halt()
         self.ser.close()
