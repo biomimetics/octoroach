@@ -11,24 +11,27 @@
 
 //// Includes here should be to provide TYPES and ENUMS only
 #include "move_queue.h"
+#include "tail_queue.h"
 
 #define CMD_SET_THRUST_OPENLOOP     0x80
 #define CMD_SET_THRUST_CLOSEDLOOP   0x81
-#define CMD_SET_PID_GAINS  			0x82
-#define CMD_GET_PID_TELEMETRY		0x83
-#define CMD_SET_CTRLD_TURN_RATE		0x84
+#define CMD_SET_PID_GAINS  	    0x82
+#define CMD_GET_PID_TELEMETRY	    0x83
+#define CMD_SET_CTRLD_TURN_RATE	    0x84
 #define CMD_GET_IMU_LOOP_ZGYRO      0x85
-#define CMD_SET_MOVE_QUEUE	        0x86
+#define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
 #define CMD_SPECIAL_TELEMETRY       0x89
 #define CMD_ERASE_SECTORS           0x8A
 #define CMD_FLASH_READBACK          0x8B
-#define CMD_SLEEP					0x8C
-
+#define CMD_SLEEP		    0x8C
+#define CMD_SET_TAIL_QUEUE          0x8D
 
 //Argument lengths
 //lenghts are in bytes
+//OBSOLETE, replaced with command-specific structs
+/*
 #define LEN_CMD_SET_THRUST_OPENLOOP     4   //2 unsigned int
 #define LEN_CMD_SET_THRUST_CLOSEDLOOP   10  //5 unsigned int
 #define LEN_CMD_SET_PID_GAINS  		20  //10 unsigned int
@@ -42,6 +45,7 @@
 #define LEN_CMD_ERASE_SECTORS           4   //1 unsigned long
 #define LEN_CMD_FLASH_READBACK          4   //1 unsigned long
 #define LEN_CMD_SLEEP			1   //1 char
+*/
 
 void cmdSetup(void);
 void cmdHandleRadioRxBuffer(void);
@@ -79,6 +83,8 @@ typedef struct{
 //obsolete
 
 //cmdSetMoveQueue
+//NOTE: This is not for the entire packet, just for one moveQ items,
+// the cmd handler will stride across the packet, unpacking these
 typedef struct{
 	int inputL, inputR;
 	unsigned long duration;
@@ -111,7 +117,17 @@ typedef struct{
 } _args_cmdFlashReadback;
 
 //cmdSleep
+//None
 
+//cmdSetTailQueue
+//NOTE: This is not for the entire packet, just for one tailQ item,
+// the cmd handler will stride across the packet, unpacking these
+typedef struct {
+    float torque;
+    unsigned long duration;
+    enum tailSegT type;
+    int params[3];
+} _args_cmdSetTailQueue;
 
 #endif // __CMD_H
 

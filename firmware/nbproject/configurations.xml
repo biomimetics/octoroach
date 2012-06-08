@@ -38,6 +38,7 @@
         <itemPath>../../imageproc-lib/dfmem.h</itemPath>
         <itemPath>../../imageproc-lib/i2c_driver.h</itemPath>
         <itemPath>../lib/leg_ctrl.h</itemPath>
+        <itemPath>../lib/tail_queue.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
     </logicalFolder>
@@ -80,6 +81,7 @@
         <itemPath>../lib/telem.c</itemPath>
         <itemPath>../lib/steering.c</itemPath>
         <itemPath>../lib/leg_ctrl.c</itemPath>
+        <itemPath>../lib/tail_queue.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
@@ -101,8 +103,8 @@
         <targetDevice>dsPIC33FJ128MC706A</targetDevice>
         <targetHeader></targetHeader>
         <platformTool>ICD3PlatformTool</platformTool>
-        <languageToolchain>C30</languageToolchain>
-        <languageToolchainVersion>3_30b</languageToolchainVersion>
+        <languageToolchain>XC16</languageToolchain>
+        <languageToolchainVersion>1.00</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -428,6 +430,31 @@
         <C30Global>
         </C30Global>
       </item>
+      <item path="../lib/tail_queue.c" ex="false" overriding="false">
+        <C30>
+          <property key="code-model" value="default"/>
+          <property key="const-model" value="default"/>
+          <property key="data-model" value="default"/>
+          <property key="enable-all-warnings" value="false"/>
+          <property key="enable-ansi-std" value="false"/>
+          <property key="enable-ansi-warnings" value="false"/>
+          <property key="enable-fatal-warnings" value="false"/>
+          <property key="enable-large-arrays" value="false"/>
+          <property key="enable-omit-frame-pointer" value="false"/>
+          <property key="enable-procedural-abstraction" value="false"/>
+          <property key="enable-short-double" value="false"/>
+          <property key="enable-symbols" value="true"/>
+          <property key="enable-unroll-loops" value="false"/>
+          <property key="extra-include-directories"
+                    value="source;../lib;../../imageproc-lib"/>
+          <property key="isolate-each-function" value="false"/>
+          <property key="optimization-level" value="0"/>
+          <property key="post-instruction-scheduling" value="default"/>
+          <property key="pre-instruction-scheduling" value="default"/>
+          <property key="preprocessor-macros" value="__IMAGEPROC2"/>
+          <property key="scalar-model" value="default"/>
+        </C30>
+      </item>
       <C30>
         <property key="code-model" value="default"/>
         <property key="const-model" value="default"/>
@@ -484,10 +511,16 @@
         <property key="general-code-protect" value="no_code_protect"/>
         <property key="general-write-protect" value="no_write_protect"/>
         <property key="generate-cross-reference-file" value="false"/>
-        <property key="heap-size" value="4096"/>
+        <property key="heap-size" value="8192"/>
         <property key="input-libraries" value=""/>
         <property key="linker-symbols" value=""/>
         <property key="map-file" value="&quot;${DISTDIR}/firmware.${IMAGE_TYPE}.map&quot;"/>
+        <property key="oXC16ld-extra-opts" value=""/>
+        <property key="oXC16ld-fill-upper" value="0"/>
+        <property key="oXC16ld-force-link" value="false"/>
+        <property key="oXC16ld-no-smart-io" value="false"/>
+        <property key="oXC16ld-nostdlib" value="false"/>
+        <property key="oXC16ld-stackguard" value="16"/>
         <property key="preprocessor-macros" value=""/>
         <property key="remove-unused-sections" value="false"/>
         <property key="report-memory-usage" value="true"/>
@@ -495,7 +528,7 @@
         <property key="secure-flash" value="no_flash"/>
         <property key="secure-ram" value="no_ram"/>
         <property key="secure-write-protect" value="no_write_protect"/>
-        <property key="stack-size" value="256"/>
+        <property key="stack-size" value="512"/>
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>

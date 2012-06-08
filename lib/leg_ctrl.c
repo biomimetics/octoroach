@@ -9,6 +9,7 @@
 #include "led.h"
 #include "adc.h"
 #include "move_queue.h"
+#include "tail_queue.h"
 #include "math.h"
 #include "steering.h"
 #include<dsp.h>
@@ -39,6 +40,11 @@ MoveQueue moveq;
 moveCmdT currentMove, idleMove;
 unsigned long currentMoveStart, moveExpire;
 
+//Tail queue
+TailQueue tailq;
+moveCmdT currentTail, idleTail;
+unsigned long currentTailStart, tailExpire;
+
 int bemf[NUM_MOTOR_PIDS]; //used to store the true, unfiltered speed
 int bemfLast[NUM_MOTOR_PIDS]; // Last post-median-filter value
 int bemfHist[NUM_MOTOR_PIDS][3]; //This is ONLY for applying the median filter to
@@ -52,6 +58,8 @@ volatile char inMotion;
 //TIMER1 driven
 static void serviceMoveQueue(void);
 static void moveSynth();
+static void serviceTailQueue(void);
+static void tailSynth();
 static void serviceMotionPID();
 static void updateBEMF();
 
@@ -67,7 +75,10 @@ static void updateBEMF();
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
     serviceMoveQueue();
+    serviceTailQueue();
     moveSynth();
+    tailSynth();
+
 
     serviceMotionPID();
 
@@ -132,7 +143,7 @@ void legCtrlSetup() {
     //ADC_OffsetR = 1;
 
     //Move Queue setup and initialization
-    moveq = mqInit(8);
+    moveq = mqInit(16);
     idleMove = malloc(sizeof (moveCmdStruct));
     idleMove->inputL = 0;
     idleMove->inputR = 0;
@@ -148,7 +159,20 @@ void legCtrlSetup() {
     blinkCtr = 0;
     inMotion = 0;
 
-    //calibBatteryOffset(100);
+    //Tail queue
+    tailq = tailqInit(16);
+    idleTail = malloc(sizeof (tailCmdStruct));
+    idleTail->inputL = 0;
+    idleTail->inputR = 0;
+    idleTail->duration = 0;
+    idleTail->type = TAIL_SEG_IDLE;
+    idleTail->params[0] = 0;
+    idleTail->params[1] = 0;
+    idleTail->params[2] = 0;
+    currentTail = idleTail;
+    currentTailStart = 0;
+    tailExpire = 0;
+
 
     //Ensure controllers are reset to zero and turned off
     //External function used here since it will zero out the state
@@ -272,7 +296,6 @@ void updateBEMF(){
         LED_YELLOW = 0;
     }
 }
-
 
 
 void serviceMoveQueue(void) {
@@ -418,4 +441,68 @@ void legCtrlOnOff(unsigned int num, unsigned char state){
 
 void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
     pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
+}
+
+
+////// Tail functions below here
+void serviceTailQueue(void) {
+    //Service Move Queue if not empty
+    if (!tailqIsEmpty(tailq)) {
+        inMotion = 1;
+        if ((currentTail == idleTail) || (t1_ticks >= tailExpire)) {
+            currentTail = mqPop(tailq);
+            tailExpire = t1_ticks + currentTail->duration;
+            currentTailStart = t1_ticks;
+
+            //If we are no on an Idle move, turn on controllers
+            if (currentTail->type != TAIL_SEG_IDLE) {
+                //TODO: Turn on tail controller
+            }
+        }
+    }    //Move Queue is empty
+    else if ((t1_ticks >= tailExpire) && currentTail != idleTail) {
+        //No more moves, go back to idle
+        currentTail = idleTail;
+        //TODO: Zero tail torque, turn off controller
+        tailExpire = 0;
+    }
+}
+
+static void tailSynth() {
+    //Move segment synthesis
+    long yS = currentTail->inputL; //store in local variable to limit lookups
+    int y = 0;
+    if (inMotion) {
+        if (currentTail->type == TAIL_SEG_IDLE) {
+            y = 0;
+        }
+        if (currentTail->type == TAIL_SEG_CONSTANT) {
+            y = yS;
+        }
+        if (currentTail->type == TAIL_SEG_RAMP) {
+            long rate = (long) currentTail->params[0];
+            //Do division last to prevent integer math underflow
+            y = rate * ((long) t1_ticks - (long) currentTailStart) / 1000 + yS;
+        }
+        if (currentTail->type == TAIL_SEG_SIN) {
+            //float temp = 1.0/1000.0;
+            float amp = (float) currentTail->params[0];
+            //float F = (float)currentMove->params[1] / 1000;
+            float F = (float) currentTail->params[1] * 0.001;
+#define BAMS16_TO_FLOAT 1/10430.367658761737
+            float phase = BAMS16_TO_FLOAT * (float) currentTail->params[2]; //binary angle
+            float fy = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + yS;
+ 
+            //Clipping
+            int temp = (int) fy;
+            if (temp < 0) {
+                temp = 0;
+            }
+            y = (unsigned int) temp;
+        }
+        //TODO: Set tail input here
+        //motor_pidObjs[0].input = yL;
+    }
+    //Note here that pidObjs[n].input is not set if !inMotion, in case another behavior wants to
+    // set it.
 }

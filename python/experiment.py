@@ -13,7 +13,7 @@ from or_helpers import *
 
 
 ###### Operation Flags ####
-SAVE_DATA = True
+SAVE_DATA = False
 RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
@@ -63,9 +63,9 @@ def main():
     #Ramp example
     moves = 3
     moveq = [moves, \
-        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-        150, 150, 500,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
+        0,   0,   500,   MOVE_SEG_RAMP,    600, 600, 0,
+        300, 300, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        300, 300, 500,   MOVE_SEG_RAMP, -600,  -600,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)

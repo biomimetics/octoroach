@@ -32,6 +32,7 @@
 unsigned char tx_frame_[127];
 
 extern MoveQueue moveq;
+extern TailQueue tailq;
 extern int offsz;
 
 extern moveCmdT currentMove, idleMove;
@@ -75,6 +76,7 @@ static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsi
 static void cmdEraseSector(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSleep(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame);
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -112,9 +114,12 @@ void cmdSetup(void) {
     cmd_func[CMD_ERASE_SECTORS] = &cmdEraseSector;
     cmd_func[CMD_FLASH_READBACK] = &cmdFlashReadback;
     cmd_func[CMD_SLEEP] = &cmdSleep;
+    cmd_func[CMD_SET_TAIL_QUEUE] = &cmdSetTailQueue;
 
-	//Set up command length vector
-	cmd_len[CMD_SET_THRUST_OPENLOOP] 	= LEN_CMD_SET_THRUST_OPENLOOP;
+    //Set up command length vector
+    //OBSOLETE: Now uses cmd specific structs
+    /*
+    cmd_len[CMD_SET_THRUST_OPENLOOP] 	= LEN_CMD_SET_THRUST_OPENLOOP;
     cmd_len[CMD_SET_THRUST_CLOSEDLOOP] = LEN_CMD_SET_THRUST_CLOSEDLOOP;
     cmd_len[CMD_SET_PID_GAINS] 		= LEN_CMD_SET_PID_GAINS;
     cmd_len[CMD_GET_PID_TELEMETRY] 	= LEN_CMD_GET_PID_TELEMETRY;
@@ -127,6 +132,7 @@ void cmdSetup(void) {
     cmd_len[CMD_ERASE_SECTORS] 		= LEN_CMD_ERASE_SECTORS;
     cmd_len[CMD_FLASH_READBACK] 		= LEN_CMD_FLASH_READBACK;
     cmd_len[CMD_SLEEP] 				= LEN_CMD_SLEEP;
+     */
 }
 
 
@@ -648,15 +654,31 @@ static void cmdSleep(unsigned char status, unsigned char length, unsigned char *
 	}
 }
 
+static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame) {
+    //The count is read via standard pointer math
+    unsigned int count;
+    count = (unsigned int) (*(frame));
 
-//Command length argument structures
+    //Unpack unsigned char* frame into structured values
+    //Here, unpacking happens in the loop below.
+    //_args_cmdSetMoveQueue* argsPtr;
+    int idx = sizeof (count); //should be an unsigned int, sizeof(uint) = 2
 
-
-/*
-tpydef union {
-	struct {
-		int dc1;
-		int dc2;
-	} vars;
-	unsigned char raw[sizeof(vars)];
-} _args_cmdSetThrustOpenLoop;*/
+    tailCmdT tailcmd;
+    int i;
+    for (i = 0; i < count; i++) {
+        tailcmd = (tailCmdT) malloc(sizeof (tailCmdStruct));
+        //argsPtr = (_args_cmdSetMoveQueue*)(frame+idx);
+        /*move->inputL = argsPtr->inputL;
+        move->inputR = argsPtr->inputR;
+        move->duration = argsPtr->duration;
+        move->type = argsPtr->type;
+        move->params[0] = argsPtr->params[0];
+        move->params[1] = argsPtr->params[1];
+        move->params[2] = argsPtr->params[2];*/
+        *tailcmd = *((tailCmdT) (frame + idx));
+        tailqPush(tailq, tailcmd);
+        //idx =+ sizeof(_args_cmdSetMoveQueue);
+        idx += sizeof (tailCmdStruct);
+    }
+}
