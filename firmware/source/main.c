@@ -25,9 +25,9 @@
 #include "adc_pid.h"
 #include "steering.h"
 #include "telem.h"
+#include "hall.h"
 
-#include <stdio.h>
-#include "stdlib.h"
+#include <stdlib.h>
 
 extern unsigned char id[4];
 
@@ -66,9 +66,14 @@ int main(void) {
     mcSetup();
     cmdSetup();
     adcSetup();
+#ifdef HALL_SENSOR
+    hallSetup();
+    //hallSteeringSetup(); //doesn't exist yet
+#else //No hall sensors, standard BEMF control
     legCtrlSetup();
-    pidSetup();
     steeringSetup();
+#endif
+
     //ovcamSetup();
 
     //radioReadTrxId(id);

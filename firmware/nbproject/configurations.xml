@@ -38,6 +38,7 @@
         <itemPath>../../imageproc-lib/dfmem.h</itemPath>
         <itemPath>../../imageproc-lib/i2c_driver.h</itemPath>
         <itemPath>../lib/leg_ctrl.h</itemPath>
+        <itemPath>../lib/hall.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
     </logicalFolder>
@@ -80,6 +81,7 @@
         <itemPath>../lib/telem.c</itemPath>
         <itemPath>../lib/steering.c</itemPath>
         <itemPath>../lib/leg_ctrl.c</itemPath>
+        <itemPath>../lib/hall.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
@@ -498,7 +500,7 @@
         <property key="general-code-protect" value="no_code_protect"/>
         <property key="general-write-protect" value="no_write_protect"/>
         <property key="generate-cross-reference-file" value="false"/>
-        <property key="heap-size" value="4096"/>
+        <property key="heap-size" value="8192"/>
         <property key="input-libraries" value=""/>
         <property key="linker-symbols" value=""/>
         <property key="map-file" value="&quot;${DISTDIR}/firmware.${IMAGE_TYPE}.map&quot;"/>
@@ -515,7 +517,7 @@
         <property key="secure-flash" value="no_flash"/>
         <property key="secure-ram" value="no_ram"/>
         <property key="secure-write-protect" value="no_write_protect"/>
-        <property key="stack-size" value="256"/>
+        <property key="stack-size" value="1024"/>
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>
