@@ -8,6 +8,13 @@
 
 #define NUM_MOTOR_PIDS 2
 
+// These defines will make a correspondance for other modules calling the
+// functions below that take in a "num" for a given motor.
+//motor_pidObjs[0] --> Left Legs
+//motor_pidObjs[1] --> Right legs
+#define LEG_CTRL_LEFT  0
+#define LEG_CTRL_RIGHT 1
+
 void legCtrlSetup();
 void SetupTimer1(void);
 unsigned long getT1_ticks();

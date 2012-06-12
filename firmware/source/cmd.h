@@ -58,7 +58,11 @@ typedef struct{
 
 //cmdSetThrustClosedLoop
 typedef struct{
-	int chan1, chan2;
+	int chan1;
+        unsigned int runtime1;
+        int chan2;
+        unsigned int runtime2;
+        unsigned int telem_samples;
 } _args_cmdSetThrustClosedLoop;
 
 //cmdSetPIDGains

@@ -86,7 +86,7 @@ def downloadTelemetry(numSamples):
     #Wait for run length before starting download
     time.sleep((shared.runtime + shared.leadinTime + shared.leadoutTime)/1000.0 + 1)
     
-    raw_input("Press any key to start readback ...")
+    raw_input("Press Enter to start readback ...")
     print "started readback"
     xb_send(shared.xb, shared.DEST_ADDR, 0, command.FLASH_READBACK, pack('=L',numSamples))
 
@@ -102,7 +102,7 @@ def downloadTelemetry(numSamples):
         dlProgress(numSamples -shared.imudata.count([]) , numSamples)
         if (time.time() - shared.last_packet_time) > shared.readback_timeout:
             print "\nReadback timeout exceeded, restarting."
-            raw_input("Press any key to start readback ...")
+            raw_input("Press Enter to start readback ...")
             shared.imudata = [ [] ] * numSamples
             print "started readback"
             dlStart = time.time()

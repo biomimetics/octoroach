@@ -88,12 +88,14 @@ def main():
         sys.stdout.write(outstring)
         sys.stdout.flush()
         
-        #setMotorSpeeds(left_throt, right_throt)
+        setMotorSpeeds(left_throt, right_throt)
         ### FOR REVERSED MOTORS:
-        setMotorSpeeds(right_throt, left_throt)
-        ###
-        #xb_send(0,command.SET_THRUST_OPEN_LOOP,pack('2h',*throttle))
+        #setMotorSpeeds(right_throt, left_throt)
+
         time.sleep(0.05) #efective debounce, or rate limiting
+
+
+
 
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better

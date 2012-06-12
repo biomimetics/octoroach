@@ -179,7 +179,7 @@ void serviceMotionPID() {
     updateBEMF();
 
     /////////// PID Section //////////
-#ifdef PID_SOFTWARE
+
     int j;
     for (j = 0; j < NUM_MOTOR_PIDS; j++) {
         //We are now measuring battery voltage directly via AN0,
@@ -193,8 +193,17 @@ void serviceMotionPID() {
             //TODO: Do we want to add provisions to track error, even when
             //the output is switched off?
 
+#ifdef PID_SOFTWARE
             //Update values
             pidUpdate(&(motor_pidObjs[j]), bemf[j]);
+#elif defined PID_HARDWARE
+            //Apply scaling, update, remove scaling for consistency
+            int temp;
+            temp = motor_pidObjs[j].input; //Save unscaled input val
+            motor_pidObjs[j].input *= MOTOR_PID_SCALER; //Scale input
+            pidUpdate(&(motor_pidObjs[j]), MOTOR_PID_SCALER* bemf[j]);
+            motor_pidObjs[j].input = temp;  //Reset unscaled input
+#endif //PID_SOFTWWARE vs PID_HARDWARE
 
             //Set PWM duty cycle
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
@@ -204,28 +213,6 @@ void serviceMotionPID() {
         }
 
     } // end of for(j)
-
-#elif defined PID_HARDWARE
-    int temp;
-    int j;
-    for (j = 0; j < NUM_MOTOR_PIDS; j++) {
-        if (motor_pidObjs[j].onoff) {
-            //pidSetReference(&PID1, pidObjs[0].input);
-            //pidHWSetReference(&(motor_pidObjs[j].dspPID), 
-            //        MOTOR_PID_ERR_SCALER * motor_pidObjs[j].input);
-            temp = motor_pidObjs[j].input; //Save unscaled input val
-            motor_pidObjs[j].input *= MOTOR_PID_SCALER; //Scale input
-            pidUpdate(&(motor_pidObjs[j]),
-                     MOTOR_PID_SCALER * bemf[j]); //Update with scaled feedback
-            motor_pidObjs[j].input = temp;  //Reset unscaled input
-
-            SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
-        } else if (PID_ZEROING_ENABLE) { //Zero DC
-            SetDCMCPWM(legCtrlOutputChannels[j], 0, 0);
-        }
-
-    } //end for(j)
-#endif //PID_SOFTWWARE vs PID_HARDWARE
 }
 
 
