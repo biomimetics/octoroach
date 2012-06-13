@@ -14,7 +14,7 @@ from or_helpers import *
 
 ###### Operation Flags ####
 SAVE_DATA = True
-RESET_ROBOT = False   #Note: This MUST be False if you're using an XBee
+RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
 def main():    
@@ -54,18 +54,16 @@ def main():
     setSteeringGains(steeringGains)
 
     #Constant example
-    #moves = 3
-    #moveq = [moves, \
-    #         0, 0, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         100, 100, 5000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         50, 50, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+    moves = 1
+    moveq = [moves, \
+             0, 0, 35000,   MOVE_SEG_CONSTANT, 0, 0, 0]
 
     #Ramp example
-    moves = 3
-    moveq = [moves, \
-        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-        150, 150, 3000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
+    #moves = 3
+    #moveq = [moves, \
+    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+    #    150, 150, 3000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)

@@ -32,9 +32,6 @@ filterAvgInt_t gyroZavg;
 
 unsigned int steeringMode;
 
-//Gyro offsets
-//extern int offsx, offsy, offsz;
-
 //extern pidObj pidObjs[NUM_PIDS];
 //extern int bemf[NUM_PIDS];
 

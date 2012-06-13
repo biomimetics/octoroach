@@ -15,6 +15,23 @@
 #define LEG_CTRL_LEFT  0
 #define LEG_CTRL_RIGHT 1
 
+//Default gains
+#ifdef PID_SOFTWARE
+#define LEG_DEFAULT_KP  200
+#define LEG_DEFAULT_KI  5
+#define LEG_DEFAULT_KD  0
+#define LEG_DEFAULT_KAW 5
+#define LEG_DEFAULT_KFF  0
+#define SOFT_GAIN_SCALER 512
+#elif defined PID_HARDWARE
+#define LEG_DEFAULT_KP  15000
+#define LEG_DEFAULT_KI  500
+#define LEG_DEFAULT_KD  150
+#define LEG_DEFAULT_KAW 0
+#define LEG_DEFAULT_KFF  0
+#define MOTOR_PID_SCALER 32
+#endif
+
 void legCtrlSetup();
 void SetupTimer1(void);
 unsigned long getT1_ticks();

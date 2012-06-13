@@ -115,7 +115,8 @@ void legCtrlSetup() {
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
 #endif
-        pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_KFF);
+        pidInitPIDObj(&(motor_pidObjs[i]), LEG_DEFAULT_KP, LEG_DEFAULT_KI,
+                LEG_DEFAULT_KD, LEG_DEFAULT_KAW, LEG_DEFAULT_KFF);
         //Set up max's and saturation values
         motor_pidObjs[i].satValPos = SATTHROT;
         motor_pidObjs[i].satValNeg = 0;

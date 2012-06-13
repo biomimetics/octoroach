@@ -7,9 +7,6 @@
 #ifndef __CMD_CONST_H
 #define __CMD_CONST_H
 
-#define CMD_VECTOR_SIZE				0xFF //full length vector
-#define MAX_CMD_FUNC				0x8F
-
 // CMD values of 0x00(0) - 0x3F(127) are defined here
 
 // for bootloader (0x00 - 0x1F)

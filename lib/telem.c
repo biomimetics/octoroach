@@ -43,7 +43,7 @@ static int telemSkip;
 
 ////   Private functions
 ////////////////////////
-void telemSetSavesToSave(unsigned long n){
+void telemSetSamplesToSave(unsigned long n){
 	samplesToSave = n;
 }
 

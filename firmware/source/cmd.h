@@ -11,20 +11,28 @@
 
 //// Includes here should be to provide TYPES and ENUMS only
 #include "move_queue.h"
+#include "hall.h"
+
+#define CMD_VECTOR_SIZE				0xFF //full length vector
+#define MAX_CMD_FUNC				0x9F
 
 #define CMD_SET_THRUST_OPENLOOP     0x80
 #define CMD_SET_THRUST_CLOSEDLOOP   0x81
-#define CMD_SET_PID_GAINS  			0x82
-#define CMD_GET_PID_TELEMETRY		0x83
-#define CMD_SET_CTRLD_TURN_RATE		0x84
+#define CMD_SET_PID_GAINS           0x82
+#define CMD_GET_PID_TELEMETRY       0x83
+#define CMD_SET_CTRLD_TURN_RATE     0x84
 #define CMD_GET_IMU_LOOP_ZGYRO      0x85
-#define CMD_SET_MOVE_QUEUE	        0x86
+#define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
 #define CMD_SPECIAL_TELEMETRY       0x89
 #define CMD_ERASE_SECTORS           0x8A
 #define CMD_FLASH_READBACK          0x8B
-#define CMD_SLEEP					0x8C
+#define CMD_SLEEP                   0x8C
+#define CMD_SET_VEL_PROFILE         0x8D
+#define CMD_WHO_AM_I                0x8E
+#define CMD_START_TELEM             0x8F
+#define CMD_ZERO_POS                0x90
 
 
 //Argument lengths
@@ -116,6 +124,15 @@ typedef struct{
 
 //cmdSleep
 
+//cmdSetVelProfile
+typedef struct{
+    int intervalsL[NUM_VELS];
+    int deltaL[NUM_VELS];
+    int velL[NUM_VELS];
+    int intervalsR[NUM_VELS];
+    int deltaR[NUM_VELS];
+    int velR[NUM_VELS];
+} _args_cmdSetVelProfile;
 
 #endif // __CMD_H
 

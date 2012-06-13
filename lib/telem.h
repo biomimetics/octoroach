@@ -38,7 +38,7 @@ typedef union packedTelemUnion {
 void telemReadbackSamples(unsigned long);
 void telemSendDataDelay(unsigned char, unsigned char*, int delaytime_ms);
 void telemSaveData(telemU *data);
-void telemSetSavesToSave(unsigned long n);
+void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 int telemISRHandler();
 

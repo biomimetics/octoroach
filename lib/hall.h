@@ -75,7 +75,7 @@ typedef struct {
 void hallSetup();
 void hallUpdatePID(pidPos *pid);
 void hallInitPIDVelProfile();
-void hallSetPIDVelProfile(int pid_num, int *interval, int *delta, int *vel);
+void hallSetVelProfile(int pid_num, int *interval, int *delta, int *vel);
 void hallInitPIDObj(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int ff);
 void hallInitPIDObjPos(pidPos *pid, int Kp, int Ki, int Kd, int Kaw, int ff);
 void hallPIDSetInput(int pid_num, int input_val, unsigned int run_time);
@@ -86,5 +86,6 @@ void hallGetSetpoint();
 void hallSetControl();
 void hallPIDOn(int pid_num);
 void hallZeroPos(int pid_num);
+long* hallGetMotorCounts();
 
 #endif // __HALL_H

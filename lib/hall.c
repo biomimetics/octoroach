@@ -515,3 +515,7 @@ void hallInitPIDObj(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int Kff) {
     pid->onoff = 0;
     pid->error = 0;
 }
+
+long* hallGetMotorCounts(){
+    return motor_count;
+}
