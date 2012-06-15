@@ -20,6 +20,8 @@
 #include "incap.h" // input capture
 #include <stdlib.h> // for malloc
 
+//#define HALL_SENSOR
+
 //Private Functions
 void hallSetupTimer1(void);
 void SetupTimer2(void);

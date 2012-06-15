@@ -66,6 +66,7 @@ int main(void) {
     mcSetup();
     cmdSetup();
     adcSetup();
+//
 #ifdef HALL_SENSOR
     hallSetup();
     //hallSteeringSetup(); //doesn't exist yet
@@ -83,7 +84,7 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    //if(phyGetState() == 0x16)  { LED_GREEN = 1; }
+    if(phyGetState() == 0x16)  { LED_GREEN = 1; }
 
     //Sleeping and low power options
     //_VREGS = 1;

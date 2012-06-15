@@ -48,22 +48,22 @@ def main():
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
     #
-    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
-    #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
+    #steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
+    steeringGains = [200,5,0,0,0,  STEER_MODE_DECREASE]
     #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
 
     #Constant example
-    moves = 1
-    moveq = [moves, \
-             0, 0, 35000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+    #moves = 1
+    #moveq = [moves, \
+    #         150, 150, 5000,   MOVE_SEG_CONSTANT, 0, 0, 0]
 
     #Ramp example
-    #moves = 3
-    #moveq = [moves, \
-    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-    #    150, 150, 3000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
+    moves = 3
+    moveq = [moves, \
+        0,   0,   1000,   MOVE_SEG_RAMP,    300, 300, 0,
+        300, 300, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        300, 300, 1000,   MOVE_SEG_RAMP, -300,  -300,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
