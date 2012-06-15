@@ -11,7 +11,8 @@
 #include "move_queue.h"
 #include "math.h"
 #include "steering.h"
-#include<dsp.h>
+#include "sys_service.h"
+#include <dsp.h>
 #include <stdlib.h> // for malloc
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
@@ -39,73 +40,61 @@ MoveQueue moveq;
 moveCmdT currentMove, idleMove;
 unsigned long currentMoveStart, moveExpire;
 
+//BEMF related variables; we store a history of the last 3 values,
+//but also provide variables for the "current" and "last" values for clarity
+//in code below
 int bemf[NUM_MOTOR_PIDS]; //used to store the true, unfiltered speed
 int bemfLast[NUM_MOTOR_PIDS]; // Last post-median-filter value
 int bemfHist[NUM_MOTOR_PIDS][3]; //This is ONLY for applying the median filter to
 int medianFilter3(int*);
 
+//This is an array to map legCtrl controller to PWM output channels
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
 volatile char inMotion;
 
 //Local scope functions
-//TIMER1 driven
 static void serviceMoveQueue(void);
 static void moveSynth();
 static void serviceMotionPID();
 static void updateBEMF();
 
-/*static struct piddata {
-    int output[NUM_MOTOR_PIDS];
-    unsigned int measurements[NUM_MOTOR_PIDS];
-    long p[2], i[2], d[2];
-} PIDTelemData;
- */
+//Function to be installed into T1, and setup function
+static void SetupTimer1(void);
+static void legCtrlServiceRoutine(void);  //To be installed with sysService
 
 
-//////////////   Timer 1   ///////////////
-void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-
+/////////        Leg Control ISR       ////////
+/////////  Installed to Timer1 @ 1Khz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
+void legCtrlServiceRoutine(void){
     serviceMoveQueue();
-    moveSynth();
-
-    serviceMotionPID();
-
-    //Timer1 runs at 1kHz; t1_ticks is a ms counter
-    t1_ticks++;
-
-    //Clear Timer1 interrupt flag
-    _T1IF = 0;
+    moveSynth();         //TODO: port to synth module
+    serviceMotionPID();  //Update controllers
 }
 
-void SetupTimer1(void) {
+static void SetupTimer1(void) {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
             T1_SYNC_EXT_OFF & T1_IDLE_CON;
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
     //T1PERvalue = 0x9C40/2;
-    t1_ticks = 0;
-    OpenTimer1(T1CON1value, T1PERvalue);
-    ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
+    //t1_ticks = 0;
+    //OpenTimer1(T1CON1value, T1PERvalue);
+    //ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
+    int retval;
+    retval = sysServiceConfigT1(T1CON1value, T1PERvalue, T1_INT_PRIOR_6 & T1_INT_ON);
+    //TODO: Put a soft trap here, conditional on retval
 }
 
-unsigned long getT1_ticks(){
-    return t1_ticks;
-}
-
-/////////////////////////////////////////
 
 
 
 void legCtrlSetup() {
     int i;
-    motor_abcCoeffs[0][0] = 1;
-    motor_abcCoeffs[0][1] = 2;
-    motor_abcCoeffs[0][2] = 3;
-    motor_abcCoeffs[1][0] = 1;
-    motor_abcCoeffs[1][1] = 2;
-    motor_abcCoeffs[2][2] = 3;
+
+    //Setup for PID controllers
     for (i = 0; i < NUM_MOTOR_PIDS; i++) {
 #ifdef PID_HARDWARE
         //THe user is REQUIRED to set up these pointers before initializing
@@ -115,7 +104,8 @@ void legCtrlSetup() {
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
 #endif
-        pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_KFF);
+        pidInitPIDObj(&(motor_pidObjs[i]), LEG_DEFAULT_KP, LEG_DEFAULT_KI,
+                LEG_DEFAULT_KD, LEG_DEFAULT_KAW, LEG_DEFAULT_KFF);
         //Set up max's and saturation values
         motor_pidObjs[i].satValPos = SATTHROT;
         motor_pidObjs[i].satValNeg = 0;
@@ -128,6 +118,8 @@ void legCtrlSetup() {
     legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
 
     SetupTimer1(); //this should be decoupled from the PID controllers
+    int retval;
+    retval = sysServiceInstallT1(legCtrlServiceRoutine);
     //ADC_OffsetL = 1; //prevent divide by zero errors
     //ADC_OffsetR = 1;
 

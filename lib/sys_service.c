@@ -3,6 +3,8 @@
 #include "sys_service.h"
 #include "timer.h"
 
+
+
 //This is a generic macro that will allow us to define all the timer
 //handlers below in a compact manner.
 #define SYS_SERVICE_BUILD(TN) \
@@ -27,22 +29,19 @@
             return -1; \
         }
 
-int test __attribute__ ((weak));
 
+// Setup Function
 void sysServiceSetup(){
-    int b = test;
+//TODO: Decide what goes here
 }
 
-#define SYS_SERVICE_T1
-
-
+///// Timer 1 /////
 #ifdef SYS_SERVICE_T1
-SYS_SERVICE_BUILD(T1)
-/*
- * unsigned int installedT1 = 0;
+
+unsigned int installedIdxT1 = 0;
 unsigned long sys_T1_ticks = 0;
 static void (*serviceVectorT1[SERVICE_VECT_LEN])(void);
-
+static char T1_already_confgured = 0;
 //Timer 1 Service ISR
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
@@ -56,28 +55,33 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 }
 
 //Timer 1 install function
-static int sysTimerInstallT1(void* func){
-    if(installedT1 < SERVICE_VECT_LEN){
-        installedT1++;
-        serviceVectorT1[installedT1] = func;
+int sysServiceInstallT1(void* func){
+    if(installedIdxT1 < SERVICE_VECT_LEN){
+        installedIdxT1++;
+        serviceVectorT1[installedIdxT1] = func;
         return 0; //succesful install
     }
     return -1; //Error, no more room
-}*/
-#endif
+}
 
-#ifdef SYS_SERVICE_T3
-SYS_SERVICE_BUILD(T3)
-#endif
+//Timer 1 setup function
+int sysServiceConfigT1(unsigned int t1conval, unsigned int t1perval,
+                        unsigned int t1intconval){
+    //Todo: is there any way to have a compile time semaphore here?
+    if(T1_already_confgured){
+        return -1;
+    } 
+    else{
+        T1_already_confgured = 1;
+        OpenTimer1(t1conval, t1perval);
+        ConfigIntTimer1(t1intconval);
+        return 0;
+    }
+}
 
-#ifdef SYS_SERVICE_T4
-SYS_SERVICE_BUILD(T4)
-#endif
+//T1 ticks getter
+unsigned long getT1_ticks(){
+    return sys_T1_ticks;
+}
 
-#ifdef SYS_SERVICE_T5
-SYS_SERVICE_BUILD(T5)
-#endif
-
-#ifdef SYS_SERVICE_T6
-SYS_SERVICE_BUILD(T6)
 #endif

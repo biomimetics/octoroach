@@ -10,6 +10,15 @@
 
 #define SERVICE_VECT_LEN 8
 
+//This will pull in sysService enabling definitions
+#include "pullin_const.h"
+
+#ifdef SYS_SERVICE_T1
+int sysServiceInstallT1(void* func);
+int sysServiceConfigT1(unsigned int t1conval, unsigned int t1perval,
+                        unsigned int t1intconval);
+unsigned long getT1_ticks();
+#endif
 
 #endif	//__SYS_SERVICE_H
 

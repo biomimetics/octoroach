@@ -20,6 +20,8 @@
 //Hard code in destination address for now, update to be dynamic later
 #define DST_ADDR		0x2051
 
+//sysService enabling defines
+#define SYS_SERVICE_T1
 
 
 #endif //__PULLIN_CONST_H
