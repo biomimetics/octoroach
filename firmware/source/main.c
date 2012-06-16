@@ -25,9 +25,9 @@
 #include "adc_pid.h"
 #include "steering.h"
 #include "telem.h"
+#include "hall.h"
 
-#include <stdio.h>
-#include "stdlib.h"
+#include <stdlib.h>
 
 extern unsigned char id[4];
 
@@ -65,9 +65,16 @@ int main(void) {
     mcSetup();
     cmdSetup();
     adcSetup();
+    telemSetup();
+//
+#ifdef HALL_SENSOR
+    hallSetup();
+    //hallSteeringSetup(); //doesn't exist yet
+#else //No hall sensors, standard BEMF control
     legCtrlSetup();
     steeringSetup();
-    telemSetup();
+#endif
+
     //ovcamSetup();
 
     //radioReadTrxId(id);
@@ -77,7 +84,7 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    //if(phyGetState() == 0x16)  { LED_GREEN = 1; }
+    if(phyGetState() == 0x16)  { LED_GREEN = 1; }
 
     //Sleeping and low power options
     //_VREGS = 1;
