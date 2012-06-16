@@ -24,8 +24,6 @@ pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
 fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
 
-//Timer 1 related variables
-volatile unsigned long t1_ticks;
 //Counter for blinking the red LED during motion
 int blinkCtr;
 
@@ -53,21 +51,19 @@ int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
 volatile char inMotion;
 
-//Local scope functions
+//Function to be installed into T1, and setup function
+static void SetupTimer1(void);
+static void legCtrlServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
 static void serviceMoveQueue(void);
 static void moveSynth();
 static void serviceMotionPID();
 static void updateBEMF();
 
-//Function to be installed into T1, and setup function
-static void SetupTimer1(void);
-static void legCtrlServiceRoutine(void);  //To be installed with sysService
-
-
 /////////        Leg Control ISR       ////////
 /////////  Installed to Timer1 @ 1Khz  ////////
 //void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-void legCtrlServiceRoutine(void){
+static void legCtrlServiceRoutine(void){
     serviceMoveQueue();
     moveSynth();         //TODO: port to synth module
     serviceMotionPID();  //Update controllers
@@ -80,15 +76,13 @@ static void SetupTimer1(void) {
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
     //T1PERvalue = 0x9C40/2;
-    //t1_ticks = 0;
+    //getT1_ticks() = 0;
     //OpenTimer1(T1CON1value, T1PERvalue);
     //ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
     int retval;
     retval = sysServiceConfigT1(T1CON1value, T1PERvalue, T1_INT_PRIOR_6 & T1_INT_ON);
     //TODO: Put a soft trap here, conditional on retval
 }
-
-
 
 
 void legCtrlSetup() {
@@ -268,10 +262,10 @@ void serviceMoveQueue(void) {
     //Service Move Queue if not empty
     if (!mqIsEmpty(moveq)) {
         inMotion = 1;
-        if ((currentMove == idleMove) || (t1_ticks >= moveExpire)) {
+        if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
-            moveExpire = t1_ticks + currentMove->duration;
-            currentMoveStart = t1_ticks;
+            moveExpire = getT1_ticks() + currentMove->duration;
+            currentMoveStart = getT1_ticks();
             steeringOn();
 
             //If we are no on an Idle move, turn on controllers
@@ -281,7 +275,7 @@ void serviceMoveQueue(void) {
             }
         }
     }    //Move Queue is empty
-    else if ((t1_ticks >= moveExpire) && currentMove != idleMove) {
+    else if ((getT1_ticks() >= moveExpire) && currentMove != idleMove) {
         //No more moves, go back to idle
         currentMove = idleMove;
         pidSetInput(&(motor_pidObjs[0]), 0);
@@ -313,8 +307,8 @@ static void moveSynth() {
             long rateL = (long) currentMove->params[0];
             long rateR = (long) currentMove->params[1];
             //Do division last to prevent integer math underflow
-            yL = rateL * ((long) t1_ticks - (long) currentMoveStart) / 1000 + ySL;
-            yR = rateR * ((long) t1_ticks - (long) currentMoveStart) / 1000 + ySR;
+            yL = rateL * ((long) getT1_ticks() - (long) currentMoveStart) / 1000 + ySL;
+            yR = rateR * ((long) getT1_ticks() - (long) currentMoveStart) / 1000 + ySR;
         }
         if (currentMove->type == MOVE_SEG_SIN) {
             //float temp = 1.0/1000.0;
@@ -324,15 +318,11 @@ static void moveSynth() {
 #define BAMS16_TO_FLOAT 1/10430.367658761737
             float phase = BAMS16_TO_FLOAT * (float) currentMove->params[2]; //binary angle
             //Must be very careful about underflow & overflow here!
-            //long arg = 2*BAMS16_PI*mF/100;
-            //arg = arg*(t1_ticks - currentMoveStart)/10 - phase;
-            //float fyL = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySL;
-            //float fyR = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySR;
-            float fyL = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + ySL;
-            float fyR = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + ySR;
+            float fyL = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() - currentMoveStart)*0.001 - phase) + ySL;
+            float fyR = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() - currentMoveStart)*0.001 - phase) + ySR;
 
 
-            //fractional arg = 2*(long)F*((long)t1_ticks-(long)currentMoveStart) *
+            //fractional arg = 2*(long)F*((long)getT1_ticks()-(long)currentMoveStart) *
             //fractional temp = _Q15sinPI(arg);
             //fractional wave = (int)((long)temp*(long)amp >> 15);
 

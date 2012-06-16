@@ -14,6 +14,7 @@
 //Inline functions
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
+//Steering controller variables
 pidObj steeringPID;
 int steeringIsOn;
 
@@ -22,25 +23,56 @@ fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory"
 
 //Averaging filter structures for gyroscope data
 //Initialzied in setup.
-//filterAvgInt_t gyroXavg, gyroYavg, gyroZavg;
-filterAvgInt_t gyroZavg;
+filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
 #define GYRO_AVG_SAMPLES 	32
 
 #define GYRO_DRIFT_THRESH 3
 
-//unsigned int orientSkip = 0;
-
-unsigned int steeringMode;
-
-//Gyro offsets
-//extern int offsx, offsy, offsz;
-
-//extern pidObj pidObjs[NUM_PIDS];
-//extern int bemf[NUM_PIDS];
+static unsigned int steeringMode;
 
 extern moveCmdT currentMove, idleMove;
 
-static void setupTimer5();
+//Function to be installed into T5, and setup function
+static void SetupTimer5();
+static void steeringServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
+static void steeringHandleISR();
+
+
+////   Private functions
+////////////////////////
+
+/////////        Steering ISR          ////////
+////////  Installed to Timer5 @ 300hz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
+static void steeringServiceRoutine(void){
+    //This intermediate function is used in case we want to tie other
+    //sub-taks to the steering service routine.
+    //TODO: Is this neccesary?
+
+    // Steering update ISR handler
+    steeringHandleISR();
+}
+
+static void setupTimer5(){
+    ///// Timer 5 setup, Steering ISR, 300Hz /////
+    // period value = Fcy/(prescale*Ftimer)
+    unsigned int T5CON1value, T5PERvalue;
+    // prescale 1:64
+    T5CON1value = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
+    // Period is set so that period = 5ms (200Hz), MIPS = 40
+    //period = 3125; // 200Hz
+    T5PERvalue = 2083; // ~300Hz
+    int retval;
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    //OpenTimer5(con_reg, period);
+    //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
+}
+
+
+
+////   Public functions
+////////////////////////
 
 void steeringSetup(void) {
 
@@ -58,6 +90,8 @@ void steeringSetup(void) {
     steeringSetAngRate(0);
 
     setupTimer5(); //T5 ISR will update the steering controller
+    int retval;
+    retval = sysServiceInstallT5(steeringServiceRoutine);
 
     //Averaging filter setup:
     //filterAvgCreate(&gyroXavg, GYRO_AVG_SAMPLES);
@@ -69,36 +103,6 @@ void steeringSetup(void) {
 
     steeringMode = STEERMODE_DECREASE;
 }
-
-
-///////////////////   Timer 5   ///////////////////////////
-void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
-
-    // Steering update ISR handler
-    steeringHandleISR();
-
-    // Section for saving telemetry data to flash
-    // Uses telemSkip as a divisor to T5.
-    telemISRHandler();
-
-    _T5IF = 0;
-}
-
-void setupTimer5(){
-    ///// Timer 5 setup, Steering ISR, 300Hz /////
-    // period value = Fcy/(prescale*Ftimer)
-    unsigned int con_reg, period;
-    // prescale 1:64
-    con_reg = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
-    // Period is set so that period = 5ms (200Hz), MIPS = 40
-    //period = 3125; // 200Hz
-    period = 2083; // ~300Hz
-    OpenTimer5(con_reg, period);
-    ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
-}
-////////////////////////////////////////////////////////////
-
-
 
 void steeringSetAngRate(int angRate) {
     steeringPID.input = angRate;
@@ -112,7 +116,7 @@ void steeringSetMode(unsigned int sm) {
     steeringMode = sm;
 }
 
-void steeringHandleISR() {
+static void steeringHandleISR() {
 
     //int gyroAvg[3];
     int gyroAvgZ;

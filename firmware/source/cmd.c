@@ -483,7 +483,9 @@ static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsi
 }
 
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame) {
+#ifndef __DEBUG
     asm volatile("reset");
+#endif
 }
 
 static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {

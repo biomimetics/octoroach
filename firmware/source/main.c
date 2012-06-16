@@ -31,7 +31,6 @@
 
 extern unsigned char id[4];
 
-extern volatile unsigned long t1_ticks;
 volatile unsigned long wakeTime;
 extern volatile char g_radio_duty_cycle;
 extern volatile char inMotion;
@@ -68,6 +67,7 @@ int main(void) {
     adcSetup();
     legCtrlSetup();
     steeringSetup();
+    telemSetup();
     //ovcamSetup();
 
     //radioReadTrxId(id);

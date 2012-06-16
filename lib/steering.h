@@ -7,7 +7,6 @@ void steeringSetup(void);
 void steeringSetAngRate(int angRate);
 void steeringSetGains(int Kp,int Ki,int Kd,int Kawm, int ff);
 void steeringSetMode(unsigned int mode);
-void steeringHandleISR();
 void steeringApplyCorrection(int* inputs, int* outputs);
 void steeringOff();
 void steeringOn();

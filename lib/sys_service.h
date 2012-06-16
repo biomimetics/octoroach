@@ -15,9 +15,16 @@
 
 #ifdef SYS_SERVICE_T1
 int sysServiceInstallT1(void* func);
-int sysServiceConfigT1(unsigned int t1conval, unsigned int t1perval,
-                        unsigned int t1intconval);
+int sysServiceConfigT1(unsigned int T1conval, unsigned int T1perval,
+                        unsigned int T1intconval);
 unsigned long getT1_ticks();
+#endif
+
+#ifdef SYS_SERVICE_T5
+int sysServiceInstallT5(void* func);
+int sysServiceConfigT5(unsigned int T5conval, unsigned int t1perval,
+                        unsigned int T5intconval);
+unsigned long getT5_ticks();
 #endif
 
 #endif	//__SYS_SERVICE_H

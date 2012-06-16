@@ -14,6 +14,7 @@
 #include "dfilter_avg.h"
 #include "adc_pid.h"
 #include "leg_ctrl.h"
+#include "sys_service.h"
 
 #define TIMER_FREQUENCY     200                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -38,17 +39,39 @@ extern volatile char g_last_ackd;
 extern filterAvgInt_t gyroZavg;
 
 //Private variables
-static unsigned long samplesToSave;
-static int telemSkip;
+static unsigned long samplesToSave = 0;
+static int telemSkip = 0;
 
-////   Private functions
-////////////////////////
-void telemSetSavesToSave(unsigned long n){
-	samplesToSave = n;
+//Function to be installed into T5, and setup function
+//static void SetupTimer5(); // Done in steering module
+static void telemServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
+static void telemISRHandler(void);
+
+/////////        Telemtry ISR          ////////
+////////  Installed to Timer5 @ 300hz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
+static void telemServiceRoutine(void){
+    //This intermediate function is used in case we want to tie other
+    //sub-taks to the telemtry service routine.
+    //TODO: Is this neccesary?
+
+    // Section for saving telemetry data to flash
+    // Uses telemSkip as a divisor to T5.
+    telemISRHandler();
 }
 
 ////   Public functions
 ////////////////////////
+void telemSetup(){
+    int retval;
+    retval = sysServiceInstallT5(telemServiceRoutine);
+}
+
+void telemSetSavesToSave(unsigned long n){
+	samplesToSave = n;
+}
+
 void telemReadbackSamples(unsigned long numSamples)
 {
 	//unsigned int page, bufferByte;// maxpage;
@@ -61,7 +84,7 @@ void telemReadbackSamples(unsigned long numSamples)
 	
 	LED_GREEN = 1;
 	//Disable motion interrupts for readback
-	_T1IE = 0; _T5IE=0;
+	//_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
 	//while(!dfmemIsReady());
 
 	telemStruct_t sampleData;
@@ -83,10 +106,9 @@ void telemReadbackSamples(unsigned long numSamples)
 		//telem_index++;
 	}
 
-	_T1IE = 1; _T5IE=1;
+	//_T1IE = 1; _T5IE=1;
 	_LATB13 = 0;
 }
-
 
 
 void telemSendDataDelay(unsigned char data_length, unsigned char* data, int delaytime_ms)
@@ -122,7 +144,16 @@ void telemSaveData(telemU *data){
 	}
 }
 
-int telemISRHandler(){
+
+void telemErase(unsigned long numSamples){
+	dfmemEraseSectorsForSamples(numSamples, sizeof(telemU));
+}
+
+
+////   Private functions
+////////////////////////
+
+static void telemISRHandler(){
 	int samplesaved = 0;
 	telemU data;
 	int gyroAvg[3]; int gyroData[3]; int gyroOffsets[3];
@@ -167,9 +198,6 @@ int telemISRHandler(){
 		}
 	}
 	telemSkip = (telemSkip + 1) & ~SKIP_COUNT;
-	return samplesaved;
+	//return samplesaved;
 }
 
-void telemErase(unsigned long numSamples){
-	dfmemEraseSectorsForSamples(numSamples, sizeof(telemU));
-}

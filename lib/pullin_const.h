@@ -21,7 +21,8 @@
 #define DST_ADDR		0x2051
 
 //sysService enabling defines
-#define SYS_SERVICE_T1
+#define SYS_SERVICE_T1 // For legCtrl, hall
+#define SYS_SERVICE_T5 // For steering, telemetry
 
 
 #endif //__PULLIN_CONST_H
