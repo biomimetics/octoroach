@@ -81,6 +81,7 @@
         <itemPath>../lib/steering.c</itemPath>
         <itemPath>../lib/leg_ctrl.c</itemPath>
         <itemPath>../lib/sys_service.c</itemPath>
+        <itemPath>../lib/hall.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
@@ -502,6 +503,10 @@
           <property key="preprocessor-macros" value="__IMAGEPROC2;__RADIO_HIGH_DATA_RATE"/>
           <property key="scalar-model" value="default"/>
         </C30>
+        <C30-AS>
+        </C30-AS>
+        <C30-LD>
+        </C30-LD>
         <C30Global>
           <property key="fast-math" value="false"/>
           <property key="generic-16-bit" value="false"/>

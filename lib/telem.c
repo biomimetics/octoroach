@@ -43,7 +43,7 @@ static unsigned long samplesToSave = 0;
 static int telemSkip = 0;
 
 //Function to be installed into T5, and setup function
-//static void SetupTimer5(); // Done in steering module
+static void SetupTimer5(); // Might collide with setup in steering module!
 static void telemServiceRoutine(void);  //To be installed with sysService
 //The following local functions are called by the service routine:
 static void telemISRHandler(void);
@@ -61,14 +61,30 @@ static void telemServiceRoutine(void){
     telemISRHandler();
 }
 
+static void SetupTimer5(){
+    ///// Timer 5 setup, Steering ISR, 300Hz /////
+    // period value = Fcy/(prescale*Ftimer)
+    unsigned int T5CON1value, T5PERvalue;
+    // prescale 1:64
+    T5CON1value = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
+    // Period is set so that period = 5ms (200Hz), MIPS = 40
+    //period = 3125; // 200Hz
+    T5PERvalue = 2083; // ~300Hz
+    int retval;
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    //OpenTimer5(con_reg, period);
+    //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
+}
+
 ////   Public functions
 ////////////////////////
 void telemSetup(){
     int retval;
     retval = sysServiceInstallT5(telemServiceRoutine);
+    SetupTimer5();
 }
 
-void telemSetSavesToSave(unsigned long n){
+void telemSetSamplesToSave(unsigned long n){
 	samplesToSave = n;
 }
 

@@ -120,7 +120,7 @@ def setGain():
     while not(shared.motor_gains_set):
         print "Setting motor gains. Packet:",count
         count = count + 1
-        xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
+        xb_send(0, command.SET_HALL_GAINS, pack('10h',*motorgains))
         time.sleep(2)
         if count > 32:
             print "Count exceeded. Exit."
@@ -168,6 +168,16 @@ def proceed():
     
 def main():
     global duration
+    
+    shared.robotQueried = False
+    queries = 1
+    while not(shared.robotQueried) and (queries < shared.maxQueries):
+        print "Querying robot, try ",queries,"/",shared.maxQueries
+        xb_send(0, command.WHO_AM_I, "Robot Echo")
+        time.sleep(1)
+        queries = queries + 1
+        
+    
     dataFileName = 'imudata.txt'
     count = 0       # keep track of packet tries
     print "using robot address", hex(256* ord(DEST_ADDR[0])+ ord(DEST_ADDR[1]))
@@ -180,7 +190,7 @@ def main():
         print "Serial open. Using port",shared.BS_COMPORT
   
     setGain()
-    xb_send(0, command.WHO_AM_I, "Robot Echo")        
+          
     throttle = [0,0]
     tinc = 25;
     # time in milliseconds

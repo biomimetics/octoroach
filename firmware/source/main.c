@@ -37,6 +37,8 @@ extern volatile char inMotion;
 
 int dcCounter;
 
+#define HALL_SENSOR
+
 int main(void) {
 
     wakeTime = 0;
@@ -66,7 +68,7 @@ int main(void) {
     cmdSetup();
     adcSetup();
     telemSetup();
-//
+
 #ifdef HALL_SENSOR
     hallSetup();
     //hallSteeringSetup(); //doesn't exist yet

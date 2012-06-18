@@ -33,7 +33,7 @@
 #define CMD_WHO_AM_I                0x8E
 #define CMD_START_TELEM             0x8F
 #define CMD_ZERO_POS                0x90
-
+#define CMD_SET_HALL_GAINS          0x91
 
 //Argument lengths
 //lenghts are in bytes

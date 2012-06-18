@@ -9,7 +9,7 @@
 #include "hall.h"
 #include "adc_pid.h"
 #include "gyro.h"
-#include "steering.h"
+//#include "steering.h"
 #include "motor_ctrl.h"
 #include "timer.h"
 #include "adc_pid.h"
@@ -18,21 +18,23 @@
 #include "hall.h"
 #include "p33Fxxxx.h"
 #include "incap.h" // input capture
+#include "sys_service.h"
 #include <stdlib.h> // for malloc
 
-//#define HALL_SENSOR
-
 //Private Functions
-void hallSetupTimer1(void);
-void SetupTimer2(void);
-void SetupInputCapture(void);
-void hallUpdateBEMF(void);
+static void SetupTimer1(void);
+static void SetupTimer2(void);
+static void SetupInputCapture(void);
+static void hallUpdateBEMF(void);
+static void hallUpdatePID(pidPos *pid);
 int medianFilter3(int*);
+
+//Function to be installed into T1, and setup function
+static void hallServiceRoutine(void);
 
 ///////////////////////////////////
 /////// Local variables ///////////
 //////////////////////////////////
-int t2_ticks; // keep track of timer 2 overflow
 long old_right_time, right_time, right_delta; // time of last event
 // unsigned long tic, toc;
 long old_left_time, left_time, left_delta;
@@ -45,6 +47,8 @@ int hallbemf[NUM_HALL_PIDS]; //used to store the true, unfiltered speed
 int hallbemfLast[NUM_HALL_PIDS]; // Last post-median-filter value
 int hallbemfHist[NUM_HALL_PIDS][3]; //This is ONLY for applying the median filter to
 
+//This is an array to map legCtrl controller to PWM output channels
+int hallOutputChannels[NUM_HALL_PIDS];
 
 // PID control structure
 pidPos hallPIDObjs[NUM_HALL_PIDS];
@@ -57,9 +61,8 @@ hallVelLUT hallPIDVel[NUM_HALL_PIDS];
 unsigned long lastMoveTime;
 int seqIndex;
 
-//////////// 1khz timer //////////
-//extern volatile unsigned long t1_ticks;
-volatile unsigned long hall_t1_ticks;
+static void hallGetSetpoint();
+static void hallSetControl();
 
 ///////////////////////////////////
 /////// Private Functions /////////
@@ -69,32 +72,31 @@ volatile unsigned long hall_t1_ticks;
 // choose clock period = 6.4 us, divide FCY by 256
 
 // highest interrupt priority. runs at 1 kHZ
-void hallSetupTimer1(void)
+static void SetupTimer1(void)
 {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
                   T1_SYNC_EXT_OFF & T1_INT_PRIOR_7;
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
-	//T1PERvalue = 0x9C40/2;
-	hall_t1_ticks = 0;
-    OpenTimer1(T1CON1value, T1PERvalue);
+    int retval;
+    retval = sysServiceConfigT1(T1CON1value, T1PERvalue, T1_INT_PRIOR_6 & T1_INT_ON);
+    //TODO: Put a soft trap here, conditional on retval
 }
  
 //Timer 2 counts
-void SetupTimer2(void) {
+// Set up just to provide a tick counter at 400 Hz
+static void SetupTimer2(void) {
     unsigned int T2CON1value, T2PERvalue;
-    t2_ticks = 0;
     T2CON1value = T2_ON & T2_SOURCE_INT & T2_PS_1_256 & T2_GATE_OFF;
     T2PERvalue = 0xffff; // max period 
-    OpenTimer2(T2CON1value, T2PERvalue);
-    // enable interrupts, lower priority
-    ConfigIntTimer2(T2_INT_ON & T2_INT_PRIOR_6);
-    EnableIntT2;
+    int retval;
+    retval = sysServiceConfigT2(T2CON1value, T2PERvalue, T2_INT_PRIOR_6 & T2_INT_ON);
+    //TODO: Put a soft trap here, conditional on retval
 }
 
 
-void SetupInputCapture() {
+static void SetupInputCapture() {
     // RB4 and RB5 will be used for inputs
     _TRISB4 = 1; // set for input
     _TRISB5 = 1; // set for input
@@ -136,7 +138,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC8Interrupt(void) {
     //  toc = swatchToc(); // elapsed time since last rising edge
     // Insert ISR code here
     motor_count[0]++; // increment count for right side - neglect overflow/wrap around
-    right_time = (long) IC8BUF + ((long) (t2_ticks) << 16);
+    //right_time = (long) IC8BUF + ((long) (t2_ticks) << 16);
+    right_time = (long) IC8BUF + (getT2_ticks() << 16);
     right_delta = right_time - old_right_time;
     old_right_time = right_time;
 
@@ -150,7 +153,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC7Interrupt(void) {
     // Insert ISR code here
     motor_count[1]++; // increment count for right side - neglect overflow/wrap around
 
-    left_time = (long) IC7BUF + ((long) (t2_ticks) << 16);
+    //left_time = (long) IC7BUF + ((long) (t2_ticks) << 16);
+    left_time = (long) IC7BUF + (getT2_ticks() << 16);
     left_delta = left_time - old_left_time;
     old_left_time = left_time;
 
@@ -159,13 +163,14 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC7Interrupt(void) {
     IFS1bits.IC7IF = 0; // Clear CN interrupt
 }
 
-void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
-
-    t2_ticks++; // updates about every 400 ms
+/// Replaced by sys_service module
+//void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
+//
+//    t2_ticks++; // updates about every 400 ms
 
     //Clear Timer2 interrupt flag
-    _T2IF = 0;
-}
+//    _T2IF = 0;
+//}
 
 
 
@@ -177,6 +182,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 
 //Main hall effect sensor setup, called from main()
 void hallSetup() {
+    //Init of PID controller objects
     int i;
     for (i = 0; i < NUM_HALL_PIDS; i++) {
         hallInitPIDObjPos(&(hallPIDObjs[i]), DEFAULT_HALL_KP, DEFAULT_HALL_KI,
@@ -186,10 +192,20 @@ void hallSetup() {
         hallPIDObjs[i].maxVal = FULLTHROT;
         hallPIDObjs[i].satValPos = SATTHROT;
     }
+
+    // Controller to PWM channel correspondance
+    hallOutputChannels[0] = MC_CHANNEL_PWM1;
+    hallOutputChannels[1] = MC_CHANNEL_PWM2;
+
+    //Init for velocity profile objects
     hallInitPIDVelProfile();
-    hallSetupTimer1(); // Done in leg_ctrl
+
+    //System setup
+    SetupTimer1(); // potentially conflicts with legCtrl!
     SetupTimer2(); // used for leg hall effect sensors
     SetupInputCapture(); // setup input capture for hall effect sensors
+    int retval;
+    retval = sysServiceInstallT1(hallServiceRoutine);
 
     // returns pointer to queue with 8 move entries
     hallMoveq = mqInit(8);
@@ -263,7 +279,7 @@ void hallPIDSetInput(int pid_num, int input_val, unsigned int run_time) {
     unsigned long temp;
     hallPIDObjs[pid_num].v_input = input_val;
     hallPIDObjs[pid_num].run_time = run_time;
-    hallPIDObjs[pid_num].start_time = hall_t1_ticks;
+    hallPIDObjs[pid_num].start_time = getT1_ticks();
     //zero out running PID values
     hallPIDObjs[pid_num].i_error = 0;
     hallPIDObjs[pid_num].p = 0;
@@ -271,7 +287,7 @@ void hallPIDSetInput(int pid_num, int input_val, unsigned int run_time) {
     hallPIDObjs[pid_num].d = 0;
     //Seed the median filter
 
-    temp = hall_t1_ticks; // need atomic read due to interrupt
+    temp = getT1_ticks(); // need atomic read due to interrupt
     lastMoveTime = temp + (unsigned long) run_time; // only one run time for both sides
     // set initial time for next move set point
 
@@ -327,23 +343,22 @@ void hallZeroPos(int pid_num) {
 }
 
 
-
 /*********************** Motor Control Interrupt *********************************************/
 /*****************************************************************************************/
 
 /*****************************************************************************************/
 
-//This ifdef is required to prevent linker collisions
-#ifdef HALL_SENSORS
-//This needs to be reconciled with the T1 ISR in leg_ctrl
-void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
-{
 
+/////////        Hall Control ISR       ////////
+/////////  Installed to Timer1 @ 1Khz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
+static void hallServiceRoutine(void)
+{
     // debug Hall effect sensors //
     LED_GREEN = _RB4;
     LED_RED = _RB5;
 
-    if (hall_t1_ticks > lastMoveTime) // turn off if done running
+    if (getT1_ticks() > lastMoveTime) // turn off if done running
     { //	hallPIDSetInput(0, 0, 0);    don't reset state when done run, keep for recording telemetry
         hallPIDObjs[0].onoff = 0;
         //	hallPIDSetInput(1, 0, 0);
@@ -356,9 +371,8 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
     hallUpdateBEMF();
     hallSetControl();
 }
-#endif
 
-void hallGetSetpoint() {
+static void hallGetSetpoint() {
     int j, index;
 
     for (j = 0; j < NUM_HALL_PIDS; j++) {
@@ -366,7 +380,7 @@ void hallGetSetpoint() {
         // update desired position between setpoints, scaled by 256
         hallPIDVel[j].interpolate += hallPIDVel[j].vel[index];
 
-        if (hall_t1_ticks >= hallPIDVel[j].expire) // time to reach previous setpoint has passed
+        if (getT1_ticks() >= hallPIDVel[j].expire) // time to reach previous setpoint has passed
         {
             hallPIDVel[j].interpolate = 0;
             hallPIDObjs[j].p_input += hallPIDVel[j].delta[index]; //update to next set point
@@ -387,7 +401,7 @@ void hallGetSetpoint() {
     }
 }
 
-void hallSetControl() {
+static void hallSetControl() {
     int j;
     // 0 = right side
     for (j = 0; j < NUM_HALL_PIDS; j++) { //pidobjs[0] : right side
@@ -417,7 +431,7 @@ void hallSetControl() {
     } // end of for(j)
 }
 
-void hallUpdatePID(pidPos *pid) {
+static void hallUpdatePID(pidPos *pid) {
     pid->p = (long) pid->Kp * pid->p_error;
     pid->i = (long) pid->Ki * pid->i_error;
     pid->d = (long) pid->Kd * (long) pid->v_error;
@@ -439,11 +453,11 @@ void hallUpdatePID(pidPos *pid) {
         pid->output = pid->satValPos;
         pid->i_error = (long) pid->i_error + (long) (pid->Kaw) * ((long) (pid->satValPos) - (long) (pid->preSat)) / ((long) GAIN_SCALER);
     }
-    
+
 }
 
 //This duplicates functionalist in leg_ctrl
-void hallUpdateBEMF() {
+static void hallUpdateBEMF() {
     //Back EMF measurements are made automatically by coordination of the ADC, PWM, and DMA.
     //Copy to local variables. Not strictly neccesary, just for clarity.
     //This **REQUIRES** that the divider on the battery & BEMF circuits have the same ratio.
@@ -477,6 +491,10 @@ void hallUpdateBEMF() {
     hallbemfLast[0] = hallbemf[0]; //bemfLast will not be used after here, OK to set
     hallbemfLast[1] = hallbemf[1];
 }
+
+
+////   Public functions
+////////////////////////
 
 void hallInitPIDObjPos(pidPos *pid, int Kp, int Ki, int Kd, int Kaw, int Kff) {
     pid->p_input = 0;
@@ -518,6 +536,6 @@ void hallInitPIDObj(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int Kff) {
     pid->error = 0;
 }
 
-long* hallGetMotorCounts(){
+long* hallGetMotorCounts() {
     return motor_count;
 }

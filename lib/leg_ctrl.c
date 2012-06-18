@@ -111,7 +111,7 @@ void legCtrlSetup() {
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
     legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
 
-    SetupTimer1(); //this should be decoupled from the PID controllers
+    SetupTimer1(); // Timer 1 @ 1 Khz
     int retval;
     retval = sysServiceInstallT1(legCtrlServiceRoutine);
     //ADC_OffsetL = 1; //prevent divide by zero errors

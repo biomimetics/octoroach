@@ -44,7 +44,7 @@ extern volatile char g_radio_duty_cycle;
 // use an array of function pointer to avoid a number of case statements
 // CMD_VECTOR_SIZE is defined in cmd_const.h
 void (*cmd_func[CMD_VECTOR_SIZE])(unsigned char, unsigned char, unsigned char*);
-char cmd_len[CMD_VECTOR_SIZE];
+//char cmd_len[CMD_VECTOR_SIZE];
 
 /*-----------------------------------------------------------------------------
  *          Declaration of static functions
@@ -82,6 +82,7 @@ static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigne
 static void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdStartTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame);
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -93,7 +94,7 @@ void cmdSetup(void) {
     // initialize the array of func pointers with Nop()
     for (i = 0; i < MAX_CMD_FUNC; ++i) {
         cmd_func[i] = &cmdNop;
-        cmd_len[i] = 0; //0 indicated an unpoplulated command
+        //cmd_len[i] = 0; //0 indicated an unpoplulated command
     }
 
     cmd_func[CMD_ECHO] = &cmdEcho;
@@ -123,6 +124,7 @@ void cmdSetup(void) {
     cmd_func[CMD_WHO_AM_I] = &cmdWhoAmI;
     cmd_func[CMD_START_TELEM] = &cmdStartTelemetry;
     cmd_func[CMD_ZERO_POS] = &cmdZeroPos;
+    cmd_func[CMD_SET_HALL_GAINS] = &cmdSetHallGains;
 
     //Set up command length vector
     /*cmd_len[CMD_SET_THRUST_OPENLOOP] = LEN_CMD_SET_THRUST_OPENLOOP;
@@ -587,4 +589,22 @@ void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame)
     //The cast to unsigned char* is here to prevent a warning
     Payload pld = payCreate(verlen, (unsigned char*)verstr, status, CMD_WHO_AM_I);
     radioSendPayload(macGetDestAddr(), pld);
+}
+
+static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
+    PKT_UNPACK(_args_cmdSetPIDGains, argsPtr, frame);
+
+    hallSetGains(0, argsPtr->Kp1, argsPtr->Ki1, argsPtr->Kd1, argsPtr->Kaw1, argsPtr->Kff1);
+    hallSetGains(1, argsPtr->Kp2, argsPtr->Ki2, argsPtr->Kd2, argsPtr->Kaw2, argsPtr->Kff2);
+
+    //Send confirmation packet
+    Payload pld;
+    pld = payCreateEmpty(20);
+    //pld->pld_data[0] = status;
+    //pld->pld_data[1] = CMD_SET_HALL_GAINS;
+    paySetType(pld, CMD_SET_HALL_GAINS);
+    paySetStatus(pld, status);
+    memcpy((pld->pld_data) + 2, frame, 20);
+    radioSendPayload((WordVal) macGetDestAddr(), pld);
 }
