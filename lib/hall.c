@@ -91,7 +91,7 @@ static void SetupTimer2(void) {
     T2CON1value = T2_ON & T2_SOURCE_INT & T2_PS_1_256 & T2_GATE_OFF;
     T2PERvalue = 0xffff; // max period 
     int retval;
-    retval = sysServiceConfigT2(T2CON1value, T2PERvalue, T2_INT_PRIOR_6 & T2_INT_ON);
+    retval = sysServiceConfigT2(T2CON1value, T2PERvalue, T2_INT_PRIOR_5 & T2_INT_ON);
     //TODO: Put a soft trap here, conditional on retval
 }
 
@@ -205,7 +205,7 @@ void hallSetup() {
     SetupTimer2(); // used for leg hall effect sensors
     SetupInputCapture(); // setup input capture for hall effect sensors
     int retval;
-    retval = sysServiceInstallT1(hallServiceRoutine);
+    //retval = sysServiceInstallT1(hallServiceRoutine);
 
     // returns pointer to queue with 8 move entries
     hallMoveq = mqInit(8);

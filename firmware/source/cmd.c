@@ -331,8 +331,17 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
     mcSetDutyCycle(MC_CHANNEL_PWM2, argsPtr->dc2);
 }
 
-static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
+//#define HALL_SENSORS
 
+static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
+#ifdef HALL_SENSORS
+    PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
+
+    hallPIDSetInput(0 , argsPtr->chan1, argsPtr->runtime1);
+    hallPIDOn(0);
+    hallPIDSetInput(1 , argsPtr->chan1, argsPtr->runtime2);
+    hallPIDOn(1);
+#else
     //_args_cmdSetThrustClosedLoop* argsPtr =
     //        (_args_cmdSetThrustClosedLoop*) (frame);
     PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
@@ -349,6 +358,7 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
     //if (argsPtr->telem_samples > 0) {
     //    cmdGetPIDTelemetry(0, 2, (unsigned char*) (&telem_samples));
     //}
+#endif
 }
 
 static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned char *frame) {

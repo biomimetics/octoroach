@@ -16,7 +16,7 @@ if len(sys.argv) < 2:
 filename  = 'version.c'
 fileheaer = 'version.h'
 version  = sys.argv[1] # version string within single quotes
-date     = time.strftime("%a %b %d %H:%M:%S %Z %Y")
+date     = time.strftime("%a %b %d %H:%M:%S %Y")
 
 # Write version and date information
 fileout = open(filename,'w')

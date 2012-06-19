@@ -37,7 +37,7 @@ extern volatile char inMotion;
 
 int dcCounter;
 
-#define HALL_SENSOR
+//#define HALL_SENSOR
 
 int main(void) {
 
