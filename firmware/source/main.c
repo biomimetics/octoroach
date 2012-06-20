@@ -67,7 +67,6 @@ int main(void) {
     cmdSetup();
     adcSetup();
     legCtrlSetup();
-    pidSetup();
     steeringSetup();
     //ovcamSetup();
 

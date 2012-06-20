@@ -41,11 +41,11 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1290873929/xl.o.d ${OBJECTDIR}/_ext/1290873929/battery.o.d ${OBJECTDIR}/_ext/1290873929/stopwatch.o.d ${OBJECTDIR}/_ext/1290873929/packet_queue.o.d ${OBJECTDIR}/_ext/1290873929/queue.o.d ${OBJECTDIR}/_ext/1290873929/at86rf.o.d ${OBJECTDIR}/_ext/1290873929/payload.o.d ${OBJECTDIR}/_ext/1290873929/ipspi1.o.d ${OBJECTDIR}/_ext/1290873929/radio.o.d ${OBJECTDIR}/_ext/1290873929/payload_queue.o.d ${OBJECTDIR}/_ext/1290873929/init_default.o.d ${OBJECTDIR}/_ext/1290873929/dfmem.o.d ${OBJECTDIR}/_ext/1290873929/i2c_driver.o.d ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o.d ${OBJECTDIR}/_ext/1290873929/gyro.o.d ${OBJECTDIR}/_ext/1290873929/pid_hw.o.d ${OBJECTDIR}/_ext/1290873929/pid.o.d ${OBJECTDIR}/_ext/1290873929/delay.o.d ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/traps.o.d ${OBJECTDIR}/_ext/1360930230/move_queue.o.d ${OBJECTDIR}/_ext/1360930230/sensors.o.d ${OBJECTDIR}/_ext/1360930230/estop.o.d ${OBJECTDIR}/_ext/1360930230/telem.o.d ${OBJECTDIR}/_ext/1360930230/steering.o.d ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d ${OBJECTDIR}/source/cmd.o.d ${OBJECTDIR}/source/main.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/version.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1290873929/xl.o.d ${OBJECTDIR}/_ext/1290873929/battery.o.d ${OBJECTDIR}/_ext/1290873929/stopwatch.o.d ${OBJECTDIR}/_ext/1290873929/packet_queue.o.d ${OBJECTDIR}/_ext/1290873929/queue.o.d ${OBJECTDIR}/_ext/1290873929/at86rf.o.d ${OBJECTDIR}/_ext/1290873929/payload.o.d ${OBJECTDIR}/_ext/1290873929/ipspi1.o.d ${OBJECTDIR}/_ext/1290873929/radio.o.d ${OBJECTDIR}/_ext/1290873929/payload_queue.o.d ${OBJECTDIR}/_ext/1290873929/init_default.o.d ${OBJECTDIR}/_ext/1290873929/dfmem.o.d ${OBJECTDIR}/_ext/1290873929/i2c_driver.o.d ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o.d ${OBJECTDIR}/_ext/1290873929/gyro.o.d ${OBJECTDIR}/_ext/1290873929/pid_hw.o.d ${OBJECTDIR}/_ext/1290873929/pid.o.d ${OBJECTDIR}/_ext/1290873929/delay.o.d ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/traps.o.d ${OBJECTDIR}/_ext/1360930230/move_queue.o.d ${OBJECTDIR}/_ext/1360930230/sensors.o.d ${OBJECTDIR}/_ext/1360930230/estop.o.d ${OBJECTDIR}/_ext/1360930230/telem.o.d ${OBJECTDIR}/_ext/1360930230/steering.o.d ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d ${OBJECTDIR}/source/cmd.o.d ${OBJECTDIR}/source/main.o.d ${OBJECTDIR}/version.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o
+OBJECTFILES=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/version.o
 
 
 CFLAGS=
@@ -61,7 +61,15 @@ LDLIBSOPTIONS=
 # fixDeps replaces a bunch of sed/cat/printf statements that slow down the build
 FIXDEPS=fixDeps
 
-.build-conf:  ${BUILD_SUBPROJECTS}
+# The following macros may be used in the pre and post step lines
+Device=dsPIC33FJ128MC706A
+ProjectDir="C:\Users\pullin\Desktop\GIT code\octoroach\firmware"
+ConfName=default
+ImagePath="dist\default\${IMAGE_TYPE}\firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
+ImageDir="dist\default\${IMAGE_TYPE}"
+ImageName="firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
+
+.build-conf:  .pre ${BUILD_SUBPROJECTS}
 	${MAKE} ${MAKE_OPTIONS} -f nbproject/Makefile-default.mk dist/${CND_CONF}/${IMAGE_TYPE}/firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
 
 MP_PROCESSOR_OPTION=33FJ128MC706A
@@ -237,6 +245,12 @@ ${OBJECTDIR}/source/main.o: source/main.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  source/main.c  -o ${OBJECTDIR}/source/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/main.o.d"    -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/source/main.o.d" $(SILENT) 
 	
+${OBJECTDIR}/version.o: version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR} 
+	@${RM} ${OBJECTDIR}/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  version.c  -o ${OBJECTDIR}/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/version.o.d"    -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/version.o.d" $(SILENT) 
+	
 else
 ${OBJECTDIR}/_ext/1290873929/xl.o: ../../imageproc-lib/xl.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
@@ -406,6 +420,12 @@ ${OBJECTDIR}/source/main.o: source/main.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  source/main.c  -o ${OBJECTDIR}/source/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/main.o.d"    -g -omf=elf -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/source/main.o.d" $(SILENT) 
 	
+${OBJECTDIR}/version.o: version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR} 
+	@${RM} ${OBJECTDIR}/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  version.c  -o ${OBJECTDIR}/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/version.o.d"    -g -omf=elf -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/version.o.d" $(SILENT) 
+	
 endif
 
 # ------------------------------------------------------------------------------------
@@ -447,6 +467,11 @@ dist/${CND_CONF}/${IMAGE_TYPE}/firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECT
 	
 endif
 
+.pre:
+	@echo "--------------------------------------"
+	@echo "User defined pre-build step: [python ../../imageproc-lib/version.py APULLIN-OCTOROACH-DEVEL;LEGS_HARD;STEER_HARD;]"
+	@python ../../imageproc-lib/version.py APULLIN-OCTOROACH-DEVEL;LEGS_HARD;STEER_HARD;
+	@echo "--------------------------------------"
 
 # Subprojects
 .build-subprojects:

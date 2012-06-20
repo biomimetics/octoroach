@@ -83,6 +83,7 @@
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
+      <itemPath>version.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -116,8 +117,8 @@
         </loading>
       </compileType>
       <makeCustomizationType>
-        <makeCustomizationPreStepEnabled>false</makeCustomizationPreStepEnabled>
-        <makeCustomizationPreStep></makeCustomizationPreStep>
+        <makeCustomizationPreStepEnabled>true</makeCustomizationPreStepEnabled>
+        <makeCustomizationPreStep>python ../../imageproc-lib/version.py APULLIN-OCTOROACH-DEVEL;LEGS_HARD;STEER_HARD;</makeCustomizationPreStep>
         <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
         <makeCustomizationPostStep></makeCustomizationPostStep>
         <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>

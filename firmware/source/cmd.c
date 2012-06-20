@@ -32,7 +32,6 @@
 unsigned char tx_frame_[127];
 
 extern MoveQueue moveq;
-extern int offsz;
 
 extern moveCmdT currentMove, idleMove;
 
@@ -435,66 +434,7 @@ static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsi
 }
 
 static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame) {
-
-    unsigned int count;
-    unsigned long tic;
-    unsigned char *tic_char;
-    Payload pld;
-    //int perpacket = 10;
-    int perpacket = 2;
-    int i;
-    int packidx = 0;
-    int dc1, dc2;
-    //LED_RED = 1;
-    int intwz;
-    unsigned char gdata[6];
-    unsigned char* gdatap = gdata;
-    int* zp = (int*) (gdatap + 4);
-
-
-    count = frame[0] + (frame[1] << 8);
-
-    tic_char = (unsigned char*) &tic;
-
-    swatchReset();
-
-    while (count) {
-        pld = payCreateEmpty(10 * perpacket);
-        packidx = 0;
-        for (i = 0; i < perpacket; i++) {
-
-            tic = swatchTic();
-            //if (tic == 4) //testing why tic seems to reset at ~1.2 seconds
-            //{
-            //        asm volatile("nop");
-            //        asm volatile("nop");
-            //}
-            gyroGetXYZ(gdata);
-            intwz = *zp - offsz;
-
-            payAppendData(pld, packidx, 4, tic_char); //time , long , 4 bytes
-            packidx += 4;
-            payAppendData(pld, packidx, 2, (unsigned char*) (&intwz)); //gyro data , int, 2 bytes
-            packidx += 2;
-            dc1 = PDC1;
-            dc2 = PDC2;
-            payAppendData(pld, packidx, 2, (unsigned char*) (&dc1)); //duty cycle 1, int, 2 bytes
-            packidx += 2;
-            payAppendData(pld, packidx, 2, (unsigned char*) (&dc2)); //duty cycle 2 , int, 2 bytes
-            packidx += 2;
-            count--;
-            delay_ms(4);
-        }
-
-        paySetStatus(pld, status);
-        paySetType(pld, CMD_GET_IMU_LOOP_ZGYRO);
-
-        radioSendPayload(macGetDestAddr(), pld);
-
-    }
-
-    //LED_RED = 0;
-
+    //Obsolete, do not use
 }
 
 static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned char *frame) {
