@@ -240,9 +240,9 @@ void updateBEMF(){
     //Simple indicator if a leg is "in motion", via the yellow LED.
     //Not functionally necceasry; can be elimited to use the LED for something else.
     if ((bemf[0] > 0) || (bemf[1] > 0)) {
-        LED_YELLOW = 1;
+        //LED_YELLOW = 1;
     } else {
-        LED_YELLOW = 0;
+        //LED_YELLOW = 0;
     }
 }
 

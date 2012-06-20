@@ -331,7 +331,7 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
     mcSetDutyCycle(MC_CHANNEL_PWM2, argsPtr->dc2);
 }
 
-//#define HALL_SENSORS
+#define HALL_SENSORS
 
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
 #ifdef HALL_SENSORS
@@ -518,42 +518,15 @@ static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigne
     //_args_cmdSetVelProfile* argsPtr = (_args_cmdSetVelProfile*) (frame);
     PKT_UNPACK(_args_cmdSetVelProfile, argsPtr, frame);
 
-    /*
-    for (i = 0; i < NUM_VELS; i++) {
-        interval[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-    for (i = 0; i < NUM_VELS; i++) {
-        delta[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-    for (i = 0; i < NUM_VELS; i++) {
-        vel[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-     */
-    //hallSetPIDVelProfile(0, interval, delta, vel);
-    /*
-    for (i = 0; i < NUM_VELS; i++) {
-        interval[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-    for (i = 0; i < NUM_VELS; i++) {
-        delta[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-    for (i = 0; i < NUM_VELS; i++) {
-        vel[i] = frame[idx]+ (frame[idx + 1] << 8);
-        idx += 2;
-    }
-     */
-    hallSetVelProfile(0, argsPtr->intervalsL, argsPtr->deltaL, argsPtr->velL);
-    hallSetVelProfile(1, argsPtr->intervalsR, argsPtr->deltaR, argsPtr->velR);
-    //hallSetPIDVelProfile(1, interval, delta, vel);
+    //hallSetVelProfile(0, argsPtr->intervalsL, argsPtr->deltaL, argsPtr->velL);
+    //hallSetVelProfile(1, argsPtr->intervalsR, argsPtr->deltaR, argsPtr->velR);
+    
     //Send confirmation packet
     pld = payCreateEmpty(sizeof(_args_cmdSetVelProfile));
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_SET_VEL_PROFILE;
+    //pld->pld_data[0] = status;
+    paySetStatus(pld, status);
+    //pld->pld_data[1] = CMD_SET_VEL_PROFILE;
+    paySetType(pld, CMD_SET_VEL_PROFILE);
     // packet length = 48 bytes (24 ints)
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetVelProfile));
     radioSendPayload((WordVal) macGetDestAddr(), pld);

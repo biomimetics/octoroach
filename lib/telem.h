@@ -1,5 +1,5 @@
-#ifndef __DFMEM_EXTRA_H
-#define __DFMEM_EXTRA_H
+#ifndef __TELEM_H
+#define __TELEM_H
 
 //Telemetry packet structure
 //This is specific to apullin's OctoROACH code
@@ -40,4 +40,4 @@ void telemSaveData(telemU *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 
-#endif  // __DFMEM_EXTRA_H
+#endif  // __TELEM_H

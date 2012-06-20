@@ -63,46 +63,46 @@ def getVelProfile(params):
     x = raw_input()
     if len(x):
         temp = map(int,x.split(','))
-        delta[0] = (temp[0]*42)/360
-        sum = delta[0]
+        params.delta[0] = (temp[0]*42)/360
+        sum = params.delta[0]
         for i in range(1,3):
             params.delta[i] = ((temp[i]-temp[i-1])*42)/360
-            sum = sum + delta[i]
-        delta[3]=42-sum
+            sum = sum + params.delta[i]
+        params.delta[3]=42-sum
     else:
         print 'not enough delta values'
         
-    print 'current duration (ms)',duration,' new value:',
-    duration = int(raw_input())
+    print 'current duration (ms)',params.duration,' new value:',
+    params.duration = int(raw_input())
     print 'enter % time of each segment <csv>',
     x = raw_input()
     if len(x):
-        intervals = map(int,x.split(','))
+        params.intervals = map(int,x.split(','))
         sum = 0
         for i in range(0,4):
-            intervals[i] = duration*intervals[i]/100  # interval in ms
-            sum = sum + intervals[i]
-            vel[i] = (delta[i] <<8)/intervals[i]
+            params.intervals[i] = params.duration*params.intervals[i]/100  # interval in ms
+            sum = sum + params.intervals[i]
+            params.vel[i] = (params.delta[i] <<8)/params.intervals[i]
         #adjust to total duration for rounding
-        intervals[3] = intervals[3] + duration - sum
+        params.intervals[3] = params.intervals[3] + params.duration - sum
     else:
         print 'not enough values'
  #  print 'intervals (ms)',intervals
-    duration = duration -1 # end on current segment
+    params.duration = params.duration -1 # end on current segment
     
     #assign locally calculated values to parameter object:
-    params.delta = delta
-    params.duration = duration
-    params.intervals = intervals
-    params.vel = vel
+    #params.delta = delta
+    #params.duration = duration
+    #params.intervals = intervals
+    #params.vel = vel
         
 
 #set velocity profile
 def setVelProfile(params):
     print "Sending velocity profile"
-    print "set points [encoder values]", exp.delta
-    print "intervals (ms)",exp.intervals
-    print "velocities (<<8)",exp.vel
+    print "set points [encoder values]", params.delta
+    print "intervals (ms)",params.intervals
+    print "velocities (<<8)",params.vel
     temp = 2*(params.intervals + params.delta + params.vel)
     xb_send(0, command.SET_VEL_PROFILE, pack('24h',*temp))
     time.sleep(0.3)

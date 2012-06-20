@@ -9,6 +9,8 @@
 // Setup Function
 void sysServiceSetup(){
 //TODO: Decide what goes here
+    _T1IE = 0;
+    _T5IE = 0;
 }
 
 ////////////////////     Timer 1     //////////////////
@@ -17,14 +19,14 @@ void sysServiceSetup(){
 unsigned int installedIdxT1 = 0;
 unsigned long sys_T1_ticks = 0;
 static void (*serviceVectorT1[SERVICE_VECT_LEN])(void);
-static unsigned char serviceVectorEnabled[SERVICE_VECT_LEN];
+int serviceVectorT1Enabled[SERVICE_VECT_LEN];
 static char T1_already_confgured = 0;
 //Timer 1 Service ISR
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
     int i;
     for(i=0; i<SERVICE_VECT_LEN; i++){
-        if(serviceVectorT1[i] && serviceVectorEnabled[i] )
+        if(serviceVectorT1[i] && serviceVectorT1Enabled[i] )
             serviceVectorT1[i]();
     }
     sys_T1_ticks++;
@@ -36,7 +38,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 int sysServiceInstallT1(void* func){
     if(installedIdxT1 < SERVICE_VECT_LEN){
         serviceVectorT1[installedIdxT1] = func;
-        serviceVectorEnabled[installedIdxT1] = SERVICE_ENABLE;
+        serviceVectorT1Enabled[installedIdxT1] = SERVICE_ENABLE;
         installedIdxT1++;
         return (installedIdxT1-1); //succesful install
     }
@@ -66,7 +68,7 @@ unsigned long getT1_ticks(){
 //Service enabler
 int sysServiceEnableSvcT1(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_ENABLE;
+        serviceVectorT1Enabled[svcNum] = SERVICE_ENABLE;
         return 0;
     }
     else{ return svcNum; }
@@ -74,7 +76,7 @@ int sysServiceEnableSvcT1(unsigned int svcNum){
 //Service disabler
 int sysServiceDisableSvcT1(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_DISABLE;
+        serviceVectorT1Enabled[svcNum] = SERVICE_DISABLE;
         return 0;
     }
     else{ return svcNum; }
@@ -89,14 +91,14 @@ int sysServiceDisableSvcT1(unsigned int svcNum){
 unsigned int installedIdxT2 = 0;
 unsigned long sys_T2_ticks = 0;
 static void (*serviceVectorT2[SERVICE_VECT_LEN])(void);
-static unsigned char serviceVectorEnabled[SERVICE_VECT_LEN];
+int serviceVectorT2Enabled[SERVICE_VECT_LEN];
 static char T2_already_confgured = 0;
 //Timer 1 Service ISR
 
 void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
     int i;
     for(i=0; i<SERVICE_VECT_LEN; i++){
-        if(serviceVectorT2[i] && serviceVectorEnabled[i] )
+        if(serviceVectorT2[i] && serviceVectorT2Enabled[i] )
             serviceVectorT2[i]();
     }
     sys_T2_ticks++;
@@ -108,7 +110,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 int sysServiceInstallT2(void* func){
     if(installedIdxT2 < SERVICE_VECT_LEN){
         serviceVectorT2[installedIdxT2] = func;
-        serviceVectorEnabled[installedIdxT2] = SERVICE_ENABLE;
+        serviceVectorT2Enabled[installedIdxT2] = SERVICE_ENABLE;
         installedIdxT2++;
         return (installedIdxT2-1); //succesful install
     }
@@ -124,8 +126,8 @@ int sysServiceConfigT2(unsigned int T2conval, unsigned int T2perval,
     }
     else{
         T2_already_confgured = 1;
-        OpenTimer1(T2conval, T2perval);
-        ConfigIntTimer1(T2intconval);
+        OpenTimer2(T2conval, T2perval);
+        ConfigIntTimer2(T2intconval);
         return 0;
     }
 }
@@ -138,7 +140,7 @@ unsigned long getT2_ticks(){
 //Service enabler
 int sysServiceEnableSvcT2(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_ENABLE;
+        serviceVectorT2Enabled[svcNum] = SERVICE_ENABLE;
         return 0;
     }
     else{ return svcNum; }
@@ -146,7 +148,7 @@ int sysServiceEnableSvcT2(unsigned int svcNum){
 //Service disabler
 int sysServiceDisableSvcT2(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_DISABLE;
+        serviceVectorT2Enabled[svcNum] = SERVICE_DISABLE;
         return 0;
     }
     else{ return svcNum; }
@@ -164,14 +166,14 @@ int sysServiceDisableSvcT2(unsigned int svcNum){
 unsigned int installedIdxT5 = 0;
 unsigned long sys_T5_ticks = 0;
 static void (*serviceVectorT5[SERVICE_VECT_LEN])(void);
-static unsigned char serviceVectorEnabled[SERVICE_VECT_LEN];
+int serviceVectorT5Enabled[SERVICE_VECT_LEN];
 static char T5_already_confgured = 0;
 //Timer 1 Service ISR
 
 void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
     int i;
     for(i=0; i<SERVICE_VECT_LEN; i++){
-        if(serviceVectorT5[i] && serviceVectorEnabled[i] )
+        if(serviceVectorT5[i] && serviceVectorT5Enabled[i] )
             serviceVectorT5[i]();
     }
     sys_T5_ticks++;
@@ -183,7 +185,7 @@ void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
 int sysServiceInstallT5(void* func){
     if(installedIdxT5 < SERVICE_VECT_LEN){
         serviceVectorT5[installedIdxT5] = func;
-        serviceVectorEnabled[installedIdxT5] = SERVICE_ENABLE;
+        serviceVectorT5Enabled[installedIdxT5] = SERVICE_ENABLE;
         installedIdxT5++;
         return (installedIdxT5-1); //succesful install
     }
@@ -199,8 +201,8 @@ int sysServiceConfigT5(unsigned int T5conval, unsigned int T5perval,
     }
     else{
         T5_already_confgured = 1;
-        OpenTimer1(T5conval, T5perval);
-        ConfigIntTimer1(T5intconval);
+        OpenTimer5(T5conval, T5perval);
+        ConfigIntTimer5(T5intconval);
         return 0;
     }
 }
@@ -213,7 +215,7 @@ unsigned long getT5_ticks(){
 //Service enabler
 int sysServiceEnableSvcT5(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_ENABLE;
+        serviceVectorT5Enabled[svcNum] = SERVICE_ENABLE;
         return 0;
     }
     else{ return svcNum; }
@@ -221,7 +223,7 @@ int sysServiceEnableSvcT5(unsigned int svcNum){
 //Service disabler
 int sysServiceDisableSvcT5(unsigned int svcNum){
     if(svcNum < SERVICE_VECT_LEN){
-        serviceVectorEnabled[svcNum] = SERVICE_DISABLE;
+        serviceVectorT5Enabled[svcNum] = SERVICE_DISABLE;
         return 0;
     }
     else{ return svcNum; }

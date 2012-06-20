@@ -76,9 +76,13 @@ static void SetupTimer1(void)
 {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
-                  T1_SYNC_EXT_OFF & T1_INT_PRIOR_7;
+            T1_SYNC_EXT_OFF & T1_IDLE_CON;
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
+    //T1PERvalue = 0x9C40/2;
+    //getT1_ticks() = 0;
+    //OpenTimer1(T1CON1value, T1PERvalue);
+    //ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
     int retval;
     retval = sysServiceConfigT1(T1CON1value, T1PERvalue, T1_INT_PRIOR_6 & T1_INT_ON);
     //TODO: Put a soft trap here, conditional on retval
@@ -205,7 +209,7 @@ void hallSetup() {
     SetupTimer2(); // used for leg hall effect sensors
     SetupInputCapture(); // setup input capture for hall effect sensors
     int retval;
-    //retval = sysServiceInstallT1(hallServiceRoutine);
+    retval = sysServiceInstallT1(hallServiceRoutine);
 
     // returns pointer to queue with 8 move entries
     hallMoveq = mqInit(8);

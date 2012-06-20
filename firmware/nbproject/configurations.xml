@@ -119,8 +119,8 @@
         </loading>
       </compileType>
       <makeCustomizationType>
-        <makeCustomizationPreStepEnabled>false</makeCustomizationPreStepEnabled>
-        <makeCustomizationPreStep>python ../../imageproc-lib/version.py APULLIN-OCTOROACH-UNQUAL</makeCustomizationPreStep>
+        <makeCustomizationPreStepEnabled>true</makeCustomizationPreStepEnabled>
+        <makeCustomizationPreStep>python ../../imageproc-lib/version.py APULLIN-OCTOROACH-UNQUAL;LEGPID-HARD;STEERPID-HARD</makeCustomizationPreStep>
         <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
         <makeCustomizationPostStep></makeCustomizationPostStep>
         <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>
@@ -321,6 +321,10 @@
           <property key="preprocessor-macros" value=""/>
           <property key="scalar-model" value="default"/>
         </C30>
+        <C30-AS>
+        </C30-AS>
+        <C30-LD>
+        </C30-LD>
         <C30Global>
           <property key="fast-math" value="false"/>
           <property key="generic-16-bit" value="false"/>
@@ -461,7 +465,7 @@
         <C30Global>
         </C30Global>
       </item>
-      <item path="../lib/sys_service.c" ex="false" overriding="false">
+      <item path="../lib/sys_service.c" ex="false" overriding="true">
         <C30>
           <property key="code-model" value="default"/>
           <property key="const-model" value="default"/>
@@ -500,6 +504,22 @@
           <property key="scalar-model" value="default"/>
         </C30>
         <C30-AS>
+          <property key="assembler-symbols" value=""/>
+          <property key="expand-macros" value="false"/>
+          <property key="extra-include-directories-for-assembler" value=""/>
+          <property key="extra-include-directories-for-preprocessor" value=""/>
+          <property key="false-conditionals" value="false"/>
+          <property key="keep-locals" value="false"/>
+          <property key="list-assembly" value="false"/>
+          <property key="list-section-info" value="false"/>
+          <property key="list-source" value="false"/>
+          <property key="list-symbols" value="false"/>
+          <property key="oXC16asm-extra-opts" value=""/>
+          <property key="omit-debug-dirs" value="false"/>
+          <property key="omit-forms" value="false"/>
+          <property key="preprocessor-macros" value=""/>
+          <property key="relax" value="false"/>
+          <property key="warning-level" value="emit-warnings"/>
         </C30-AS>
         <C30-LD>
         </C30-LD>
@@ -595,7 +615,7 @@
         <property key="optimization-level" value="1"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
-        <property key="preprocessor-macros" value="__IMAGEPROC2;__RADIO_HIGH_DATA_RATE"/>
+        <property key="preprocessor-macros" value="__IMAGEPROC2"/>
         <property key="scalar-model" value="default"/>
       </C30>
       <C30-AS>

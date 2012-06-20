@@ -37,7 +37,7 @@ extern volatile char inMotion;
 
 int dcCounter;
 
-//#define HALL_SENSOR
+#define HALL_SENSORS
 
 int main(void) {
 
@@ -67,14 +67,14 @@ int main(void) {
     mcSetup();
     cmdSetup();
     adcSetup();
-    telemSetup();
+    telemSetup(); //Timer 5
 
-#ifdef HALL_SENSOR
-    hallSetup();
+#ifdef HALL_SENSORS
+    hallSetup();    // Timer 1, Timer 2
     //hallSteeringSetup(); //doesn't exist yet
 #else //No hall sensors, standard BEMF control
-    legCtrlSetup();
-    steeringSetup();
+    legCtrlSetup(); // Timer 1
+    steeringSetup();  //Timer 5
 #endif
 
     //ovcamSetup();
