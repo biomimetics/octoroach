@@ -14,7 +14,7 @@ from or_helpers import *
 
 ###### Operation Flags ####
 SAVE_DATA = True
-RESET_ROBOT = False   #Note: This MUST be False if you're using an XBee
+RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
 def main():    
@@ -41,7 +41,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [5000,200,0,0,20 , 5000,200,0,0,20] #Hardware PID
+    motorgains = [8000,100,0,0,0 , 8000,100,0,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
     setMotorGains(motorgains)
 
@@ -54,17 +54,15 @@ def main():
     setSteeringGains(steeringGains)
 
     #Constant example
-    #moves = 3
+    #moves = 1
     #moveq = [moves, \
-    #         0, 0, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         100, 100, 5000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         50, 50, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-
+    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+             
     #Ramp example
     moves = 3
     moveq = [moves, \
         0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-        150, 150, 3000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        150, 150, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0,
         150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
 
     #Sin example

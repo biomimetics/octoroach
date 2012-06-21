@@ -14,10 +14,11 @@
 #include "dfilter_avg.h"
 #include "adc_pid.h"
 #include "leg_ctrl.h"
+#include "sys_service.h"
 
-#define TIMER_FREQUENCY     200                 // 400 Hz
+#define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define SKIP_COUNT          2
+#define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
 
 #if defined(__RADIO_HIGH_DATA_RATE)
 	#define READBACK_DELAY_TIME_MS 3
@@ -26,29 +27,70 @@
 #endif
 
 
-//This should get a getter function, and not use an extern
+//TODO: Remove externs by adding getters to other modules
 extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
 
 //global flag from radio module to know if last packet was ACK'd
+//TODO: fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
 
 //Filter stuctures for gyro variables
 extern filterAvgInt_t gyroZavg;
 
-//Private variables
-static unsigned long samplesToSave;
-static int telemSkip;
+////////   Private variables   ////////////////
+static unsigned long samplesToSave = 0;
+//Skip counter for dividing the 300hz timer into lower telemetry rates
+static unsigned int telemSkipNum = DEFAULT_SKIP_NUM;
+static unsigned int skipcounter = DEFAULT_SKIP_NUM;
 
-////   Private functions
-////////////////////////
-void telemSetSavesToSave(unsigned long n){
-	samplesToSave = n;
+//Function to be installed into T5, and setup function
+static void SetupTimer5(); // Might collide with setup in steering module!
+static void telemServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
+static void telemISRHandler(void);
+
+/////////        Telemtry ISR          ////////
+////////  Installed to Timer5 @ 300hz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
+static void telemServiceRoutine(void){
+    //This intermediate function is used in case we want to tie other
+    //sub-taks to the telemtry service routine.
+    //TODO: Is this neccesary?
+
+    // Section for saving telemetry data to flash
+    // Uses telemSkip as a divisor to T5.
+    telemISRHandler();
+}
+
+static void SetupTimer5(){
+    ///// Timer 5 setup, Steering ISR, 300Hz /////
+    // period value = Fcy/(prescale*Ftimer)
+    unsigned int T5CON1value, T5PERvalue;
+    // prescale 1:64
+    T5CON1value = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
+    // Period is set so that period = 5ms (200Hz), MIPS = 40
+    //period = 3125; // 200Hz
+    T5PERvalue = 2083; // ~300Hz
+    int retval;
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    //OpenTimer5(con_reg, period);
+    //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
 
 ////   Public functions
 ////////////////////////
+void telemSetup(){
+    int retval;
+    retval = sysServiceInstallT5(telemServiceRoutine);
+    SetupTimer5();
+}
+
+void telemSetSamplesToSave(unsigned long n){
+	samplesToSave = n;
+}
+
 void telemReadbackSamples(unsigned long numSamples)
 {
 	//unsigned int page, bufferByte;// maxpage;
@@ -61,7 +103,7 @@ void telemReadbackSamples(unsigned long numSamples)
 	
 	LED_GREEN = 1;
 	//Disable motion interrupts for readback
-	_T1IE = 0; _T5IE=0;
+	//_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
 	//while(!dfmemIsReady());
 
 	telemStruct_t sampleData;
@@ -83,10 +125,9 @@ void telemReadbackSamples(unsigned long numSamples)
 		//telem_index++;
 	}
 
-	_T1IE = 1; _T5IE=1;
+	//_T1IE = 1; _T5IE=1;
 	_LATB13 = 0;
 }
-
 
 
 void telemSendDataDelay(unsigned char data_length, unsigned char* data, int delaytime_ms)
@@ -122,7 +163,16 @@ void telemSaveData(telemU *data){
 	}
 }
 
-int telemISRHandler(){
+
+void telemErase(unsigned long numSamples){
+	dfmemEraseSectorsForSamples(numSamples, sizeof(telemU));
+}
+
+
+////   Private functions
+////////////////////////
+
+static void telemISRHandler(){
 	int samplesaved = 0;
 	telemU data;
 	int gyroAvg[3]; int gyroData[3]; int gyroOffsets[3];
@@ -130,8 +180,10 @@ int telemISRHandler(){
 
 	//float orZ[3];
 	//orientGetOrZ(orZ);
-	
-	if( telemSkip == 0){
+
+        //skipcounter decrements to 0, triggering a telemetry save, and resets
+        // value of skicounter
+	if( skipcounter == 0){
 		if( samplesToSave > 0)
 		{
 			/////// Get Gyro data and calc average via filter
@@ -165,11 +217,14 @@ int telemISRHandler(){
 			telemSaveData(&data); 
 			samplesaved = 1;
 		}
+                //Reset value of skip counter
+                skipcounter = telemSkipNum;
 	}
-	telemSkip = (telemSkip + 1) & ~SKIP_COUNT;
-	return samplesaved;
+        //Always decrement skip counter at every interrupt, at 300Hz
+        //This way, if telemSkipNum = 1, a sample is saved at every interrupt.
+        skipcounter--;
 }
 
-void telemErase(unsigned long numSamples){
-	dfmemEraseSectorsForSamples(numSamples, sizeof(telemU));
+void telemSetSkip(unsigned int skipnum){
+    telemSkipNum = skipnum;
 }

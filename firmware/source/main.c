@@ -25,18 +25,19 @@
 #include "adc_pid.h"
 #include "steering.h"
 #include "telem.h"
+#include "hall.h"
 
-#include <stdio.h>
-#include "stdlib.h"
+#include <stdlib.h>
 
 extern unsigned char id[4];
 
-extern volatile unsigned long t1_ticks;
 volatile unsigned long wakeTime;
 extern volatile char g_radio_duty_cycle;
 extern volatile char inMotion;
 
 int dcCounter;
+
+#define HALL_SENSORS
 
 int main(void) {
 
@@ -66,8 +67,16 @@ int main(void) {
     mcSetup();
     cmdSetup();
     adcSetup();
-    legCtrlSetup();
-    steeringSetup();
+    telemSetup(); //Timer 5
+
+#ifdef HALL_SENSORS
+    hallSetup();    // Timer 1, Timer 2
+    //hallSteeringSetup(); //doesn't exist yet
+#else //No hall sensors, standard BEMF control
+    legCtrlSetup(); // Timer 1
+    steeringSetup();  //Timer 5
+#endif
+
     //ovcamSetup();
 
     //radioReadTrxId(id);
@@ -77,7 +86,7 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    //if(phyGetState() == 0x16)  { LED_GREEN = 1; }
+    if(phyGetState() == 0x16)  { LED_GREEN = 1; }
 
     //Sleeping and low power options
     //_VREGS = 1;
