@@ -16,9 +16,9 @@
 #include "leg_ctrl.h"
 #include "sys_service.h"
 
-#define TIMER_FREQUENCY     200                 // 400 Hz
+#define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define SKIP_COUNT          2
+#define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
 
 #if defined(__RADIO_HIGH_DATA_RATE)
 	#define READBACK_DELAY_TIME_MS 3
@@ -27,20 +27,23 @@
 #endif
 
 
-//This should get a getter function, and not use an extern
+//TODO: Remove externs by adding getters to other modules
 extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
 
 //global flag from radio module to know if last packet was ACK'd
+//TODO: fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
 
 //Filter stuctures for gyro variables
 extern filterAvgInt_t gyroZavg;
 
-//Private variables
+////////   Private variables   ////////////////
 static unsigned long samplesToSave = 0;
-static int telemSkip = 0;
+//Skip counter for dividing the 300hz timer into lower telemetry rates
+static unsigned int telemSkipNum = DEFAULT_SKIP_NUM;
+static unsigned int skipcounter = DEFAULT_SKIP_NUM;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
@@ -177,8 +180,10 @@ static void telemISRHandler(){
 
 	//float orZ[3];
 	//orientGetOrZ(orZ);
-	
-	if( telemSkip == 0){
+
+        //skipcounter decrements to 0, triggering a telemetry save, and resets
+        // value of skicounter
+	if( skipcounter == 0){
 		if( samplesToSave > 0)
 		{
 			/////// Get Gyro data and calc average via filter
@@ -212,8 +217,14 @@ static void telemISRHandler(){
 			telemSaveData(&data); 
 			samplesaved = 1;
 		}
+                //Reset value of skip counter
+                skipcounter = telemSkipNum;
 	}
-	telemSkip = (telemSkip + 1) & ~SKIP_COUNT;
-	//return samplesaved;
+        //Always decrement skip counter at every interrupt, at 300Hz
+        //This way, if telemSkipNum = 1, a sample is saved at every interrupt.
+        skipcounter--;
 }
 
+void telemSetSkip(unsigned int skipnum){
+    telemSkipNum = skipnum;
+}

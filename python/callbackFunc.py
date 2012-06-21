@@ -135,8 +135,7 @@ def xbee_received(packet):
             print motor
         # SET_VEL_PROFILE
         elif (type == command.SET_VEL_PROFILE):
-            print "Set Velocity Profile readback"
-            print "length data =",len(data)
+            print "Set Velocity Profile readback:"
             temp = unpack(pattern, data)
             print temp
         # WHO_AM_I

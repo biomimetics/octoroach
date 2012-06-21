@@ -147,7 +147,6 @@ def readinGains(lr, params):
             
     
 
-
 # execute move command
 def proceed(params):
     thrust = [params.throttle[0], params.duration, params.throttle[1], params.duration, 0]

@@ -24,6 +24,8 @@ typedef struct {
 		//float orient[3];
 	} telemStruct_t;
 
+//TODO: A union is not neccesary here. Remove for clarity, and chage related
+//  code
 typedef union packedTelemUnion {
 	telemStruct_t telemStruct;
 	unsigned char dataArray[sizeof(telemStruct_t)];
@@ -39,5 +41,6 @@ void telemSendDataDelay(unsigned char, unsigned char*, int delaytime_ms);
 void telemSaveData(telemU *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
+void telemSetSkip(unsigned int skipnum);
 
 #endif  // __TELEM_H

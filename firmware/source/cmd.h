@@ -31,7 +31,7 @@
 #define CMD_SLEEP                   0x8C
 #define CMD_SET_VEL_PROFILE         0x8D
 #define CMD_WHO_AM_I                0x8E
-#define CMD_START_TELEM             0x8F
+#define CMD_HALL_TELEMETRY          0x8F
 #define CMD_ZERO_POS                0x90
 #define CMD_SET_HALL_GAINS          0x91
 
@@ -133,6 +133,13 @@ typedef struct{
     int deltaR[NUM_VELS];
     int velR[NUM_VELS];
 } _args_cmdSetVelProfile;
+
+//cmdHallTelemetry
+typedef struct {
+    unsigned long startDelay; // recording start time
+    int count; // count of samples to record
+    int skip; // samples to skip
+} _args_cmdHallTelemetry;
 
 #endif // __CMD_H
 

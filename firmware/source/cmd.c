@@ -80,7 +80,7 @@ static void cmdFlashReadback(unsigned char status, unsigned char length, unsigne
 static void cmdSleep(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdStartTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdHallTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame);
 
@@ -122,7 +122,7 @@ void cmdSetup(void) {
     cmd_func[CMD_SLEEP] = &cmdSleep;
     cmd_func[CMD_SET_VEL_PROFILE] = &cmdSetVelProfile;
     cmd_func[CMD_WHO_AM_I] = &cmdWhoAmI;
-    cmd_func[CMD_START_TELEM] = &cmdStartTelemetry;
+    cmd_func[CMD_HALL_TELEMETRY] = &cmdHallTelemetry;
     cmd_func[CMD_ZERO_POS] = &cmdZeroPos;
     cmd_func[CMD_SET_HALL_GAINS] = &cmdSetHallGains;
 
@@ -512,15 +512,12 @@ static void cmdSleep(unsigned char status, unsigned char length, unsigned char *
 
 // set up velocity profile structure  - assume 4 set points for now, generalize later
 static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigned char *frame) {
-    //int interval[NUM_VELS], delta[NUM_VELS], vel[NUM_VELS];
-    //int idx = 0, i = 0;
     Payload pld;
-    //_args_cmdSetVelProfile* argsPtr = (_args_cmdSetVelProfile*) (frame);
     PKT_UNPACK(_args_cmdSetVelProfile, argsPtr, frame);
 
-    //hallSetVelProfile(0, argsPtr->intervalsL, argsPtr->deltaL, argsPtr->velL);
-    //hallSetVelProfile(1, argsPtr->intervalsR, argsPtr->deltaR, argsPtr->velR);
-    
+    hallSetVelProfile(0, argsPtr->intervalsL, argsPtr->deltaL, argsPtr->velL);
+    hallSetVelProfile(1, argsPtr->intervalsR, argsPtr->deltaR, argsPtr->velR);
+
     //Send confirmation packet
     pld = payCreateEmpty(sizeof(_args_cmdSetVelProfile));
     //pld->pld_data[0] = status;
@@ -543,25 +540,35 @@ void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame
 }
 
 // alternative telemetry which runs at 1 kHz rate inside PID loop
-static void cmdStartTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
-    /*
-    int idx = 0;
-    unsigned long temp;
-    TelemControl.count = frame[idx] + (frame[idx + 1] << 8);
-    idx += 2;
+static void cmdHallTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
+    //TODO: Integration of hall telemetry is unfinished. Fuction will currently
+    // do nothing.
+
+    PKT_UNPACK(_args_cmdHallTelemetry, argsPtr, frame);
+
+    //start time = argsPtr->startDealy + getT1_ticks();
+    //telemSetSkip(argsPtr->skip);
+    //telemSetSamplesToSave(argsPtr->count);
+    //swatchReset(); //This should probably be done within the telem module!
+
+    //int idx = 0;
+    //unsigned long temp;
+    //TelemControl.count = frame[idx] + (frame[idx + 1] << 8);
+    //idx += 2;
     // start time is relative to current t1_ticks
-    temp = t1_ticks; // need atomic read due to interrupts
-    TelemControl.start =
-            (unsigned long) (frame[idx] + (frame[idx + 1] << 8))
-            + temp;
-    idx += 2;
-    samplesToSave = TelemControl.count; // **** this runs sample capture in T5 interrupt
-    TelemControl.skip = frame[idx]+(frame[idx + 1] << 8);
-    swatchReset();
-    if (TelemControl.count > 0) {
-        TelemControl.onoff = 1; // use just steering servo sample capture
-    } // enable telemetry last
-     */
+    //temp = t1_ticks; // need atomic read due to interrupts
+    //TelemControl.start =
+    //        (unsigned long) (frame[idx] + (frame[idx + 1] << 8))
+    //        + temp;
+    //idx += 2;
+    //samplesToSave = TelemControl.count; // **** this runs sample capture in T5 interrupt
+    
+    //TelemControl.skip = frame[idx]+(frame[idx + 1] << 8);
+    //swatchReset();
+    //if (TelemControl.count > 0) {
+    //    TelemControl.onoff = 1; // use just steering servo sample capture
+    //} // enable telemetry last
+     
 }
 
 // send robot info when queried
