@@ -1,3 +1,5 @@
+#include "pullin_const.h"
+
 #include "pid.h"
 #include "timer.h"
 #include "gyro.h"
@@ -16,7 +18,6 @@
 
 //Steering controller variables
 pidObj steeringPID;
-int steeringIsOn;
 
 fractional steering_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
 fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
@@ -26,7 +27,7 @@ fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory"
 filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
 #define GYRO_AVG_SAMPLES 	32
 
-#define GYRO_DRIFT_THRESH 3
+#define GYRO_DRIFT_THRESH 5
 
 static unsigned int steeringMode;
 
@@ -65,8 +66,6 @@ static void setupTimer5(){
     T5PERvalue = 2083; // ~300Hz
     int retval;
     retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
-    //OpenTimer5(con_reg, period);
-    //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
 
 
@@ -94,18 +93,16 @@ void steeringSetup(void) {
     retval = sysServiceInstallT5(steeringServiceRoutine);
 
     //Averaging filter setup:
-    //filterAvgCreate(&gyroXavg, GYRO_AVG_SAMPLES);
-    //filterAvgCreate(&gyroYavg, GYRO_AVG_SAMPLES);
     filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
-    steeringIsOn = 1;
-    steeringPID.onoff = PID_ON;
+    steeringPID.onoff = PID_OFF; //OFF by default
 
     steeringMode = STEERMODE_DECREASE;
 }
 
 void steeringSetAngRate(int angRate) {
     steeringPID.input = angRate;
+    steeringPID.onoff = PID_ON;
 }
 
 void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
@@ -119,38 +116,34 @@ void steeringSetMode(unsigned int sm) {
 static void steeringHandleISR() {
 
     //int gyroAvg[3];
-    int gyroAvgZ;
+    int wz;
     int gyroData[3];
     int gyroOffsets[3];
 
     gyroGetXYZ((unsigned char*) gyroData);
     gyroGetOffsets(gyroOffsets);
 
-    //filterAvgUpdate(&gyroXavg,gyroData[0] - gyroOffsets[0]);
-    //filterAvgUpdate(&gyroYavg,gyroData[1] - gyroOffsets[1]);
     filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
 
-    //gyroAvg[0] = filterAvgCalc(&gyroXavg);
-    //gyroAvg[1] = filterAvgCalc(&gyroYavg);
-    gyroAvgZ = filterAvgCalc(&gyroZavg);
+    wz = filterAvgCalc(&gyroZavg);
 
     //Threshold filter on gyro to account for minor drift
-    if (ABS(gyroAvgZ) < GYRO_DRIFT_THRESH) {
-        gyroAvgZ = 0;
-    }
+    //if (ABS(wz) < GYRO_DRIFT_THRESH) {
+    //    wz = 0;
+    //}
 
     //Update the setpoints
     //if((currentMove->inputL != 0) && (currentMove->inputR != 0)){
     if (currentMove != idleMove) {
         //Only update steering controller if we are in motion
 #ifdef PID_SOFTWARE
-        pidUpdate(&steeringPID, gyroAvg[2])
+        pidUpdate(&steeringPID, gyroAvgZ);
 #elif defined PID_HARDWARE
         int temp = 0;
         temp = steeringPID.input; //Save unscaled input val
         steeringPID.input *= STEERING_PID_ERR_SCALER; //Scale input
         pidUpdate(&steeringPID,
-                 STEERING_PID_ERR_SCALER * gyroAvgZ); //Update with scaled feedback
+                 STEERING_PID_ERR_SCALER * wz); //Update with scaled feedback
        steeringPID.input = temp;  //Reset unscaled input
 #endif   //PID_SOFTWWARE vs PID_HARDWARE
     }
@@ -168,7 +161,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
 
     if (steeringPID.onoff == PID_ON) {
         int delta = steeringPID.output;
-
+        
         if (steeringMode == STEERMODE_DECREASE) {
             // Depending on which way the bot is turning, choose which side to add correction to
             if (steeringPID.output <= 0) {

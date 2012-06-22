@@ -2,6 +2,6 @@
 
 #include "version.h"
 
-static char version[] = "APULLIN-OCTOROACH-DEVEL;LEGPID-HARD;STEERPID-HARD: Wed Jun 20 17:47:21 2012";
+static char version[] = "APULLIN-OCTOROACH-DEVEL;LEGPID-HARD;STEERPID-HARD: Thu Jun 21 20:13:15 2012";
 
 char* versionGetString(void) { return version; }

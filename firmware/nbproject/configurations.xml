@@ -145,6 +145,20 @@
           <property key="extra-include-directories"
                     value="../lib;../../imageproc-lib;source"/>
           <property key="isolate-each-function" value="false"/>
+          <property key="oXC16gcc-align-arr" value="false"/>
+          <property key="oXC16gcc-cnsts-mauxflash" value="false"/>
+          <property key="oXC16gcc-data-sects" value="false"/>
+          <property key="oXC16gcc-errata" value=""/>
+          <property key="oXC16gcc-fillupper" value=""/>
+          <property key="oXC16gcc-large-aggregate" value="false"/>
+          <property key="oXC16gcc-mauxflash" value="false"/>
+          <property key="oXC16gcc-mpa-lvl" value=""/>
+          <property key="oXC16gcc-name-text-sec" value=""/>
+          <property key="oXC16gcc-near-chars" value="false"/>
+          <property key="oXC16gcc-no-isr-warn" value="false"/>
+          <property key="oXC16gcc-sfr-warn" value="false"/>
+          <property key="oXC16gcc-smar-io-lvl" value="1"/>
+          <property key="oXC16gcc-smart-io-fmt" value=""/>
           <property key="optimization-level" value="0"/>
           <property key="post-instruction-scheduling" value="default"/>
           <property key="pre-instruction-scheduling" value="default"/>
@@ -201,7 +215,9 @@
         </C30-LD>
         <C30Global>
           <property key="fast-math" value="false"/>
+          <property key="generic-16-bit" value="false"/>
           <property key="legacy-libc" value="false"/>
+          <property key="oXC16glb-macros" value="PID_HARDWARE"/>
           <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
@@ -223,6 +239,20 @@
           <property key="extra-include-directories"
                     value="../lib;../../imageproc-lib;source"/>
           <property key="isolate-each-function" value="false"/>
+          <property key="oXC16gcc-align-arr" value="false"/>
+          <property key="oXC16gcc-cnsts-mauxflash" value="false"/>
+          <property key="oXC16gcc-data-sects" value="false"/>
+          <property key="oXC16gcc-errata" value=""/>
+          <property key="oXC16gcc-fillupper" value=""/>
+          <property key="oXC16gcc-large-aggregate" value="false"/>
+          <property key="oXC16gcc-mauxflash" value="false"/>
+          <property key="oXC16gcc-mpa-lvl" value=""/>
+          <property key="oXC16gcc-name-text-sec" value=""/>
+          <property key="oXC16gcc-near-chars" value="false"/>
+          <property key="oXC16gcc-no-isr-warn" value="false"/>
+          <property key="oXC16gcc-sfr-warn" value="false"/>
+          <property key="oXC16gcc-smar-io-lvl" value="1"/>
+          <property key="oXC16gcc-smart-io-fmt" value=""/>
           <property key="optimization-level" value="0"/>
           <property key="post-instruction-scheduling" value="default"/>
           <property key="pre-instruction-scheduling" value="default"/>
@@ -279,7 +309,9 @@
         </C30-LD>
         <C30Global>
           <property key="fast-math" value="true"/>
+          <property key="generic-16-bit" value="false"/>
           <property key="legacy-libc" value="false"/>
+          <property key="oXC16glb-macros" value=""/>
           <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
@@ -404,6 +436,11 @@
           <property key="warn-section-align" value="false"/>
         </C30-LD>
         <C30Global>
+          <property key="fast-math" value="false"/>
+          <property key="generic-16-bit" value="false"/>
+          <property key="legacy-libc" value="false"/>
+          <property key="oXC16glb-macros" value="PID_HARDWARE"/>
+          <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
       <item path="../lib/steering.c" ex="false" overriding="true">
@@ -424,6 +461,20 @@
           <property key="extra-include-directories"
                     value="../lib;../../imageproc-lib;source"/>
           <property key="isolate-each-function" value="false"/>
+          <property key="oXC16gcc-align-arr" value="false"/>
+          <property key="oXC16gcc-cnsts-mauxflash" value="false"/>
+          <property key="oXC16gcc-data-sects" value="false"/>
+          <property key="oXC16gcc-errata" value=""/>
+          <property key="oXC16gcc-fillupper" value=""/>
+          <property key="oXC16gcc-large-aggregate" value="false"/>
+          <property key="oXC16gcc-mauxflash" value="false"/>
+          <property key="oXC16gcc-mpa-lvl" value=""/>
+          <property key="oXC16gcc-name-text-sec" value=""/>
+          <property key="oXC16gcc-near-chars" value="false"/>
+          <property key="oXC16gcc-no-isr-warn" value="false"/>
+          <property key="oXC16gcc-sfr-warn" value="false"/>
+          <property key="oXC16gcc-smar-io-lvl" value="1"/>
+          <property key="oXC16gcc-smart-io-fmt" value=""/>
           <property key="optimization-level" value="0"/>
           <property key="post-instruction-scheduling" value="default"/>
           <property key="pre-instruction-scheduling" value="default"/>
@@ -463,6 +514,11 @@
           <property key="warn-section-align" value="false"/>
         </C30-LD>
         <C30Global>
+          <property key="fast-math" value="false"/>
+          <property key="generic-16-bit" value="false"/>
+          <property key="legacy-libc" value="false"/>
+          <property key="oXC16glb-macros" value="PID_HARDWARE"/>
+          <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
       <item path="../lib/sys_service.c" ex="false" overriding="true">
@@ -676,7 +732,9 @@
       </C30-LD>
       <C30Global>
         <property key="fast-math" value="true"/>
+        <property key="generic-16-bit" value="false"/>
         <property key="legacy-libc" value="false"/>
+        <property key="oXC16glb-macros" value="PID_HARDWARE"/>
         <property key="output-file-format" value="elf"/>
       </C30Global>
       <ICD3PlatformTool>

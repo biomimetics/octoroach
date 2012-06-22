@@ -189,7 +189,7 @@ static void telemISRHandler(){
 			/////// Get Gyro data and calc average via filter
 			gyroGetXYZ((unsigned char*)gyroData);
 			gyroGetOffsets(gyroOffsets);
-			filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
+			//filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
 			//Only average for Z
 			gyroAvg[2] = filterAvgCalc(&gyroZavg);
 	

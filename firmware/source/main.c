@@ -37,8 +37,6 @@ extern volatile char inMotion;
 
 int dcCounter;
 
-#define HALL_SENSORS
-
 int main(void) {
 
     wakeTime = 0;

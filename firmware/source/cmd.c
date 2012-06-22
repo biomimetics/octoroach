@@ -27,6 +27,8 @@
 #include "hall.h"
 #include "version.h"
 
+#include "pullin_const.h" //major config defines, sys-service, hall, etc
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -330,8 +332,6 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
     mcSetDutyCycle(MC_CHANNEL_PWM1, argsPtr->dc1);
     mcSetDutyCycle(MC_CHANNEL_PWM2, argsPtr->dc2);
 }
-
-#define HALL_SENSORS
 
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
 #ifdef HALL_SENSORS

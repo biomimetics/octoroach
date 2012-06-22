@@ -118,7 +118,7 @@ void legCtrlSetup() {
     //ADC_OffsetR = 1;
 
     //Move Queue setup and initialization
-    moveq = mqInit(8);
+    moveq = mqInit(32);
     idleMove = malloc(sizeof (moveCmdStruct));
     idleMove->inputL = 0;
     idleMove->inputR = 0;
@@ -231,18 +231,18 @@ void updateBEMF(){
         bemf[i] = medianFilter3(bemfHist[i]); //Apply median filter
     }
 
-    // IIR filter on BEMF: y[n] = 0.8 * y[n-1] + 0.2 * x[n]
-    bemf[0] = (8 * (long) bemfLast[0] / 10) + 2 * (long) bemf[0] / 10;
-    bemf[1] = (8 * (long) bemfLast[1] / 10) + 2 * (long) bemf[1] / 10;
+    // IIR filter on BEMF: y[n] = 0.2 * y[n-1] + 0.8 * x[n]
+    bemf[0] = (2 * (long) bemfLast[0] / 10) + 8 * (long) bemf[0] / 10;
+    bemf[1] = (2 * (long) bemfLast[1] / 10) + 8 * (long) bemf[1] / 10;
     bemfLast[0] = bemf[0]; //bemfLast will not be used after here, OK to set
     bemfLast[1] = bemf[1];
 
     //Simple indicator if a leg is "in motion", via the yellow LED.
     //Not functionally necceasry; can be elimited to use the LED for something else.
     if ((bemf[0] > 0) || (bemf[1] > 0)) {
-        //LED_YELLOW = 1;
+        LED_YELLOW = 1;
     } else {
-        //LED_YELLOW = 0;
+        LED_YELLOW = 0;
     }
 }
 
@@ -264,9 +264,22 @@ void serviceMoveQueue(void) {
         inMotion = 1;
         if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
+            //MOVE_SEG_LOOP_DECL only needs to appear once
+            if(currentMove->type == MOVE_SEG_LOOP_DECL){
+                mqLoopingOnOff(1);
+                currentMove = mqPop(moveq);
+            }
+            if(currentMove->type == MOVE_SEG_LOOP_CLEAR){
+                mqLoopingOnOff(0);
+                currentMove = mqPop(moveq);
+            }
+            if(currentMove->type == MOVE_SEG_QFLUSH){
+                while(mqPop(moveq)); //Terminate on NULL return, flushing queue
+                currentMove = idleMove;
+            }
+            //TODO: handle NULL return from mqPop
             moveExpire = getT1_ticks() + currentMove->duration;
             currentMoveStart = getT1_ticks();
-            steeringOn();
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {

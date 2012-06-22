@@ -26,7 +26,7 @@ void steeringOn();
 #define STEERING_KD  0
 #define STEERING_KAW 0
 #define STEERING_FF  0
-#define STEERING_PID_ERR_SCALER 16
+#define STEERING_PID_ERR_SCALER 1
 
 #endif
 
