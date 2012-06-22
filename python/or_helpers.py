@@ -19,6 +19,9 @@ MOVE_SEG_SIN = 2
 MOVE_SEG_TRI = 3
 MOVE_SEG_SAW = 4
 MOVE_SEG_IDLE = 5
+MOVE_SEG_LOOP_DECL = 6
+MOVE_SEG_LOOP_CLEAR = 7
+MOVE_SEG_QFLUSH = 8
 
 ##
 STEER_MODE_DECREASE = 0
@@ -30,6 +33,14 @@ STEER_MODE_SPLIT = 2
 def xb_send(xb, DEST_ADDR, status, type, data):
     payload = chr(status) + chr(type) + ''.join(data)
     xb.tx(dest_addr = DEST_ADDR, data = payload)
+    
+def xb_safe_exit():
+    print "Halting xb"
+    shared.xb.halt()
+    print "Closing serial"
+    shared.ser.close()
+    print "Exiting..."
+    sys.exit(1)
 
 def resetRobot():
     xb_send(shared.xb, shared.DEST_ADDR, 0, command.SOFTWARE_RESET, pack('h',0))
@@ -137,29 +148,42 @@ def sleepRobot():
     xb_send(shared.xb, shared.DEST_ADDR, 0, command.SLEEP, pack('b',1))
     
 def setSteeringRate(rate):
+    count = 1
     shared.angRateDeg = rate
     shared.angRate = round( shared.angRateDeg / shared.count2deg)
     while not(shared.steering_rate_set):
-        print "Setting steering rate..."
+        print "Setting steering rate...   ",count,"/8"
+        count = count + 1
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_CTRLD_TURN_RATE, pack('h',shared.angRate))
-        time.sleep(0.25)
+        time.sleep(0.3)
+        if count > 8:
+            print "Unable to set steering rate, exiting."
+            xb_safe_exit()
 
 def setMotorGains(gains):
+    count = 1
     shared.motorGains = gains
     while not(shared.motor_gains_set):
-        print "Setting motor gains..."
+        print "Setting motor gains...   ",count,"/8"
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_PID_GAINS, pack('10h',*gains))
-        time.sleep(0.25)
+        time.sleep(0.3)
+        if count > 8:
+            print "Unable to set motor gains, exiting."
+            xb_safe_exit()
     
 def setSteeringGains(gains):
+    count = 1
     shared.steeringGains = gains
     while not (shared.steering_gains_set):
-        print "Setting steering gains..."
+        print "Setting steering gains...   ",count,"/8"
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_STEERING_GAINS, pack('6h',*gains))
-        time.sleep(0.25)
+        time.sleep(0.3)
+        if count > 8:
+            print "Unable to set steering gains, exiting."
+            xb_safe_exit()
 
 def eraseFlashMem(numSamples):
     eraseStartTime = time.time()

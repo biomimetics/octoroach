@@ -7,12 +7,11 @@ void steeringSetup(void);
 void steeringSetAngRate(int angRate);
 void steeringSetGains(int Kp,int Ki,int Kd,int Kawm, int ff);
 void steeringSetMode(unsigned int mode);
-void steeringHandleISR();
 void steeringApplyCorrection(int* inputs, int* outputs);
 void steeringOff();
 void steeringOn();
 
-#define STEERING_SAT       5000
+#define STEERING_SAT       1024
 
 #ifdef PID_SOFTWARE
 #define STEERING_KP  0
@@ -22,7 +21,7 @@ void steeringOn();
 
 #elif defined PID_HARDWARE
 //Hardware PID
-#define STEERING_KP  20
+#define STEERING_KP  0
 #define STEERING_KI  0
 #define STEERING_KD  0
 #define STEERING_KAW 0

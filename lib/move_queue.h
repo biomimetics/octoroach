@@ -10,7 +10,10 @@ enum moveSegT{
 	MOVE_SEG_SIN,
 	MOVE_SEG_TRI,
 	MOVE_SEG_SAW,
-	MOVE_SEG_IDLE
+	MOVE_SEG_IDLE,
+        MOVE_SEG_LOOP_DECL,
+        MOVE_SEG_LOOP_CLEAR,
+        MOVE_SEG_QFLUSH
 };
 
 typedef struct
@@ -37,5 +40,7 @@ int mqIsFull(MoveQueue queue);
 int mqIsEmpty(MoveQueue queue);
 
 int mqGetSize(MoveQueue queue);
+
+void mqLoopingOnOff(int onoff);
 
 #endif // __MOVE_QUEUE_H

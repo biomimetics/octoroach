@@ -29,7 +29,7 @@ def main():
 
 
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]
-    motorgains = [5000,100,0,0,0 , 5000,100,0,0,0] #Hardware PID
+    motorgains = [8000,100,0,0,10 , 8000,100,0,0,10] #Hardware PID
     
     setMotorGains(motorgains)
     
@@ -65,7 +65,7 @@ def main():
                 forward = min(left_throt, right_throt)
                 turn = 0
         elif (keypress == 'q') or (ord(keypress) == 26):
-                print "Exit."
+                print "\nExiting..."
                 shared.xb.halt()
                 shared.ser.close()
                 sys.exit(0)
