@@ -7,9 +7,10 @@
 #include "payload.h"
 #include "pid.h"
 #include "p33Fxxxx.h"
-#include <stdio.h>      // for NULL
+//#include <stdio.h>      // for NULL
 #include <stdlib.h>     // for malloc
 
+static int moveQueueLooping = 0;
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -34,7 +35,12 @@ void mqPush(MoveQueue mq, moveCmdT mv) {
 }
 
 moveCmdT mqPop(MoveQueue queue) {
-    return (moveCmdT)queuePop(queue);
+    moveCmdT thismove = (moveCmdT)queuePop(queue);
+    if(moveQueueLooping){
+        queuePush(queue, thismove);
+    }
+    //return (moveCmdT)queuePop(queue);
+    return thismove;
 }
 
 int mqIsFull(MoveQueue queue) {
@@ -50,3 +56,6 @@ int mqGetSize(MoveQueue queue) {
     return queueGetSize(queue);
 }
 
+void mqLoopingOnOff(int onoff){
+    moveQueueLooping = onoff;
+}

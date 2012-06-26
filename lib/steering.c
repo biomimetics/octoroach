@@ -1,192 +1,235 @@
+#include "settings.h"
+
 #include "pid.h"
 #include "timer.h"
 #include "gyro.h"
 #include "steering.h"
 #include "stopwatch.h"
-#include "dfmem_extra.h"
+#include "dfmem.h"
+#include "telem.h"
 #include "move_queue.h"
 #include "xl.h"
+#include "dfilter_avg.h"
+#include "pid_hw.h"
+#include "leg_ctrl.h"
+#include "sys_service.h"
 
-#define TIMER_FREQUENCY     200                 // 400 Hz
-#define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define SKIP_COUNT          2
+//Inline functions
+#define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
-long gyro_accum;
-int j;
-int gdata[3];
-int xldata[3];
-pidT steeringPID;
-int steeringIsOn;
-int gyroAvg;
-int telemSkip;
+//Steering controller variables
+pidObj steeringPID;
 
-int datactr;
+fractional steering_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
+fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
 
-int samplesToSave;
+//Averaging filter structures for gyroscope data
+//Initialzied in setup.
+filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
+#define GYRO_AVG_SAMPLES 	32
 
-static int gyroWindow[GYRO_AVG_SAMPLES];
+#define GYRO_DRIFT_THRESH 5
 
-int windowIdx;
+static unsigned int steeringMode;
 
-extern int offsx, offsy, offsz;
+extern moveCmdT currentMove, idleMove;
 
-extern pidT pidObjs[NUM_PIDS];
-extern int bemf[NUM_PIDS];
+//Function to be installed into T5, and setup function
+static void SetupTimer5();
+static void steeringServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
+static void steeringHandleISR();
 
-extern moveCmdT currentMove;
 
-extern unsigned long t1_ticks; //needed to calculate new runtimes
+////   Private functions
+////////////////////////
+
+/////////        Steering ISR          ////////
+////////  Installed to Timer5 @ 300hz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
+static void steeringServiceRoutine(void){
+    //This intermediate function is used in case we want to tie other
+    //sub-taks to the steering service routine.
+    //TODO: Is this neccesary?
+
+    // Steering update ISR handler
+    steeringHandleISR();
+}
+
+static void SetupTimer5(){
+    ///// Timer 5 setup, Steering ISR, 300Hz /////
+    // period value = Fcy/(prescale*Ftimer)
+    unsigned int T5CON1value, T5PERvalue;
+    // prescale 1:64
+    T5CON1value = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
+    // Period is set so that period = 5ms (200Hz), MIPS = 40
+    //period = 3125; // 200Hz
+    T5PERvalue = 2083; // ~300Hz
+    int retval;
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+}
+
+
+
+////   Public functions
+////////////////////////
 
 void steeringSetup(void) {
 
-    gyro_accum = 0;
-    j = 0;
+#ifdef PID_HARDWARE
+    //Create PID controller object
+    steeringPID.dspPID.abcCoefficients = steering_abcCoeffs;
+    steeringPID.dspPID.controlHistory = steering_controlHists;
+#endif
+    pidInitPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
+    steeringPID.satValPos = STEERING_SAT;
+    steeringPID.satValNeg = -STEERING_SAT;
+    steeringPID.maxVal = STEERING_SAT;
+    steeringPID.minVal = -STEERING_SAT;
 
-    initPIDObj(&steeringPID, STEERING_KP, STEERING_KI, STEERING_KD, STEERING_KAW, 0);
-    setSteeringAngRate(0);
+    steeringSetAngRate(0);
 
-    // period value = Fcy/(prescale*Ftimer)
-    unsigned int con_reg, period;
+    SetupTimer5(); //T5 ISR will update the steering controller
+    int retval;
+    retval = sysServiceInstallT5(steeringServiceRoutine);
 
-    // prescale 1:64
-    con_reg = T5_ON & T5_IDLE_CON & T5_GATE_OFF & T5_PS_1_64 & T5_SOURCE_INT;
-    // Period is set so that period = 5ms (200Hz), MIPS = 40
-    period = 2083; // ~300Hz
+    //Averaging filter setup:
+    filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
-    OpenTimer5(con_reg, period);
-    ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
+    steeringPID.onoff = PID_OFF; //OFF by default
 
-    //offs = (float*)(gyroGetCalibParam());
-	steeringIsOn = 1;
-	windowIdx = 0;
+    steeringMode = STEERMODE_DECREASE;
 }
 
-void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
-    
-    //int gyroAvg;
-	int left, right;
-	int i;
-
-	gyroGetXYZ((unsigned char*)gdata);
-	xlGetXYZ((unsigned char*)xldata);
-
-	gyroWindow[windowIdx] = gdata[2];
-	windowIdx = (windowIdx + 1) % GYRO_AVG_SAMPLES;
-
-	gyro_accum = 0;
-	for( i =0; i < GYRO_AVG_SAMPLES; i++){
-		gyro_accum += gyroWindow[i];
-	}
-	gyroAvg = (gyro_accum - GYRO_AVG_SAMPLES*offsz) / GYRO_AVG_SAMPLES;
-
-	//Update the setpoints
-	if((currentMove->inputL != 0) && (currentMove->inputR != 0)){  
-		//Only update steering controller if we are in motion
-		steeringPID.error = steeringPID.input - gyroAvg;
-       	UpdatePIDSteering(&steeringPID , gyroAvg);
-		
-		//left = pidObjs[0].input;    WRONG --> causes an implicit accumulation!!!
-		//right = pidObjs[1].input; 
-		left = currentMove->inputL;
-		right = currentMove->inputR;
-		
-		// Depending on which way the bot is turning, choose which side to add correction to
-		if( steeringPID.input <= 0){
-			right = right - steeringPID.output;
-			if( right < 0){ right = 1; }  //clip right channel to zero (one, actually)
-		} else //if(steeringPID.input > 0)
-		{
-			left = left + steeringPID.output;
-			if( left < 0){ left = 1; }  //clip right channel to zero (one, actually)
-		}
-		pidObjs[0].input = left;
-		pidObjs[1].input = right;
-	}
-
-	// Section for saving telemetry data to flash
-	// Uses telemSkip as a divisor to T5.
-	telemU data;
-	
-	if( telemSkip == 0){
-		if( samplesToSave > 0)
-		{
-			//Stopwatch was already started in the cmdSpecialTelemetry function
-			data.telemStruct.timeStamp = (long)swatchTic(); 
-			data.telemStruct.inputL = pidObjs[0].input;  
-			data.telemStruct.inputR = pidObjs[1].input;
-			data.telemStruct.dcL = PDC1;
-			data.telemStruct.dcR = PDC2;
-			data.telemStruct.gyroX = gdata[0] - offsx;
-			data.telemStruct.gyroY = gdata[1] - offsy;
-			data.telemStruct.gyroZ = gdata[2] - offsz;
-			data.telemStruct.gyroAvg = gyroAvg;
-			data.telemStruct.accelX = xldata[0];
-			data.telemStruct.accelY = xldata[1];
-			data.telemStruct.accelZ = xldata[2];
-			data.telemStruct.bemfL = bemf[0];
-			data.telemStruct.bemfR = bemf[1];
-			data.telemStruct.sOut = steeringPID.output;
-			samplesToSave--;
-			saveTelemData(&data); 
-		}
-	}
-	telemSkip = (telemSkip + 1) & ~SKIP_COUNT;
-	//telemSkip = 0;
-    _T5IF = 0;
-
+void steeringSetAngRate(int angRate) {
+    steeringPID.input = angRate;
+    steeringPID.onoff = PID_ON;
 }
 
-void setSteeringAngRate(int angRate)
-{  
-	_T5IE = 0;
-	steeringPID.input = angRate;
-	steeringPID.p = 0;
-	steeringPID.i = 0;
-	steeringPID.d = 0;
-	steeringPID.iState = 0;
-	_T5IE = 1;
+void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
+    pidSetGains(&steeringPID, Kp, Ki, Kd, Kaw, ff);
 }
 
-//I need a better solution than this
-void UpdatePIDSteering(pidT *pid, int y)
-{
-    pid->p = (long)pid->Kp * pid->error;
-    pid->i = (long)pid->Ki * pid->iState;
-    //Filtered derivative action applied directly to measurement
-    pid->d = ((long)pid->Kd * (long)pid->d * (long)STEERING_GAIN_SCALER) / ((long)pid->Kd + (long)pid->Kp * (long)pid->N) -
-        ((long)pid->Kd * (long)pid->Kp * (long)pid->N * ((long)y - (long)pid->y_old)) /
-        ((long)pid->Kd + (long)pid->Kp * (long)pid->N);
+void steeringSetMode(unsigned int sm) {
+    steeringMode = sm;
+}
 
-    pid->preSat = (pid->p + pid->i + pid->d) / (long)STEERING_GAIN_SCALER ;
+static void steeringHandleISR() {
 
-    if (pid->preSat > SATVAL)
-    {
-        pid->output = SATVAL;
-    }else
-    {
-        pid->output = pid->preSat;
+    //int gyroAvg[3];
+    int wz;
+    int gyroData[3];
+    int gyroOffsets[3];
+
+    gyroGetXYZ((unsigned char*) gyroData);
+    gyroGetOffsets(gyroOffsets);
+
+    filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
+
+    wz = filterAvgCalc(&gyroZavg);
+
+    //Threshold filter on gyro to account for minor drift
+    //if (ABS(wz) < GYRO_DRIFT_THRESH) {
+    //    wz = 0;
+    //}
+
+    //Update the setpoints
+    //if((currentMove->inputL != 0) && (currentMove->inputR != 0)){
+    if (currentMove != idleMove) {
+        //Only update steering controller if we are in motion
+#ifdef PID_SOFTWARE
+        pidUpdate(&steeringPID, gyroAvgZ);
+#elif defined PID_HARDWARE
+        int temp = 0;
+        temp = steeringPID.input; //Save unscaled input val
+        steeringPID.input *= STEERING_PID_ERR_SCALER; //Scale input
+        pidUpdate(&steeringPID,
+                 STEERING_PID_ERR_SCALER * wz); //Update with scaled feedback
+       steeringPID.input = temp;  //Reset unscaled input
+#endif   //PID_SOFTWWARE vs PID_HARDWARE
     }
-
-    pid->iState += (long)(pid->error) + ((long)(pid->Kaw) * 
-			((long)(pid->output) - (long)(pid->preSat)))/(long)GAIN_SCALER;
-    pid->y_old = y;
+    //Now the output correction is stored in steeringPID.output,
+    //which will be read later when the steering mixing is done.
 }
 
-void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff){
-    steeringPID.Kp  = Kp;
-    steeringPID.Ki  = Ki;
-    steeringPID.Kd  = Kd;
-    steeringPID.Kaw = Kaw;
-	steeringPID.feedforward = ff;
+void steeringApplyCorrection(int* inputs, int* outputs) {
+    int left, right;
+    //Steering Mixing
+    //left = currentMove->inputL;
+    //right = currentMove->inputR;
+    left = inputs[0];
+    right = inputs[1];
+
+    if (steeringPID.onoff == PID_ON) {
+        int delta = steeringPID.output;
+        
+        if (steeringMode == STEERMODE_DECREASE) {
+            // Depending on which way the bot is turning, choose which side to add correction to
+            if (steeringPID.output <= 0) {
+                //right = right + steeringPID.output;
+                right = right + delta;
+                if (right < 0) {
+                    right = 0;
+                } //clip right channel to zero
+            } else //if(steeringPID.output > 0)
+            {
+                left = left - delta;
+                //left = left - steeringPID.output;
+                if (left < 0) {
+                    left = 0;
+                } //clip right channel to zero (one, actually)
+            }
+        } else if (steeringMode == STEERMODE_INCREASE) {
+            // Depending on which way the bot is turning, choose which side to add correction to
+            if (steeringPID.output <= 0) {
+                //right = right + steeringPID.output;
+                left = left - delta;
+                if (right < 0) {
+                    right = 0;
+                } //clip right channel to zero
+            } else //if(steeringPID.output > 0)
+            {
+                right = right + delta;
+                //left = left - steeringPID.output;
+                if (left < 0) {
+                    left = 0;
+                } //clip right channel to zero
+            }
+        } else if (steeringMode == STEERMODE_SPLIT) {
+            right = right + delta / 2;
+            left = left - delta / 2;
+            if (right < 0) {
+                left = left - right; //increase left, since right < 0
+                right = 0;
+            } //clip right channel to zero
+            if (left < 0) {
+                right = right - left; //increase right, since left < 0
+                left = 0;
+            } //clip left channel to zero
+        }
+
+    }//endif steeringPID.onoff
+
+    outputs[0] = left;
+    outputs[1] = right;
+
+    //pidObjs[0].input = left;
+    //pidObjs[1].input = right;
 }
 
-/*
-void getSteeringTelem(unsigned char* ptr){
-	steeringPID.p;
-	
+void steeringOff() {
+    steeringPID.onoff = PID_OFF;
+    steeringPID.p = 0;
+    steeringPID.i = 0;
+    steeringPID.d = 0;
+    steeringPID.output = 0;
 }
-*/
 
-void setSampleSaveCount(int count){
-	samplesToSave = count;
+void steeringOn() {
+    steeringPID.onoff = PID_ON;
+    steeringPID.p = 0;
+    steeringPID.i = 0;
+    steeringPID.d = 0;
+    steeringPID.output = 0;
 }
+
