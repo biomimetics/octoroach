@@ -27,6 +27,6 @@
 #define SYS_SERVICE_T5 // For steering, telemetry
 
 //Configure project-wide for Hall Sensor operation
-//#define HALL_SENSORS
+#define HALL_SENSORS
 
 #endif //__PULLIN_CONST_H
