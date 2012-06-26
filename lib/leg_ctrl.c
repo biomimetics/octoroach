@@ -12,7 +12,8 @@
 #include "tail_queue.h"
 #include "math.h"
 #include "steering.h"
-#include<dsp.h>
+#include "sys_service.h"
+#include <dsp.h>
 #include <stdlib.h> // for malloc
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
@@ -24,8 +25,6 @@ pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
 fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
 
-//Timer 1 related variables
-volatile unsigned long t1_ticks;
 //Counter for blinking the red LED during motion
 int blinkCtr;
 
@@ -40,83 +39,57 @@ MoveQueue moveq;
 moveCmdT currentMove, idleMove;
 unsigned long currentMoveStart, moveExpire;
 
-//Tail queue
-TailQueue tailq;
-moveCmdT currentTail, idleTail;
-unsigned long currentTailStart, tailExpire;
-
+//BEMF related variables; we store a history of the last 3 values,
+//but also provide variables for the "current" and "last" values for clarity
+//in code below
 int bemf[NUM_MOTOR_PIDS]; //used to store the true, unfiltered speed
 int bemfLast[NUM_MOTOR_PIDS]; // Last post-median-filter value
 int bemfHist[NUM_MOTOR_PIDS][3]; //This is ONLY for applying the median filter to
 int medianFilter3(int*);
 
+//This is an array to map legCtrl controller to PWM output channels
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
 volatile char inMotion;
 
-//Local scope functions
-//TIMER1 driven
+//Function to be installed into T1, and setup function
+static void SetupTimer1(void);
+static void legCtrlServiceRoutine(void);  //To be installed with sysService
+//The following local functions are called by the service routine:
 static void serviceMoveQueue(void);
 static void moveSynth();
-static void serviceTailQueue(void);
-static void tailSynth();
 static void serviceMotionPID();
 static void updateBEMF();
 
-/*static struct piddata {
-    int output[NUM_MOTOR_PIDS];
-    unsigned int measurements[NUM_MOTOR_PIDS];
-    long p[2], i[2], d[2];
-} PIDTelemData;
- */
-
-
-//////////////   Timer 1   ///////////////
-void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-
+/////////        Leg Control ISR       ////////
+/////////  Installed to Timer1 @ 1Khz  ////////
+//void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
+static void legCtrlServiceRoutine(void){
     serviceMoveQueue();
-    serviceTailQueue();
-    moveSynth();
-    tailSynth();
-
-
-    serviceMotionPID();
-
-    //Timer1 runs at 1kHz; t1_ticks is a ms counter
-    t1_ticks++;
-
-    //Clear Timer1 interrupt flag
-    _T1IF = 0;
+    moveSynth();         //TODO: port to synth module
+    serviceMotionPID();  //Update controllers
 }
 
-void SetupTimer1(void) {
+static void SetupTimer1(void) {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
             T1_SYNC_EXT_OFF & T1_IDLE_CON;
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
     //T1PERvalue = 0x9C40/2;
-    t1_ticks = 0;
-    OpenTimer1(T1CON1value, T1PERvalue);
-    ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
+    //getT1_ticks() = 0;
+    //OpenTimer1(T1CON1value, T1PERvalue);
+    //ConfigIntTimer1(T1_INT_PRIOR_6 & T1_INT_ON);
+    int retval;
+    retval = sysServiceConfigT1(T1CON1value, T1PERvalue, T1_INT_PRIOR_6 & T1_INT_ON);
+    //TODO: Put a soft trap here, conditional on retval
 }
-
-unsigned long getT1_ticks(){
-    return t1_ticks;
-}
-
-/////////////////////////////////////////
-
 
 
 void legCtrlSetup() {
     int i;
-    motor_abcCoeffs[0][0] = 1;
-    motor_abcCoeffs[0][1] = 2;
-    motor_abcCoeffs[0][2] = 3;
-    motor_abcCoeffs[1][0] = 1;
-    motor_abcCoeffs[1][1] = 2;
-    motor_abcCoeffs[2][2] = 3;
+
+    //Setup for PID controllers
     for (i = 0; i < NUM_MOTOR_PIDS; i++) {
 #ifdef PID_HARDWARE
         //THe user is REQUIRED to set up these pointers before initializing
@@ -126,7 +99,8 @@ void legCtrlSetup() {
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
 #endif
-        pidInitPIDObj(&(motor_pidObjs[i]), DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, DEFAULT_KAW, DEFAULT_KFF);
+        pidInitPIDObj(&(motor_pidObjs[i]), LEG_DEFAULT_KP, LEG_DEFAULT_KI,
+                LEG_DEFAULT_KD, LEG_DEFAULT_KAW, LEG_DEFAULT_KFF);
         //Set up max's and saturation values
         motor_pidObjs[i].satValPos = SATTHROT;
         motor_pidObjs[i].satValNeg = 0;
@@ -138,12 +112,14 @@ void legCtrlSetup() {
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
     legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
 
-    SetupTimer1(); //this should be decoupled from the PID controllers
+    SetupTimer1(); // Timer 1 @ 1 Khz
+    int retval;
+    retval = sysServiceInstallT1(legCtrlServiceRoutine);
     //ADC_OffsetL = 1; //prevent divide by zero errors
     //ADC_OffsetR = 1;
 
     //Move Queue setup and initialization
-    moveq = mqInit(16);
+    moveq = mqInit(32);
     idleMove = malloc(sizeof (moveCmdStruct));
     idleMove->inputL = 0;
     idleMove->inputR = 0;
@@ -158,21 +134,6 @@ void legCtrlSetup() {
     moveExpire = 0;
     blinkCtr = 0;
     inMotion = 0;
-
-    //Tail queue
-    tailq = tailqInit(16);
-    idleTail = malloc(sizeof (tailCmdStruct));
-    idleTail->inputL = 0;
-    idleTail->inputR = 0;
-    idleTail->duration = 0;
-    idleTail->type = TAIL_SEG_IDLE;
-    idleTail->params[0] = 0;
-    idleTail->params[1] = 0;
-    idleTail->params[2] = 0;
-    currentTail = idleTail;
-    currentTailStart = 0;
-    tailExpire = 0;
-
 
     //Ensure controllers are reset to zero and turned off
     //External function used here since it will zero out the state
@@ -203,7 +164,7 @@ void serviceMotionPID() {
     updateBEMF();
 
     /////////// PID Section //////////
-#ifdef PID_SOFTWARE
+
     int j;
     for (j = 0; j < NUM_MOTOR_PIDS; j++) {
         //We are now measuring battery voltage directly via AN0,
@@ -217,8 +178,17 @@ void serviceMotionPID() {
             //TODO: Do we want to add provisions to track error, even when
             //the output is switched off?
 
+#ifdef PID_SOFTWARE
             //Update values
             pidUpdate(&(motor_pidObjs[j]), bemf[j]);
+#elif defined PID_HARDWARE
+            //Apply scaling, update, remove scaling for consistency
+            int temp;
+            temp = motor_pidObjs[j].input; //Save unscaled input val
+            motor_pidObjs[j].input *= MOTOR_PID_SCALER; //Scale input
+            pidUpdate(&(motor_pidObjs[j]), MOTOR_PID_SCALER* bemf[j]);
+            motor_pidObjs[j].input = temp;  //Reset unscaled input
+#endif //PID_SOFTWWARE vs PID_HARDWARE
 
             //Set PWM duty cycle
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
@@ -228,28 +198,6 @@ void serviceMotionPID() {
         }
 
     } // end of for(j)
-
-#elif defined PID_HARDWARE
-    int temp;
-    int j;
-    for (j = 0; j < NUM_MOTOR_PIDS; j++) {
-        if (motor_pidObjs[j].onoff) {
-            //pidSetReference(&PID1, pidObjs[0].input);
-            //pidHWSetReference(&(motor_pidObjs[j].dspPID), 
-            //        MOTOR_PID_ERR_SCALER * motor_pidObjs[j].input);
-            temp = motor_pidObjs[j].input; //Save unscaled input val
-            motor_pidObjs[j].input *= MOTOR_PID_SCALER; //Scale input
-            pidUpdate(&(motor_pidObjs[j]),
-                     MOTOR_PID_SCALER * bemf[j]); //Update with scaled feedback
-            motor_pidObjs[j].input = temp;  //Reset unscaled input
-
-            SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
-        } else if (PID_ZEROING_ENABLE) { //Zero DC
-            SetDCMCPWM(legCtrlOutputChannels[j], 0, 0);
-        }
-
-    } //end for(j)
-#endif //PID_SOFTWWARE vs PID_HARDWARE
 }
 
 
@@ -282,9 +230,9 @@ void updateBEMF(){
         bemf[i] = medianFilter3(bemfHist[i]); //Apply median filter
     }
 
-    // IIR filter on BEMF: y[n] = 0.8 * y[n-1] + 0.2 * x[n]
-    bemf[0] = (8 * (long) bemfLast[0] / 10) + 2 * (long) bemf[0] / 10;
-    bemf[1] = (8 * (long) bemfLast[1] / 10) + 2 * (long) bemf[1] / 10;
+    // IIR filter on BEMF: y[n] = 0.2 * y[n-1] + 0.8 * x[n]
+    bemf[0] = (2 * (long) bemfLast[0] / 10) + 8 * (long) bemf[0] / 10;
+    bemf[1] = (2 * (long) bemfLast[1] / 10) + 8 * (long) bemf[1] / 10;
     bemfLast[0] = bemf[0]; //bemfLast will not be used after here, OK to set
     bemfLast[1] = bemf[1];
 
@@ -312,11 +260,24 @@ void serviceMoveQueue(void) {
     //Service Move Queue if not empty
     if (!mqIsEmpty(moveq)) {
         inMotion = 1;
-        if ((currentMove == idleMove) || (t1_ticks >= moveExpire)) {
+        if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
-            moveExpire = t1_ticks + currentMove->duration;
-            currentMoveStart = t1_ticks;
-            steeringOn();
+            //MOVE_SEG_LOOP_DECL only needs to appear once
+            if(currentMove->type == MOVE_SEG_LOOP_DECL){
+                mqLoopingOnOff(1);
+                currentMove = mqPop(moveq);
+            }
+            if(currentMove->type == MOVE_SEG_LOOP_CLEAR){
+                mqLoopingOnOff(0);
+                currentMove = mqPop(moveq);
+            }
+            if(currentMove->type == MOVE_SEG_QFLUSH){
+                while(mqPop(moveq)); //Terminate on NULL return, flushing queue
+                currentMove = idleMove;
+            }
+            //TODO: handle NULL return from mqPop
+            moveExpire = getT1_ticks() + currentMove->duration;
+            currentMoveStart = getT1_ticks();
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {
@@ -325,7 +286,7 @@ void serviceMoveQueue(void) {
             }
         }
     }    //Move Queue is empty
-    else if ((t1_ticks >= moveExpire) && currentMove != idleMove) {
+    else if ((getT1_ticks() >= moveExpire) && currentMove != idleMove) {
         //No more moves, go back to idle
         currentMove = idleMove;
         pidSetInput(&(motor_pidObjs[0]), 0);
@@ -357,8 +318,8 @@ static void moveSynth() {
             long rateL = (long) currentMove->params[0];
             long rateR = (long) currentMove->params[1];
             //Do division last to prevent integer math underflow
-            yL = rateL * ((long) t1_ticks - (long) currentMoveStart) / 1000 + ySL;
-            yR = rateR * ((long) t1_ticks - (long) currentMoveStart) / 1000 + ySR;
+            yL = rateL * ((long) getT1_ticks() - (long) currentMoveStart) / 1000 + ySL;
+            yR = rateR * ((long) getT1_ticks() - (long) currentMoveStart) / 1000 + ySR;
         }
         if (currentMove->type == MOVE_SEG_SIN) {
             //float temp = 1.0/1000.0;
@@ -368,15 +329,11 @@ static void moveSynth() {
 #define BAMS16_TO_FLOAT 1/10430.367658761737
             float phase = BAMS16_TO_FLOAT * (float) currentMove->params[2]; //binary angle
             //Must be very careful about underflow & overflow here!
-            //long arg = 2*BAMS16_PI*mF/100;
-            //arg = arg*(t1_ticks - currentMoveStart)/10 - phase;
-            //float fyL = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySL;
-            //float fyR = amp*sin(2*3.1415*F*(float)(t1_ticks - currentMoveStart)/1000  - phase) + ySR;
-            float fyL = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + ySL;
-            float fyR = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + ySR;
+            float fyL = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() - currentMoveStart)*0.001 - phase) + ySL;
+            float fyR = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() - currentMoveStart)*0.001 - phase) + ySR;
 
 
-            //fractional arg = 2*(long)F*((long)t1_ticks-(long)currentMoveStart) *
+            //fractional arg = 2*(long)F*((long)getT1_ticks()-(long)currentMoveStart) *
             //fractional temp = _Q15sinPI(arg);
             //fractional wave = (int)((long)temp*(long)amp >> 15);
 
@@ -441,68 +398,4 @@ void legCtrlOnOff(unsigned int num, unsigned char state){
 
 void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
     pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
-}
-
-
-////// Tail functions below here
-void serviceTailQueue(void) {
-    //Service Move Queue if not empty
-    if (!tailqIsEmpty(tailq)) {
-        inMotion = 1;
-        if ((currentTail == idleTail) || (t1_ticks >= tailExpire)) {
-            currentTail = mqPop(tailq);
-            tailExpire = t1_ticks + currentTail->duration;
-            currentTailStart = t1_ticks;
-
-            //If we are no on an Idle move, turn on controllers
-            if (currentTail->type != TAIL_SEG_IDLE) {
-                //TODO: Turn on tail controller
-            }
-        }
-    }    //Move Queue is empty
-    else if ((t1_ticks >= tailExpire) && currentTail != idleTail) {
-        //No more moves, go back to idle
-        currentTail = idleTail;
-        //TODO: Zero tail torque, turn off controller
-        tailExpire = 0;
-    }
-}
-
-static void tailSynth() {
-    //Move segment synthesis
-    long yS = currentTail->inputL; //store in local variable to limit lookups
-    int y = 0;
-    if (inMotion) {
-        if (currentTail->type == TAIL_SEG_IDLE) {
-            y = 0;
-        }
-        if (currentTail->type == TAIL_SEG_CONSTANT) {
-            y = yS;
-        }
-        if (currentTail->type == TAIL_SEG_RAMP) {
-            long rate = (long) currentTail->params[0];
-            //Do division last to prevent integer math underflow
-            y = rate * ((long) t1_ticks - (long) currentTailStart) / 1000 + yS;
-        }
-        if (currentTail->type == TAIL_SEG_SIN) {
-            //float temp = 1.0/1000.0;
-            float amp = (float) currentTail->params[0];
-            //float F = (float)currentMove->params[1] / 1000;
-            float F = (float) currentTail->params[1] * 0.001;
-#define BAMS16_TO_FLOAT 1/10430.367658761737
-            float phase = BAMS16_TO_FLOAT * (float) currentTail->params[2]; //binary angle
-            float fy = amp * sin(2 * 3.1415 * F * (float) (t1_ticks - currentMoveStart)*0.001 - phase) + yS;
- 
-            //Clipping
-            int temp = (int) fy;
-            if (temp < 0) {
-                temp = 0;
-            }
-            y = (unsigned int) temp;
-        }
-        //TODO: Set tail input here
-        //motor_pidObjs[0].input = yL;
-    }
-    //Note here that pidObjs[n].input is not set if !inMotion, in case another behavior wants to
-    // set it.
 }

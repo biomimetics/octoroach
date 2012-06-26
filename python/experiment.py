@@ -24,7 +24,8 @@ def main():
         shared.dataFileName = findFileName();
         print "Data file:  ", shared.dataFileName
 
-    #sendEcho("abcdefgh")
+    #sendEcho("abc")
+    #time.sleep(1)
 
     if RESET_ROBOT:
         print "Resetting robot..."
@@ -40,32 +41,32 @@ def main():
     #Motor gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
-    #
-    motorgains = [5000,100,0,0,20 , 5000,100,0,0,20] #Hardware PID
+    
+    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
     setMotorGains(motorgains)
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
     #
-    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
+    steeringGains = [5000,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
     #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
-    #steeringGains = [20,1,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
 
     #Constant example
-    #moves = 3
+    #moves = 1
     #moveq = [moves, \
-    #         0, 0, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         100, 100, 5000,   MOVE_SEG_CONSTANT, 0, 0, 0,
-    #         50, 50, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-
+    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+             
     #Ramp example
-    moves = 3
+    moves = 5
     moveq = [moves, \
-        0,   0,   500,   MOVE_SEG_RAMP,    600, 600, 0,
-        300, 300, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        300, 300, 500,   MOVE_SEG_RAMP, -600,  -600,  0]
+        0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
+        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+        150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
+        0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
@@ -81,6 +82,8 @@ def main():
     shared.leadoutTime = 500;
     
     numSamples = calcNumSamples(moveq)
+    numSamples = 850
+    shared.imudata = [ [] ] * numSamples
     
     #Flash must be erased to save new data
     if SAVE_DATA:
@@ -98,8 +101,19 @@ def main():
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
     sendMoveQueue(moveq)
+    
+    #Clear loop
+    time.sleep(6)
+    mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
+    mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
 
     if SAVE_DATA:
+        print "Sending loop clear!!"
+        sendMoveQueue(mqclear)
+        time.sleep(0.05)
+        print "Sending move queue flush!!"
+        sendMoveQueue(mqflush)
+        
         downloadTelemetry(numSamples)
 
     #Wait for Ctrl+C to exit; this is done in case other messages come in

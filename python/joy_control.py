@@ -1,21 +1,19 @@
+import sys
 import numpy as np
 from lib import command 
 from struct import *
 import time
 from xbee import XBee
 import serial
-import glob
-from math import ceil
+import pygame
 from callbackFunc import xbee_received
 import shared
-import pygame
-import sys
 
 DEST_ADDR = '\x20\x52'
-#~ imudata_file_name = 'imudata.txt'
-#~ statedata_file_name = 'statedata.txt'
-#~ dutycycle_file_name = 'dutycycle.txt'
-#~ motordata_file_name = 'motordata.txt'
+imudata_file_name = 'imudata.txt'
+statedata_file_name = 'statedata.txt'
+dutycycle_file_name = 'dutycycle.txt'
+motordata_file_name = 'motordata.txt'
 
 imudata = []
 statedata = []
@@ -23,9 +21,10 @@ dutycycles = []
 motordata = []
 gainsNotSet = True;
 
-MAXTHROT = 250
+MAXTHROT = 200
 
-ser = serial.Serial(shared.BS_COMPORT, shared.BS_BAUDRATE,timeout=3, rtscts=1)
+
+ser = serial.Serial(shared.BS_COMPORT, 230400,timeout=3, rtscts=1)
 xb = XBee(ser, callback = xbee_received)
 
 def xb_send(status, type, data):
@@ -36,15 +35,15 @@ def resetRobot():
     xb_send(0, command.SOFTWARE_RESET, pack('h',0))
 
 
-if __name__ == '__main__':
-
-    #dataFileName = 'imudata.txt'
+def main():
+    global MAXTHROT
+    dataFileName = 'imudata.txt'
 
     if ser.isOpen():
         print "Serial open."
-        
-    #resetRobot()
-    time.sleep(0.2)
+
+    resetRobot()
+    time.sleep(1)
 
     try:
         pygame.init()
@@ -57,27 +56,25 @@ if __name__ == '__main__':
         ser.close()
         sys.exit(-1)
 
-    
     motorgains = [200,2,0,2,0,    200,2,0,2,0]
-    
     while not(shared.motor_gains_set):
         print "Setting motor gains..."
         xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
         time.sleep(1)
     
     throttle = [0,0]
+    tinc = 25;
 
     try:    
         while True:
 
             value = []
             pygame.event.pump()
-            left_throt = -j.get_axis(2)
-            right_throt = -j.get_axis(1)
-            #Clip at less than 2% throttle
-            if left_throt < 0.02:
+            left_throt = -j.get_axis(1)
+            right_throt = -j.get_axis(2)
+            if left_throt < 0.01:
                 left_throt = 0
-            if right_throt < 0.02:
+            if right_throt < 0.01:
                 right_throt = 0
             left_throt = MAXTHROT * left_throt
             right_throt = MAXTHROT * right_throt
@@ -92,9 +89,10 @@ if __name__ == '__main__':
             xb_send(0, command.SET_THRUST_CLOSED_LOOP, pack('5h',*thrust))
             #xb_send(0,command.SET_THRUST_OPEN_LOOP,pack('2h',*throttle))
 
-            time.sleep(0.15)
+            time.sleep(0.25)
 
     except:
+        print
         print "closing"
         try:
             xb.halt()
@@ -103,7 +101,24 @@ if __name__ == '__main__':
             print "Got SerialException."
 
 
-
+#Provide a try-except over the whole main function
+# for clean exit. The Xbee module should have better
+# provisions for handling a clean exit, but it doesn't.
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "\nRecieved Ctrl+C, exiting."
+        xb.halt()
+        ser.close()
+    except Exception as args:
+        print "\nGeneral exception:",args
+        print "Attemping to exit cleanly..."
+        xb.halt()
+        ser.close()
+    except serial.serialutil.SerialException:
+        xb.halt()
+        ser.close()
 
 
 

@@ -39,6 +39,9 @@
         <itemPath>../../imageproc-lib/i2c_driver.h</itemPath>
         <itemPath>../lib/leg_ctrl.h</itemPath>
         <itemPath>../lib/tail_queue.h</itemPath>
+        <itemPath>../lib/tail_ctrl.h</itemPath>
+        <itemPath>../lib/sys_service.h</itemPath>
+        <itemPath>../lib/hall.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
     </logicalFolder>
@@ -82,9 +85,13 @@
         <itemPath>../lib/steering.c</itemPath>
         <itemPath>../lib/leg_ctrl.c</itemPath>
         <itemPath>../lib/tail_queue.c</itemPath>
+        <itemPath>../lib/tail_ctrl.c</itemPath>
+        <itemPath>../lib/sys_service.c</itemPath>
+        <itemPath>../lib/hall.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
+      <itemPath>version.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -454,6 +461,12 @@
           <property key="preprocessor-macros" value="__IMAGEPROC2"/>
           <property key="scalar-model" value="default"/>
         </C30>
+        <C30-AS>
+        </C30-AS>
+        <C30-LD>
+        </C30-LD>
+        <C30Global>
+        </C30Global>
       </item>
       <C30>
         <property key="code-model" value="default"/>
@@ -536,7 +549,9 @@
       </C30-LD>
       <C30Global>
         <property key="fast-math" value="true"/>
+        <property key="generic-16-bit" value="false"/>
         <property key="legacy-libc" value="false"/>
+        <property key="oXC16glb-macros" value="PID_HARDWARE"/>
         <property key="output-file-format" value="elf"/>
       </C30Global>
       <ICD3PlatformTool>

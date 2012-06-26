@@ -63,5 +63,11 @@ SPECIAL_TELEMETRY  =        0x89
 ERASE_SECTORS      =        0x8A
 FLASH_READBACK     =        0x8B
 SLEEP              =        0x8C
+SET_VEL_PROFILE =           0x8D
+WHO_AM_I =                  0x8E
+START_TELEM =               0x8F
+ZERO_POS =                  0x90
+SET_HALL_GAINS =            0x91
+SET_TAIL_QUEUE =            0x92
 
 # CMD values of 0xF0(240) - 0xFF(255) are reserved for future use
