@@ -1,0 +1,9 @@
+*.pyc
+*.mcw
+*.o
+*.hex
+*.map
+*.cof
+build
+dist
+version.c
