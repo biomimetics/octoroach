@@ -1,7 +1,7 @@
-/*.cof
-/*.hex
-/*.map
-/*.mcs
+*.cof
+*.hex
+*.map
+*.mcs
 *.pyc
 build
 dist
