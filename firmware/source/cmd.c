@@ -27,7 +27,7 @@
 #include "hall.h"
 #include "version.h"
 
-#include "pullin_const.h" //major config defines, sys-service, hall, etc
+#include "settings.h" //major config defines, sys-service, hall, etc
 
 #include <stdio.h>
 #include <string.h>

@@ -28,7 +28,6 @@
         <itemPath>../lib/adc_pid.h</itemPath>
         <itemPath>../lib/motor_ctrl.h</itemPath>
         <itemPath>../lib/cmd_const.h</itemPath>
-        <itemPath>../lib/pullin_const.h</itemPath>
         <itemPath>../lib/flashmem.h</itemPath>
         <itemPath>../lib/move_queue.h</itemPath>
         <itemPath>../lib/steering.h</itemPath>
@@ -44,6 +43,7 @@
         <itemPath>../lib/hall.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
+      <itemPath>source/settings.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

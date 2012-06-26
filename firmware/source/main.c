@@ -5,7 +5,7 @@
  * Author: stanbaek
  *******************************************************************************/
 
-#include "pullin_const.h"
+#include "settings.h"
 #include "Generic.h"
 #include "p33Fxxxx.h"
 #include "init_default.h"
@@ -43,9 +43,9 @@ int main(void) {
     wakeTime = 0;
     dcCounter = 0;
 
-    WordVal src_addr_init = {SRC_ADDR};
-    WordVal src_pan_id_init = {SRC_PAN_ID};
-    WordVal dst_addr_init = {DST_ADDR};
+    WordVal src_addr_init = {RADIO_SRC_ADDR};
+    WordVal src_pan_id_init = {RADIO_SRC_PAN_ID};
+    WordVal dst_addr_init = {RADIO_DST_ADDR};
 
     SetupClock();
     SwitchClocks();
@@ -56,8 +56,8 @@ int main(void) {
     mSET_AND_SAVE_CPU_IP(old_ipl, 1)
 
     swatchSetup();
-    radioInit(src_addr_init, src_pan_id_init, RXPQ_MAX_SIZE, TXPQ_MAX_SIZE);
-    radioSetChannel(MY_CHAN); //Set to my channel
+    radioInit(src_addr_init, src_pan_id_init, RADIO_RXPQ_MAX_SIZE, RADIO_TXPQ_MAX_SIZE);
+    radioSetChannel(RADIO_CHANNEL); //Set to my channel
     macSetDestAddr(dst_addr_init);
 
     dfmemSetup();
