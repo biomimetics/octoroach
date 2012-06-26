@@ -8,13 +8,14 @@
 #define __SETTINGS_H
 
 
+#error "REQUIRED: Review and set radio channel & network parameters in firmware/source/settings.h  , then comment out this line."
 /////// Radio settings ///////
-#define RADIO_CHANNEL			0x19
-//#warning "You have changed the radio channel from 0x19 to something else"
-#define RADIO_SRC_PAN_ID 		0x2050
-#define RADIO_SRC_ADDR 		0x2052
-//Hard code in destination address for now, update to be dynamic later
-#define RADIO_DST_ADDR		0x2051
+// Motile address ; all MRI robots were shipped with this configuration
+#define RADIO_CHANNEL		0x0e
+#define RADIO_SRC_ADDR 		0x3002
+#define RADIO_SRC_PAN_ID  		0x3000
+//Hard-coded destination address, must match basestation or XBee addr
+#define RADIO_DST_ADDR		0x3001
 
 // Radio queue sizes
 #define RADIO_RXPQ_MAX_SIZE 	16
