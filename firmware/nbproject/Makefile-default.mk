@@ -234,7 +234,7 @@ ${OBJECTDIR}/_ext/1360930230/tail_queue.o: ../lib/tail_queue.c  nbproject/Makefi
 ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o: ../lib/tail_ctrl.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/tail_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d"    -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/tail_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d"    -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -fast-math -mlarge-data -O0 -I".\source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/sys_service.o: ../lib/sys_service.c  nbproject/Makefile-${CND_CONF}.mk
@@ -433,7 +433,7 @@ ${OBJECTDIR}/_ext/1360930230/tail_queue.o: ../lib/tail_queue.c  nbproject/Makefi
 ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o: ../lib/tail_ctrl.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/tail_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d"    -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/tail_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d"    -g -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -fast-math -mlarge-data -O0 -I".\source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/sys_service.o: ../lib/sys_service.c  nbproject/Makefile-${CND_CONF}.mk

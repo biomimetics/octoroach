@@ -2,7 +2,7 @@
 
 #include "tail_ctrl.h"
 #include "pid.h"
-#include "motor_ctrl.h"
+//#include "motor_ctrl.h"
 #include "timer.h"
 #include "led.h"
 #include "tail_queue.h"
@@ -14,11 +14,11 @@
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
 //PID container objects
-//pidObj motor_pidObjs[NUM_MOTOR_PIDS];
+pidObj tailPID;
 //DSP PID stuff
 //These have to be declared here!
-//fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
-//fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
+fractional tail_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
+fractional tail_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
 
 //Counter for blinking the red LED during motion
 //int blinkCtr;
@@ -35,7 +35,7 @@ unsigned long currentTailStart, tailExpire;
 
 //Function to be installed into T1, and setup function
 static void SetupTimer1(void);
-static void tailCtrlServiceRoutine(void);  //To be installed with sysService
+static void tailCtrlServiceRoutine(void); //To be installed with sysService
 //The following local functions are called by the service routine:
 static void serviceTailQueue(void);
 static void tailSynth();
@@ -45,8 +45,9 @@ volatile char tailInMotion;
 /////////        Leg Control ISR       ////////
 /////////  Installed to Timer1 @ 1Khz  ////////
 //void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-static void tailCtrlServiceRoutine(void){
-    serviceTailQueue();  //Update controllers
+
+static void tailCtrlServiceRoutine(void) {
+    serviceTailQueue(); //Update controllers
     tailSynth();
 }
 
@@ -67,6 +68,7 @@ static void SetupTimer1(void) {
 
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
+
 void tailCtrlSetup() {
 
     SetupTimer1(); // Timer 1 @ 1 Khz
@@ -86,10 +88,25 @@ void tailCtrlSetup() {
     currentTailStart = 0;
     tailExpire = 0;
 
+ #ifdef PID_HARDWARE
+    //Create PID controller object
+    tailPID.dspPID.abcCoefficients = tail_abcCoeffs;
+    tailPID.dspPID.controlHistory = tail_controlHists;
+#endif
+    pidInitPIDObj(&tailPID, TAIL_DEFAULT_KP, TAIL_DEFAULT_KI,
+            TAIL_DEFAULT_KD, TAIL_DEFAULT_KAW, 0);
+    tailPID.satValPos = 100;
+    tailPID.satValNeg = -100;
+    tailPID.maxVal = 100;
+    tailPID.minVal = -100;
+
+    tailPID.onoff = PID_OFF;
+
 }
 
 
 ////// Tail functions below here
+
 static void serviceTailQueue(void) {
     //Service Move Queue if not empty
     if (!tailqIsEmpty(tailq)) {
@@ -104,7 +121,7 @@ static void serviceTailQueue(void) {
                 //TODO: Turn on tail controller
             }
         }
-    }    //Move Queue is empty
+    }//Move Queue is empty
     else if ((getT1_ticks() >= tailExpire) && currentTail != idleTail) {
         //No more moves, go back to idle
         currentTail = idleTail;
@@ -137,7 +154,7 @@ static void tailSynth() {
 #define BAMS16_TO_FLOAT 1/10430.367658761737
             float phase = BAMS16_TO_FLOAT * (float) currentTail->params[2]; //binary angle
             float fy = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() -
-                                currentTailStart)*0.001 - phase) + yS;
+                    currentTailStart)*0.001 - phase) + yS;
 
             //Clipping
             int temp = (int) fy;
@@ -151,4 +168,16 @@ static void tailSynth() {
     }
     //Note here that pidObjs[n].input is not set if !inMotion, in case another behavior wants to
     // set it.
+}
+
+void tailCtrlSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
+    pidSetGains(&tailPID, Kp, Ki, Kd, Kaw, ff);
+}
+
+void tailCtrlOnOff(unsigned char state) {
+    tailPID.onoff = state;
+}
+
+void tailCtrlSetInput(int val){
+    pidSetInput(&tailPID, val);
 }

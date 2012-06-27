@@ -24,6 +24,7 @@
 #include "steering.h"
 #include "telem.h"
 #include "leg_ctrl.h"
+#include "tail_ctrl.h"
 #include "hall.h"
 #include "version.h"
 
@@ -89,6 +90,7 @@ static void cmdHallTelemetry(unsigned char status, unsigned char length, unsigne
 static void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned char *frame);
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -132,6 +134,7 @@ void cmdSetup(void) {
     cmd_func[CMD_ZERO_POS] = &cmdZeroPos;
     cmd_func[CMD_SET_HALL_GAINS] = &cmdSetHallGains;
     cmd_func[CMD_SET_TAIL_QUEUE] = &cmdSetTailQueue;
+    cmd_func[CMD_SET_TAIL_GAINS] = &cmdSetTailGains;
 
     //Set up command length vector
     /*cmd_len[CMD_SET_THRUST_OPENLOOP] = LEN_CMD_SET_THRUST_OPENLOOP;
@@ -649,4 +652,23 @@ static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned
         //idx =+ sizeof(_args_cmdSetMoveQueue);
         idx += sizeof (tailCmdStruct);
     }
+}
+
+static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned char *frame) {
+    //int Kp, Ki, Kd, Kaw, ff;
+    //int idx = 0;
+
+    //Unpack unsigned char* frame into structured values
+    //_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*) (frame);
+    PKT_UNPACK(_args_cmdSetTailGains, argsPtr, frame);
+
+    tailCtrlSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->Kff);
+
+    //Send confirmation packet
+    Payload pld;
+    pld = payCreateEmpty(sizeof(_args_cmdSetTailGains));
+    pld->pld_data[0] = status;
+    pld->pld_data[1] = CMD_SET_TAIL_GAINS;
+    memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetTailGains));
+    radioSendPayload((WordVal) macGetDestAddr(), pld);
 }

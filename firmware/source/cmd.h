@@ -36,6 +36,7 @@
 #define CMD_ZERO_POS                0x90
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
+#define CMD_SET_TAIL_GAINS          0x93
 
 //Argument lengths
 //lenghts are in bytes
@@ -157,6 +158,11 @@ typedef struct {
     enum tailSegT type;
     int params[3];
 } _args_cmdSetTailQueue;
+
+//cmdSetTailGains
+typedef struct{
+	int Kp, Ki, Kd, Kaw, Kff;
+} _args_cmdSetTailGains;
 
 #endif // __CMD_H
 
