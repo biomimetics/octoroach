@@ -28,6 +28,6 @@
 
 /////// Configuration options ///////
 //Configure project-wide for Hall Sensor operation
-#define HALL_SENSORS
+//#define HALL_SENSORS
 
 #endif //__SETTINGS_H

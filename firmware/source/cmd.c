@@ -326,15 +326,18 @@ static void cmdEraseMemSector(unsigned char status, unsigned char length, unsign
 -----------------------------------------------------------------------------*/
 void cmdEcho(unsigned char status, unsigned char length, unsigned char *frame) {
 
-    //radioSendPayload(macGetDestAddr(), payCreate(length, frame, status, CMD_ECHO));
-    Payload pld;
-    pld = payCreateEmpty(1);
-    paySetStatus(pld, status);
-    paySetType(pld, CMD_ECHO);
-    unsigned char temp = 99;
-    paySetData(pld, 1, &temp);
+    char* temp = malloc(length*sizeof(char));
+    strncpy(temp,(char*)frame,length);
 
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(macGetDestAddr(), payCreate(length, frame, status, CMD_ECHO));
+    //Payload pld;
+    //pld = payCreateEmpty(1);
+    //paySetStatus(pld, status);
+    //paySetType(pld, CMD_ECHO);
+    //unsigned char temp = 99;
+    //paySetData(pld, 1, &temp);
+
+    //radioSendPayload((WordVal) macGetDestAddr(), pld);
 }
 
 static void cmdNop(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -477,8 +480,12 @@ static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsi
 }
 
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame) {
+    delay_ms(10);
+    char* resetmsg = "RESET";
+    radioSendPayload(macGetDestAddr(), payCreate(6, (unsigned char*)resetmsg, status, CMD_ECHO));
+    delay_ms(10);
 #ifndef __DEBUG
-    asm volatile("reset");
+    __asm__ volatile ("reset");
 #endif
 }
 
