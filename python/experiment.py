@@ -9,6 +9,7 @@ import serial
 import shared
 
 from or_helpers import *
+from hall_helpers import queryRobot
 
 
 
@@ -24,13 +25,16 @@ def main():
         shared.dataFileName = findFileName();
         print "Data file:  ", shared.dataFileName
 
-    #sendEcho("abc")
-    #time.sleep(1)
+    #sendEcho("echo test")
+    #time.sleep(0.2)
 
     if RESET_ROBOT:
         print "Resetting robot..."
         resetRobot()
-        time.sleep(1)
+        time.sleep(0.5)
+        
+    # Send robot a WHO_AM_I command, verify communications
+    queryRobot()
         
     #wakeRobot()    
     #time.sleep(1)

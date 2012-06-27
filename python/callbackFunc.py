@@ -71,7 +71,7 @@ def xbee_received(packet):
                 dutycycles.append(datum)
         # ECHO
         elif type == command.ECHO:
-            print "echo:",status, type, data
+            print "echo: status = ",status," type=",type," data = ",data
         # SET_PID_GAINS
         elif type == command.SET_PID_GAINS:
             print "Set PID gains"

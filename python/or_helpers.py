@@ -43,7 +43,7 @@ def xb_safe_exit():
     sys.exit(1)
 
 def resetRobot():
-    xb_send(shared.xb, shared.DEST_ADDR, 0, command.SOFTWARE_RESET, pack('h',0))
+    xb_send(shared.xb, shared.DEST_ADDR, 0, command.SOFTWARE_RESET, pack('h',1))
 
 def findFileName():
     filenames = glob.glob("*imudata*.txt");
