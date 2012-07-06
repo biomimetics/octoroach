@@ -16,6 +16,7 @@
 #include "leg_ctrl.h"
 #include "sys_service.h"
 #include <string.h> //for memcpy
+#include "cmd.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -45,6 +46,7 @@ static unsigned long samplesToSave = 0;
 //Skip counter for dividing the 300hz timer into lower telemetry rates
 static unsigned int telemSkipNum = DEFAULT_SKIP_NUM;
 static unsigned int skipcounter = DEFAULT_SKIP_NUM;
+static unsigned long sampIdx = 0;
 
 static unsigned long samplesToStream = 0;
 static char telemStreamingFlag = TELEM_STREAM_OFF;
@@ -101,47 +103,43 @@ void telemSetSamplesToSave(unsigned long n) {
 
 void telemReadbackSamples(unsigned long numSamples) {
     //unsigned int page, bufferByte;// maxpage;
-    unsigned char dataPacket[PACKETSIZE + PKT_INDEX_SIZE];
-    //unsigned long bytesleft = PACKETSIZE * num;
-    //unsigned long telem_index = 0;
+    //unsigned char dataPacket[PACKETSIZE];
+    
     int delaytime_ms = READBACK_DELAY_TIME_MS;
 
-    unsigned long i;
+    unsigned long i  = 0; //will actually be the same as the sampleIndex
 
     LED_GREEN = 1;
     //Disable motion interrupts for readback
     //_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
-    //while(!dfmemIsReady());
+    
 
     telemStruct_t sampleData;
 
     for (i = 0; i < numSamples; i++) {
         //Retireve data from flash
         //dfmemReadSample(i, sizeof(sampleData), (unsigned char*)(&sampleData));
-        dfmemReadSample(i, sizeof (sampleData), dataPacket + PKT_INDEX_SIZE);
-        //Write sample number to start of packet. TODO: fix this
-        *(unsigned long*) (dataPacket) = (long) i;
+        dfmemReadSample(i, sizeof (sampleData), (unsigned char*)(&sampleData));
+       
         //Reliable send, with linear backoff
         g_last_ackd = 0;
         do {
-            telemSendDataDelay(PACKETSIZE + PKT_INDEX_SIZE, dataPacket, delaytime_ms);
+            telemSendDataDelay(PACKETSIZE, (unsigned char*)(&sampleData), delaytime_ms);
             //trx_status = phyReadBit(SR_TRAC_STATUS);
             delaytime_ms += 2;
         } while (g_last_ackd == 0);
         delaytime_ms = READBACK_DELAY_TIME_MS;
-        //telem_index++;
     }
 
-    //_T1IE = 1; _T5IE=1;
-    _LATB13 = 0;
+    LED_GREEN = 0;
 }
 
 void telemSendDataDelay(unsigned char data_length, unsigned char* data, int delaytime_ms) {
     // Create Payload, set status and type (don't cares)
     Payload pld = payCreateEmpty(data_length);
     //////    FIX THIS //////////
-    paySetType(pld, 0x89); // Don't Care
-    paySetStatus(pld, 0); // Don't Care
+    paySetType(pld, CMD_SPECIAL_TELEMETRY); //this is the only dependance on cmd.h
+    paySetStatus(pld, 0); //
 
     // Set Payload data
     paySetData(pld, data_length, data);
@@ -178,7 +176,6 @@ void telemErase(unsigned long numSamples) {
 ////////////////////////
 
 static void telemISRHandler() {
-    int samplesaved = 0;
     telemU data;
     int gyroAvg[3];
     int gyroData[3];
@@ -192,6 +189,7 @@ static void telemISRHandler() {
     // value of skicounter
     if (skipcounter == 0) {
         if (samplesToSave > 0) {
+
             /////// Get Gyro data and calc average via filter
             gyroGetXYZ((unsigned char*) gyroData);
             gyroGetOffsets(gyroOffsets);
@@ -203,6 +201,7 @@ static void telemISRHandler() {
             xlGetXYZ((unsigned char*) xldata);
 
             //Stopwatch was already started in the cmdSpecialTelemetry function
+            data.telemStruct.sampleIndex = sampIdx;
             data.telemStruct.timeStamp = (long) swatchTic();
             data.telemStruct.inputL = motor_pidObjs[0].input;
             data.telemStruct.inputR = motor_pidObjs[1].input;
@@ -221,7 +220,7 @@ static void telemISRHandler() {
             data.telemStruct.Vbatt = adcGetVBatt();
             data.telemStruct.steerAngle = steeringPID.input;
             telemSaveData(&data);
-            samplesaved = 1;
+            sampIdx++;
         }
         //Reset value of skip counter
         skipcounter = telemSkipNum;
@@ -247,6 +246,7 @@ static void telemISRHandler() {
                 xlGetXYZ((unsigned char*) xldata);
 
                 //Stopwatch was already started in the cmdSpecialTelemetry function
+                data.telemStruct.sampleIndex = sampIdx;
                 data.telemStruct.timeStamp = (long)swatchTic();
                 data.telemStruct.inputL = motor_pidObjs[0].input;
                 data.telemStruct.inputR = motor_pidObjs[1].input;
@@ -267,12 +267,12 @@ static void telemISRHandler() {
 
                 //Send back data:
                 Payload pld;
-                pld = payCreateEmpty(PACKETSIZE + PKT_INDEX_SIZE);
-                paySetType(pld, 0x85);
+                pld = payCreateEmpty(PACKETSIZE);
+                paySetType(pld, CMD_STREAM_TELEMETRY);  //requires cmd.h
                 paySetStatus(pld, 0);
-                unsigned long temp = 0;
-                memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH, &temp, sizeof(temp));
-                memcpy(pld->pld_data + sizeof(temp) + PAYLOAD_HEADER_LENGTH, &data, sizeof(data));
+                //Is there a cleaner way to do this? The payload interface is
+                //rather difficult.
+                memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH, &data, sizeof(data));
                 g_last_ackd = 0;
                 radioSendPayload(macGetDestAddr(), pld);
                 samplesToStream--;

@@ -103,7 +103,7 @@ def xbee_received(packet):
             #print "Special Telemetry Data Packet, ",shared.pkts
             datum = unpack(pattern, data)
             datum = list(datum)
-            telem_index = datum.pop(0)
+            telem_index = datum.pop(0) #pop removes this from data array
             #print "Special Telemetry Data Packet #",telem_index
             if (datum[0] != -1) and (telem_index) >= 0:
                 shared.imudata[telem_index] = datum
