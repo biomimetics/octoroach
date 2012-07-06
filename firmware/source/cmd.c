@@ -76,7 +76,7 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdStreamTelemetry(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame);
@@ -120,7 +120,7 @@ void cmdSetup(void) {
     cmd_func[CMD_SET_PID_GAINS] = &cmdSetPIDGains;
     cmd_func[CMD_GET_PID_TELEMETRY] = &cmdGetPIDTelemetry;
     cmd_func[CMD_SET_CTRLD_TURN_RATE] = &cmdSetCtrldTurnRate;
-    cmd_func[CMD_GET_IMU_LOOP_ZGYRO] = &cmdGetImuLoopZGyro;
+    cmd_func[CMD_STREAM_TELEMETRY] = &cmdStreamTelemetry;
     cmd_func[CMD_SET_MOVE_QUEUE] = &cmdSetMoveQueue;
     cmd_func[CMD_SET_STEERING_GAINS] = &cmdSetSteeringGains;
     cmd_func[CMD_SOFTWARE_RESET] = &cmdSoftwareReset;
@@ -432,8 +432,14 @@ static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsi
     radioSendPayload((WordVal) macGetDestAddr(), pld);
 }
 
-static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame) {
-    //Obsolete, do not use
+static void cmdStreamTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
+
+    PKT_UNPACK(_args_cmdStreamTelemetry, argsPtr, frame);
+
+    if (argsPtr->count != 0) {
+        swatchReset();
+        telemStartStreaming(argsPtr->count);
+    }
 }
 
 static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned char *frame) {

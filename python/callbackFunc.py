@@ -14,7 +14,7 @@ pktFormat = { \
     command.SET_PID_GAINS:          '10h', \
     command.GET_PID_TELEMETRY:      '', \
     command.SET_CTRLD_TURN_RATE:    '=h', \
-    command.GET_IMU_LOOP_ZGYRO:     '='+2*'Lhhh', \
+    command.STREAM_TELEMETRY:       '=LL'+16*'h', \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
@@ -91,14 +91,12 @@ def xbee_received(packet):
             print "degrees: ",shared.count2deg * rate
             print "counts: ", rate
             shared.steering_rate_set = True
-        # GET_IMU_LOOP_ZGYRO
-        elif type == command.GET_IMU_LOOP_ZGYRO:
-            pp = 2;
-            print "Z Gyro Data Packet"
+        # STREAM_TELEMETRY
+        elif type == command.STREAM_TELEMETRY:
+            print "Streaming telemtry packet:"
             datum = unpack(pattern, data)
-            if (datum[0] != -1):
-                for i in range(pp):
-                    shared.imudata.append(datum[4*i:4*(i+1)] )
+            print datum
+            #Do more here
         # SPECIAL_TELEMETRY
         elif type == command.SPECIAL_TELEMETRY:
             shared.pkts = shared.pkts + 1

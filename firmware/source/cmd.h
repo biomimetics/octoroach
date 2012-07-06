@@ -22,7 +22,7 @@
 #define CMD_SET_PID_GAINS           0x82
 #define CMD_GET_PID_TELEMETRY       0x83
 #define CMD_SET_CTRLD_TURN_RATE     0x84
-#define CMD_GET_IMU_LOOP_ZGYRO      0x85
+#define CMD_STREAM_TELEMETRY        0x85
 #define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
@@ -163,6 +163,11 @@ typedef struct {
 typedef struct{
 	int Kp, Ki, Kd, Kaw, Kff;
 } _args_cmdSetTailGains;
+
+//cmdStreamTelemetry
+typedef struct{
+    unsigned long count;
+} _args_cmdStreamTelemetry;
 
 #endif // __CMD_H
 

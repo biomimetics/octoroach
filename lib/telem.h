@@ -34,6 +34,9 @@ typedef union packedTelemUnion {
 #define PACKETSIZE sizeof(telemStruct_t)
 #define PKT_INDEX_SIZE 4 //for sending a 4-byte (ulong) telemetry packet index
 
+#define TELEM_STREAM_OFF  0
+#define TELEM_STREAM_ON   1
+
 // Prototypes
 void telemSetup(); //To be called in main
 void telemReadbackSamples(unsigned long);
@@ -42,5 +45,6 @@ void telemSaveData(telemU *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 void telemSetSkip(unsigned int skipnum);
+void telemStartStreaming(unsigned long num);
 
 #endif  // __TELEM_H

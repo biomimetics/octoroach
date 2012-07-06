@@ -238,3 +238,7 @@ def calcNumSamples(moveq):
     shared.imudata = [ [] ] * n
     print "Samples: ",n
     return n
+
+def startTelemetryStream(numSamples):
+    xb_send(shared.xb, shared.DEST_ADDR, \
+            0, command.STREAM_TELEMETRY, pack('L',numSamples))

@@ -9,7 +9,7 @@
 
 
 /////// Radio settings ///////
-#define RADIO_CHANNEL			0x0E
+#define RADIO_CHANNEL			0x19
 //#warning "You have changed the radio channel from 0x19 to something else"
 #define RADIO_SRC_PAN_ID 		0x2050
 #define RADIO_SRC_ADDR 		0x2052
@@ -39,6 +39,6 @@
 
 /////// Configuration options ///////
 //Configure project-wide for Hall Sensor operation
-//#define HALL_SENSORS
+#define HALL_SENSORS
 
 #endif //__SETTINGS_H
