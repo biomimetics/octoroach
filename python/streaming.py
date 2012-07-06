@@ -42,7 +42,7 @@ def main():
     raw_input("Press enter to start streaming ...")
     
     
-    numSamples = 5
+    numSamples = 100
     startTelemetryStream(numSamples)
 
     #Wait for streaming to complete
