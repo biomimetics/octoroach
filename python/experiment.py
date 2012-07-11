@@ -14,7 +14,7 @@ from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
-SAVE_DATA = False
+SAVE_DATA = True
 RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
@@ -58,19 +58,22 @@ def main():
     #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
 
+    #### Do not send more than 5 move segments per packet!   ####
+    #### Instead, send multiple packets, and don't use       ####
+    ####    calcNumSamples() below, manually calc numSamples ####
+    #### This will be fixed to be automatic in the future.   ####
+
     #Constant example
     #moves = 1
     #moveq = [moves, \
     #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #Ramp example
-    moves = 5
+    moves = 3
     moveq = [moves, \
-        0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
         0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
         150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
-        0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
+        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
@@ -86,7 +89,6 @@ def main():
     shared.leadoutTime = 500;
     
     numSamples = calcNumSamples(moveq)
-    numSamples = 850
     shared.imudata = [ [] ] * numSamples
     
     #Flash must be erased to save new data
@@ -106,18 +108,8 @@ def main():
     #as soon as it is received
     sendMoveQueue(moveq)
     
-    #Clear loop
-    time.sleep(6)
-    mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
-    mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
 
     if SAVE_DATA:
-        print "Sending loop clear!!"
-        sendMoveQueue(mqclear)
-        time.sleep(0.05)
-        print "Sending move queue flush!!"
-        sendMoveQueue(mqflush)
-        
         downloadTelemetry(numSamples)
 
     #Wait for Ctrl+C to exit; this is done in case other messages come in
