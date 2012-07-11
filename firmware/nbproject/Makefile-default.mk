@@ -61,7 +61,15 @@ LDLIBSOPTIONS=
 # fixDeps replaces a bunch of sed/cat/printf statements that slow down the build
 FIXDEPS=fixDeps
 
-.build-conf:  ${BUILD_SUBPROJECTS}
+# The following macros may be used in the pre and post step lines
+Device=dsPIC33FJ128MC706A
+ProjectDir="C:\Users\pullin\Desktop\GIT Code\octoroach\firmware"
+ConfName=default
+ImagePath="dist\default\${IMAGE_TYPE}\firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
+ImageDir="dist\default\${IMAGE_TYPE}"
+ImageName="firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
+
+.build-conf:  .pre ${BUILD_SUBPROJECTS}
 	${MAKE} ${MAKE_OPTIONS} -f nbproject/Makefile-default.mk dist/${CND_CONF}/${IMAGE_TYPE}/firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}
 
 MP_PROCESSOR_OPTION=33FJ128MC706A
@@ -519,6 +527,11 @@ dist/${CND_CONF}/${IMAGE_TYPE}/firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECT
 	
 endif
 
+.pre:
+	@echo "--------------------------------------"
+	@echo "User defined pre-build step: [python ..\..\imageproc-lib\version.py APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD ]"
+	@python ..\..\imageproc-lib\version.py APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD 
+	@echo "--------------------------------------"
 
 # Subprojects
 .build-subprojects:

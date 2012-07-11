@@ -12,6 +12,7 @@
 #include "dfilter_avg.h"
 #include "pid_hw.h"
 #include "leg_ctrl.h"
+#include "sys_service.h"
 
 //Inline functions
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
@@ -55,7 +56,7 @@ static void steeringServiceRoutine(void){
     steeringHandleISR();
 }
 
-static void setupTimer5(){
+static void SetupTimer5(){
     ///// Timer 5 setup, Steering ISR, 300Hz /////
     // period value = Fcy/(prescale*Ftimer)
     unsigned int T5CON1value, T5PERvalue;
@@ -88,7 +89,7 @@ void steeringSetup(void) {
 
     steeringSetAngRate(0);
 
-    setupTimer5(); //T5 ISR will update the steering controller
+    SetupTimer5(); //T5 ISR will update the steering controller
     int retval;
     retval = sysServiceInstallT5(steeringServiceRoutine);
 
