@@ -104,27 +104,27 @@ void telemSetSamplesToSave(unsigned long n) {
 void telemReadbackSamples(unsigned long numSamples) {
     //unsigned int page, bufferByte;// maxpage;
     //unsigned char dataPacket[PACKETSIZE];
-    
+
     int delaytime_ms = READBACK_DELAY_TIME_MS;
 
-    unsigned long i  = 0; //will actually be the same as the sampleIndex
+    unsigned long i = 0; //will actually be the same as the sampleIndex
 
     LED_GREEN = 1;
     //Disable motion interrupts for readback
     //_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
-    
+
 
     telemStruct_t sampleData;
 
     for (i = 0; i < numSamples; i++) {
         //Retireve data from flash
         //dfmemReadSample(i, sizeof(sampleData), (unsigned char*)(&sampleData));
-        dfmemReadSample(i, sizeof (sampleData), (unsigned char*)(&sampleData));
-       
+        dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
+
         //Reliable send, with linear backoff
         g_last_ackd = 0;
         do {
-            telemSendDataDelay(PACKETSIZE, (unsigned char*)(&sampleData), delaytime_ms);
+            telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
             //trx_status = phyReadBit(SR_TRAC_STATUS);
             delaytime_ms += 2;
         } while (g_last_ackd == 0);
@@ -247,7 +247,7 @@ static void telemISRHandler() {
 
                 //Stopwatch was already started in the cmdSpecialTelemetry function
                 data.telemStruct.sampleIndex = sampIdx;
-                data.telemStruct.timeStamp = (long)swatchTic();
+                data.telemStruct.timeStamp = (long) swatchTic();
                 data.telemStruct.inputL = motor_pidObjs[0].input;
                 data.telemStruct.inputR = motor_pidObjs[1].input;
                 data.telemStruct.dcL = PDC1;
@@ -264,15 +264,14 @@ static void telemISRHandler() {
                 data.telemStruct.sOut = steeringPID.output;
                 data.telemStruct.Vbatt = adcGetVBatt();
                 data.telemStruct.steerAngle = steeringPID.input;
-
+                sampIdx++;
                 //Send back data:
                 Payload pld;
                 pld = payCreateEmpty(PACKETSIZE);
-                paySetType(pld, CMD_STREAM_TELEMETRY);  //requires cmd.h
+                paySetType(pld, CMD_STREAM_TELEMETRY); //requires cmd.h
                 paySetStatus(pld, 0);
-                //Is there a cleaner way to do this? The payload interface is
-                //rather difficult.
-                memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH, &data, sizeof(data));
+                //Is there a cleaner way to do this? The payload interface is confusing
+                memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH, &data, sizeof (data));
                 g_last_ackd = 0;
                 radioSendPayload(macGetDestAddr(), pld);
                 samplesToStream--;
