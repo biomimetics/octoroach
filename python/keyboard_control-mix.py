@@ -29,7 +29,7 @@ def main():
 
 
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]
-    motorgains = [8000,100,0,0,10 , 8000,100,0,0,10] #Hardware PID
+    motorgains = [30000,300,0,0,15 , 30000,300,0,0,15] #Hardware PID
     
     setMotorGains(motorgains)
     

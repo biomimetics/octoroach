@@ -166,6 +166,7 @@ def setMotorGains(gains):
     shared.motorGains = gains
     while not(shared.motor_gains_set):
         print "Setting motor gains...   ",count,"/8"
+        count = count + 1
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_PID_GAINS, pack('10h',*gains))
         time.sleep(0.3)
@@ -178,6 +179,7 @@ def setSteeringGains(gains):
     shared.steeringGains = gains
     while not (shared.steering_gains_set):
         print "Setting steering gains...   ",count,"/8"
+        count = count + 1
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_STEERING_GAINS, pack('6h',*gains))
         time.sleep(0.3)

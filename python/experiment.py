@@ -14,7 +14,7 @@ from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
-SAVE_DATA = False
+SAVE_DATA = True
 RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
@@ -46,14 +46,14 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
+    motorgains = [30000,300,0,0,15 , 30000,300,0,0,15] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
     setMotorGains(motorgains)
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
     #
-    steeringGains = [5000,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
+    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
     #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
     #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
@@ -82,11 +82,10 @@ def main():
     
     
     #Timing settings
-    shared.leadinTime = 500;
-    shared.leadoutTime = 500;
+    shared.leadinTime = 2500;
+    shared.leadoutTime = 100;
     
     numSamples = calcNumSamples(moveq)
-    numSamples = 850
     shared.imudata = [ [] ] * numSamples
     
     #Flash must be erased to save new data

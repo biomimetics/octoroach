@@ -1,5 +1,4 @@
 DEST_ADDR = '\x20\x52'
-#DEST_ADDR = '\x30\x02'
 xb = []
 ser = []
 
@@ -7,7 +6,7 @@ ser = []
 BS_COMPORT = 'COM3'
 BS_BAUDRATE = 230400
 #XBee
-#BS_COMPORT = 'COM4'
+#BS_COMPORT = 'COM7'
 #BS_BAUDRATE = 57600
 
 motor_gains_set = False

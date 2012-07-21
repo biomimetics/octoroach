@@ -12,9 +12,13 @@
 #include "tail_queue.h"
 #include "math.h"
 #include "steering.h"
+#include "dfilter_avg.h"
 #include "sys_service.h"
 #include <dsp.h>
 #include <stdlib.h> // for malloc
+
+#define INT_MIN -32768
+#define INT_MAX 32767
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
@@ -24,6 +28,15 @@ pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 //These have to be declared here!
 fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
 fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
+
+//Phase integrator
+pidObj phase_pidObj;
+fractional phase_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
+fractional phase_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
+filterAvgInt_t phaseAvg; //This is exported for use in the telemetry module
+int bemfDiff = 0;
+int bemfDiffHist[3] = {0,0,0};
+#define PHASE_AVG_SAMPLES 	4
 
 //Counter for blinking the red LED during motion
 int blinkCtr;
@@ -98,6 +111,7 @@ void legCtrlSetup() {
                 motor_abcCoeffs[i];
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
+
 #endif
         pidInitPIDObj(&(motor_pidObjs[i]), LEG_DEFAULT_KP, LEG_DEFAULT_KI,
                 LEG_DEFAULT_KD, LEG_DEFAULT_KAW, LEG_DEFAULT_KFF);
@@ -108,6 +122,20 @@ void legCtrlSetup() {
         motor_pidObjs[i].minVal = 0;
     }
 
+#ifdef PID_HARDWARE
+    phase_pidObj.dspPID.abcCoefficients = phase_abcCoeffs;
+    phase_pidObj.dspPID.controlHistory = phase_controlHists;
+    pidInitPIDObj(&phase_pidObj, PHASE_DEFAULT_KP, PHASE_DEFAULT_KI,
+            PHASE_DEFAULT_KD, PHASE_DEFAULT_KAW, PHASE_DEFAULT_KFF);
+    phase_pidObj.satValPos = 200;
+    phase_pidObj.satValNeg = -200;
+    phase_pidObj.maxVal = INT_MAX;
+    phase_pidObj.minVal = INT_MIN;
+#endif
+    //Phase filter
+    filterAvgCreate(&phaseAvg, PHASE_AVG_SAMPLES);
+
+    
     //Set which PWM output each PID Object will correspond to
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
     legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
@@ -149,6 +177,7 @@ void legCtrlSetup() {
         bemfHist[i][1] = 0;
         bemfHist[i][2] = 0;
     }
+    
 }
 
 // Runs the PID controllers for the legs
@@ -162,6 +191,34 @@ void serviceMotionPID() {
     motor_pidObjs[1].input = poststeer[1];
 
     updateBEMF();
+
+    if(currentMove != idleMove){
+        bemfDiff = bemfLast[1] - bemfLast[0];
+        //if (bemfDiff != 0){
+        //    Nop();
+        //    Nop();
+        //}
+        //Phase lead/lag correction
+        filterAvgUpdate(&phaseAvg, bemfDiff);
+        int bemfDiffAvg = filterAvgCalc(&phaseAvg);
+        //median
+        bemfDiffHist[2] = bemfDiffHist[1]; //rotate first
+        bemfDiffHist[1] = bemfDiffHist[0];
+        bemfDiffHist[0] = bemfDiffAvg; //include newest value
+        bemfDiffAvg = medianFilter3(bemfDiffHist); //Apply median filter
+
+        phase_pidObj.input = 0;
+        pidUpdate(&phase_pidObj, bemfDiffAvg);
+        //Apply update
+        if(phase_pidObj.output < 0){
+            motor_pidObjs[0].input -= phase_pidObj.output;
+        }
+        else{
+            motor_pidObjs[1].input += phase_pidObj.output;
+        }
+        //motor_pidObjs[0].input -= phase_pidObj.output / 2;
+        //motor_pidObjs[1].input += phase_pidObj.output / 2;
+    }
 
     /////////// PID Section //////////
 

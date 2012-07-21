@@ -63,7 +63,7 @@ FIXDEPS=fixDeps
 
 # The following macros may be used in the pre and post step lines
 Device=dsPIC33FJ128MC706A
-ProjectDir="C:\Users\pullin\Desktop\GIT Code\octoroach\firmware"
+ProjectDir="C:\Users\pullin\Desktop\GIT code\octoroach\firmware"
 ConfName=default
 ImagePath="dist\default\${IMAGE_TYPE}\firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
 ImageDir="dist\default\${IMAGE_TYPE}"

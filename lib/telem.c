@@ -34,6 +34,8 @@ extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
 
+extern pidObj phase_pidObj;
+
 //global flag from radio module to know if last packet was ACK'd
 //TODO: fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
