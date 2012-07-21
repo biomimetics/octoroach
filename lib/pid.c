@@ -133,6 +133,8 @@ void initPIDVelProfile()
 			pidVel[j].vel[i] = (pidVel[j].delta[i] << 8) / pidVel[j].interval[i];
 		 }
 		pidObjs[j].p_input = 0; // initialize first set point 
+//		pidObjs[j].v_input = 0; // initialize first velocity
+		pidObjs[j].v_input = (int)( pidVel[j].vel[0] * K_EMF);	//initialize first velocity
 	}
 }
 
@@ -192,7 +194,9 @@ void initPIDObj(pidT *pid, int Kp, int Ki, int Kd, int Kaw, int ff)
 // called from set thrust closed loop, etc. Thrust 
 void pidSetInput(int pid_num, int input_val, unsigned int run_time){
 unsigned long temp;	
-	pidObjs[pid_num].v_input = input_val;
+/*      ******   use velocity setpoint + throttle for compatibility between Hall and Pullin code *****/
+/* otherwise, miss first velocity set point */
+    pidObjs[pid_num].v_input = input_val + (int)( pidVel[pid_num].vel[0] * K_EMF);	//initialize first velocity ;
     pidObjs[pid_num].run_time = run_time;
     pidObjs[pid_num].start_time = t1_ticks;
     //zero out running PID values
@@ -251,6 +255,7 @@ void pidZeroPos(int pid_num){
 	EnableIntIC7; EnableIntIC8;   	
 // reset position setpoint as well
 	pidObjs[pid_num].p_input = 0;
+	pidObjs[pid_num].v_input = 0;
 	pidVel[pid_num].leg_stride = 0; // strides also reset 
 }
 
@@ -390,6 +395,7 @@ void pidGetSetpoint()
 			{ 	pidVel[j].interpolate = 0;	
 				pidObjs[j].p_input += pidVel[j].delta[index];	//update to next set point
 				pidVel[j].expire += pidVel[j].interval[(index+1) % NUM_VELS];  // expire time for next interval
+			       pidObjs[j].v_input = (int)( pidVel[j].vel[(index+1) % NUM_VELS] * K_EMF);	  //update to next velocity 
 				// got to next index point	
 				pidVel[j].index++;
 		
@@ -401,6 +407,7 @@ void pidGetSetpoint()
 					if ((pidVel[j].leg_stride % 5) == 0)
 					{ pidObjs[j].p_input +=3; }					
 				}  // loop on index
+
 			}
 		}
 }
@@ -413,7 +420,7 @@ void pidSetControl()
    {  //pidobjs[0] : right side
 	// p_input has scaled velocity interpolation to make smoother
         	pidObjs[j].p_error = pidObjs[j].p_input + (pidVel[j].interpolate >> 8)  - motor_count[j];
-            pidObjs[j].v_error = pidObjs[j].v_input - measurements[j];
+            pidObjs[j].v_error = pidObjs[j].v_input - measurements[j];  // v_input should be A/D volts per Hall count/ms
             //Update values
             UpdatePID(&(pidObjs[j]));
    		if(pidObjs[j].onoff)
@@ -442,7 +449,7 @@ void UpdatePID(pidPos *pid)
     pid->i = (long)pid->Ki  * pid->i_error;
     pid->d=(long)pid->Kd *  (long) pid->v_error;
     // better check scale factors
-/* just use simpled PID, offset is already subtracted in PID GetState */
+/* just use simple PID, offset is already subtracted in PID GetState */
 // scale so doesn't over flow
     pid->preSat = pid->feedforward + pid->p +
 		 ((pid->i + pid->d) >> 4); // divide by 16

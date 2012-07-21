@@ -15,6 +15,8 @@
 #define COUNT_REVS  42   // depends on gear ratio- counts per leg rev
 // STRIDE_TICKS should be easily divisible
 #define STRIDE_TICKS (COUNT_REVS*16)  // number of t1 ticks/leg revolution
+/* The back emf constant can be measured by measuring velocity from Hall Effect sensor */
+#define K_EMF    ((1000/256)* 182.9/219.6)  // A/D units per hall count per ms, scale by >>8
 
 #ifndef ADC_MAX
 #define ADC_MAX             1024
@@ -33,7 +35,6 @@ typedef struct
 	unsigned long start_time;
 	int inputOffset;
 	int feedforward;
-	char OUTPUT_CHANNEL;
 } pidT;
 
 // pid type for leg control
@@ -75,6 +76,7 @@ typedef struct
 	int vel[NUM_VELS];     // velocity increments to setpoint, >>8
 	int leg_stride;
 } pidVelLUT;
+
 
 //Functions
 void UpdatePID(pidPos *pid);

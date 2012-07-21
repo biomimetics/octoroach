@@ -30,19 +30,18 @@ RESET_ROBOT = False
 # motorgains = [200,2,0,2,0,    200,2,0,2,0]
 # [Kp Ki Kd Kanti-wind ff]
 # now uses back emf velocity as d term
-motorgains = [500,0,250,0,50, 500,0,250,0,50]
+motorgains = [500,0,5,0,50, 500,0,5,0,50]
 throttle = [0,0]
-duration = 213  # length of run
-cycle = 213 # ms for a leg cycle
+duration = 1000  # length of run
+cycle = 250 # ms for a leg cycle
 # velocity profile
 # [time intervals for setpoints]
 # [position increments at set points]
 # [velocity increments]   muliplied by 256
-delta = [10,10,10,12]  # adds up to 42 counts- should be 42.6
-#intervals = [0x8f, 0x19, 0x19, 0x8f]  # total 336 ms
-intervals = [70, 70, 40, 33]  # total 213 ms
+delta = [10,10,12,10]  # adds up to 42 counts- should be 42.6
+intervals = [87, 87, 37, 39]  # total 250 ms
 #intervals = [40,40,10,10] # total 100 ms
-vel = [36,36,64,93]  # = 256*delta/interval
+vel = [29,29,83,69]  # = 256*delta/interval
 
 
 ser = serial.Serial(shared.BS_COMPORT, shared.BS_BAUDRATE,timeout=3, rtscts=0)
@@ -60,8 +59,8 @@ def menu():
     print "e: radio echo test    | g: right motor gains | h: Help menu"
     print "l: left motor gains"
     print "m: toggle memory mode | n: get robot name    | p: proceed"
-    print "q: quit               | r: reset robot       | t: time of move  length"
-    print "v: set velocity profile"
+    print "q: quit               | r: reset robot       | s: set throttle"
+    print "t: time of move length| v: set velocity profile"
     print "z: zero motor counts"
 
 
@@ -161,7 +160,7 @@ def getGain(lr):
 count = 300
 
 def proceed():
-    global duration, count, delay
+    global duration, count, delay, throttle
     thrust = [throttle[0], duration, throttle[1], duration, 0]
     if telemetry:
         xb_send(0, command.ERASE_SECTORS, pack('h',0))
@@ -226,7 +225,7 @@ def writeFileHeader(dataFileName):
 
 def main():
     print 'keyboard_telem Feb. 16, 2012\n'
-    global duration, telemetry, dataFileName
+    global throttle, duration, telemetry, dataFileName
     dataFileName = 'Data/imudata.txt'
     count = 0       # keep track of packet tries
     print "using robot address", hex(256* ord(DEST_ADDR[0])+ ord(DEST_ADDR[1]))
@@ -271,7 +270,7 @@ def main():
             menu()
         elif keypress == 'l':
             getGain('L')
-            setGain
+            setGain()
         elif keypress =='m':
             telemetry = not(telemetry)
             print 'Telemetry recording', telemetry
@@ -282,8 +281,12 @@ def main():
         elif keypress == 'r':
             resetRobot()
             print 'Resetting robot'
-        elif keypress == 's':
-            throttle[1] -= tinc
+        elif keypress == 's':  # set speed with throttle
+            print "throttle = ", throttle, "enter throttle [0]:",
+            throttle[0]= int(raw_input())
+            print "enter throttle[1]:",
+            throttle[1]= int(raw_input())
+            print "new throttle =", throttle
         elif keypress == 't':
             print 'cycle='+str(cycle)+' duration='+str(duration)+'. New duration:',
             duration = int(raw_input())
@@ -292,6 +295,7 @@ def main():
             setVelProfile()
         elif keypress == 'w':
             throttle[1] += tinc
+            print "Throttle = ",throttle
         elif keypress == 'x':
             throttle[1] = 0
         elif keypress == 'z':
