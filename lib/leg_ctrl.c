@@ -33,10 +33,10 @@ fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, 
 pidObj phase_pidObj;
 fractional phase_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
 fractional phase_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
-filterAvgInt_t phaseAvg; //This is exported for use in the telemetry module
-int bemfDiff = 0;
-int bemfDiffHist[3] = {0,0,0};
-#define PHASE_AVG_SAMPLES 	4
+long phaseL = 0;
+long phaseR = 0;
+long phaseDiff = 0;
+int phaseDiffLast = 0;
 
 //Counter for blinking the red LED during motion
 int blinkCtr;
@@ -132,8 +132,6 @@ void legCtrlSetup() {
     phase_pidObj.maxVal = INT_MAX;
     phase_pidObj.minVal = INT_MIN;
 #endif
-    //Phase filter
-    filterAvgCreate(&phaseAvg, PHASE_AVG_SAMPLES);
 
     
     //Set which PWM output each PID Object will correspond to
@@ -193,31 +191,26 @@ void serviceMotionPID() {
     updateBEMF();
 
     if(currentMove != idleMove){
-        bemfDiff = bemfLast[1] - bemfLast[0];
-        //if (bemfDiff != 0){
-        //    Nop();
-        //    Nop();
-        //}
         //Phase lead/lag correction
-        filterAvgUpdate(&phaseAvg, bemfDiff);
-        int bemfDiffAvg = filterAvgCalc(&phaseAvg);
-        //median
-        bemfDiffHist[2] = bemfDiffHist[1]; //rotate first
-        bemfDiffHist[1] = bemfDiffHist[0];
-        bemfDiffHist[0] = bemfDiffAvg; //include newest value
-        bemfDiffAvg = medianFilter3(bemfDiffHist); //Apply median filter
+        phaseL += (unsigned long) bemf[0];
+        phaseR += (unsigned long) bemf[1];
+        phaseDiff = phaseR - phaseL;
+
+        // IIR filter
+        phaseDiff = (2 * (long) phaseDiffLast / 10) + 8 * (long) phaseDiff / 10;
+        phaseDiffLast = phaseDiff;
 
         phase_pidObj.input = 0;
-        pidUpdate(&phase_pidObj, bemfDiffAvg);
+        pidUpdate(&phase_pidObj, (int)phaseDiff);
         //Apply update
-        if(phase_pidObj.output < 0){
-            motor_pidObjs[0].input -= phase_pidObj.output;
-        }
-        else{
-            motor_pidObjs[1].input += phase_pidObj.output;
-        }
-        //motor_pidObjs[0].input -= phase_pidObj.output / 2;
-        //motor_pidObjs[1].input += phase_pidObj.output / 2;
+        //if(phase_pidObj.output < 0){
+        //    motor_pidObjs[0].input -= phase_pidObj.output;
+        //}
+        //else{
+        //    motor_pidObjs[1].input += phase_pidObj.output;
+        //}
+        motor_pidObjs[0].input -= phase_pidObj.output / 2;
+        motor_pidObjs[1].input += phase_pidObj.output / 2;
     }
 
     /////////// PID Section //////////
@@ -455,4 +448,8 @@ void legCtrlOnOff(unsigned int num, unsigned char state){
 
 void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
     pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
+}
+
+void legCtrlSetPhaseGains(int Kp, int Ki, int Kd, int Kaw, int ff){
+    pidSetGains(&phase_pidObj, Kp, Ki, Kd, Kaw, ff);
 }

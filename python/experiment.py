@@ -14,9 +14,9 @@ from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
-SAVE_DATA = True
-RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
-                      # This is a known bug.
+SAVE_DATA   = True
+RESET_ROBOT = True
+EXIT_WAIT   = False
 
 def main():    
     setupSerial()
@@ -46,7 +46,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [30000,300,0,0,15 , 30000,300,0,0,15] #Hardware PID
+    motorgains = [25000,600,0,0,15 , 30000,300,0,0,15] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
     setMotorGains(motorgains)
 
@@ -57,20 +57,30 @@ def main():
     #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
     #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
+    
+    phasegains = [2000, 100, 10, 0, 0]
+    setPhaseGains(phasegains)
 
     #Constant example
-    #moves = 1
-    #moveq = [moves, \
-    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-             
-    #Ramp example
-    moves = 5
+    moves = 1
     moveq = [moves, \
-        0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
-        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-        150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
-        0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
+             50, 50, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+      
+    #Ramp example
+    #moves = 3
+    #moveq = [moves, \
+    #    0,   0,   500 ,   MOVE_SEG_RAMP,    100, 100, 0,
+    #    0,   0,   5000,   MOVE_SEG_CONSTANT,    300, 300, 0,
+    #    50, 50,   500 ,   MOVE_SEG_RAMP,    -100,  -100,  0]
+
+    #Loop example
+    #moves = 5
+    #moveq = [moves, \
+    #    0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
+    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+    #    150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
+    #    0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
@@ -82,8 +92,8 @@ def main():
     
     
     #Timing settings
-    shared.leadinTime = 2500;
-    shared.leadoutTime = 100;
+    shared.leadinTime = 200;
+    shared.leadoutTime = 200;
     
     numSamples = calcNumSamples(moveq)
     shared.imudata = [ [] ] * numSamples
@@ -106,29 +116,28 @@ def main():
     sendMoveQueue(moveq)
     
     #Clear loop
-    time.sleep(6)
-    mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
-    mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
+    #time.sleep(6)
+    #mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
+    #mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
 
     if SAVE_DATA:
-        print "Sending loop clear!!"
-        sendMoveQueue(mqclear)
-        time.sleep(0.05)
-        print "Sending move queue flush!!"
-        sendMoveQueue(mqflush)
-        
+        #print "Sending loop clear!!"
+        #sendMoveQueue(mqclear)
+        #time.sleep(0.05)
+        #print "Sending move queue flush!!"
+        #sendMoveQueue(mqflush)
         downloadTelemetry(numSamples)
 
     #Wait for Ctrl+C to exit; this is done in case other messages come in
     #from the robot, which are handled by callbackfunc
     print "Ctrl + C to exit"
 
-    while True:
-        try:
-            time.sleep(1)
-            #print ".",
-        except KeyboardInterrupt:
-            break
+    if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
+        while True:
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                break
 
     shared.xb.halt()
     shared.ser.close()

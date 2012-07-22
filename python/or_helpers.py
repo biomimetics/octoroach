@@ -244,3 +244,16 @@ def calcNumSamples(moveq):
 def startTelemetryStream(numSamples):
     xb_send(shared.xb, shared.DEST_ADDR, \
             0, command.STREAM_TELEMETRY, pack('L',numSamples))
+            
+def setPhaseGains(gains):
+    count = 1
+    shared.phaseGains = gains
+    while not (shared.phase_gains_set):
+        print "Setting BEMF-Phase gains...   ",count,"/8"
+        count = count + 1
+        xb_send(shared.xb, shared.DEST_ADDR, \
+                0, command.SET_PHASE_GAINS, pack('5h',*gains))
+        time.sleep(0.3)
+        if count > 8:
+            print "Unable to set phase gains, exiting."
+            xb_safe_exit()

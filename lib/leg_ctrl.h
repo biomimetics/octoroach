@@ -32,9 +32,9 @@
 #define MOTOR_PID_SCALER 32
 #endif
 
-#define PHASE_DEFAULT_KP  1000
-#define PHASE_DEFAULT_KI  1000
-#define PHASE_DEFAULT_KD  100
+#define PHASE_DEFAULT_KP  3000
+#define PHASE_DEFAULT_KI  0
+#define PHASE_DEFAULT_KD  0
 #define PHASE_DEFAULT_KAW 0
 #define PHASE_DEFAULT_KFF 0
 
@@ -42,5 +42,6 @@ void legCtrlSetup();
 void legCtrlSetInput(unsigned int num, int val);
 void legCtrlOnOff(unsigned int num, unsigned char state);
 void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff);
+void legCtrlSetPhaseGains(int Kp, int Ki, int Kd, int Kaw, int ff);
 
 #endif

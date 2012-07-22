@@ -12,6 +12,7 @@ BS_BAUDRATE = 230400
 motor_gains_set = False
 steering_gains_set = False
 steering_rate_set = False
+phase_gains_set  = False
 flash_erased = 0
 pkts = 0
 deg2count = 14.375

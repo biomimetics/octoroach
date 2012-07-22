@@ -14,11 +14,11 @@ pktFormat = { \
     command.SET_PID_GAINS:          '10h', \
     command.GET_PID_TELEMETRY:      '', \
     command.SET_CTRLD_TURN_RATE:    '=h', \
-    command.STREAM_TELEMETRY:       '=LL'+16*'h', \
+    command.STREAM_TELEMETRY:       '=LL'+16*'h'+'l', \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+16*'h', \
+    command.SPECIAL_TELEMETRY:      '=LL'+16*'h'+'l', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -26,7 +26,8 @@ pktFormat = { \
     command.SET_VEL_PROFILE:        '24h' ,\
     command.WHO_AM_I:               '', \
     command.ZERO_POS:               '=2l', \
-    command.SET_HALL_GAINS:         '10h' \
+    command.SET_HALL_GAINS:         '10h', \
+    command.SET_PHASE_GAINS:        '5h' \
     }
                
 #XBee callback function, called every time a packet is recieved
@@ -104,6 +105,7 @@ def xbee_received(packet):
             datum = unpack(pattern, data)
             datum = list(datum)
             telem_index = datum.pop(0) #pop removes this from data array
+            #print "telem_index: ",telem_index
             #print "Special Telemetry Data Packet #",telem_index
             if (datum[0] != -1) and (telem_index) >= 0:
                 shared.imudata[telem_index] = datum
@@ -141,14 +143,19 @@ def xbee_received(packet):
             #print "whoami:",status, hex(type), data
             print "whoami:",data
             shared.robotQueried = True
+        elif type == command.SET_PHASE_GAINS:
+            print "Set BEMF-Phase gains"
+            gains = unpack(pattern, data)
+            print gains
+            shared.phase_gains_set = True
         else:    
             pass
     
     except Exception as args:
         print "\nGeneral exception from callbackfunc:",args
         print "Attemping to exit cleanly..."
-        self.xb.halt()
-        self.ser.close()
+        shared.xb.halt()
+        shared.ser.close()
         sys.exit()
 
 

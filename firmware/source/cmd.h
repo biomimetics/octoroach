@@ -37,6 +37,7 @@
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
 #define CMD_SET_TAIL_GAINS          0x93
+#define CMD_SET_PHASE_GAINS         0x94
 
 //Argument lengths
 //lenghts are in bytes
@@ -168,6 +169,11 @@ typedef struct{
 typedef struct{
     unsigned long count;
 } _args_cmdStreamTelemetry;
+
+//cmdSetPhaseGains
+typedef struct{
+	int Kp, Ki, Kd, Kaw, Kff;
+} _args_cmdSetPhaseGains;
 
 #endif // __CMD_H
 
