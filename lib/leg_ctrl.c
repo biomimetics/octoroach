@@ -190,6 +190,7 @@ void serviceMotionPID() {
 
     updateBEMF();
 
+    /*
     if(currentMove != idleMove){
         //Phase lead/lag correction
         phaseL += (unsigned long) bemf[0];
@@ -209,9 +210,10 @@ void serviceMotionPID() {
         //else{
         //    motor_pidObjs[1].input += phase_pidObj.output;
         //}
-        motor_pidObjs[0].input -= phase_pidObj.output / 2;
-        motor_pidObjs[1].input += phase_pidObj.output / 2;
+        //motor_pidObjs[0].input -= phase_pidObj.output / 2;
+        //motor_pidObjs[1].input += phase_pidObj.output / 2;
     }
+     */
 
     /////////// PID Section //////////
 

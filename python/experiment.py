@@ -46,7 +46,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [25000,600,0,0,15 , 30000,300,0,0,15] #Hardware PID
+    motorgains = [32000,1,0,0,500 , 32000,1,0,0,500] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
     setMotorGains(motorgains)
 
@@ -58,13 +58,13 @@ def main():
     #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
     
-    phasegains = [2000, 100, 10, 0, 0]
+    phasegains = [0, 0, 0, 0, 0]
     setPhaseGains(phasegains)
 
     #Constant example
     moves = 1
     moveq = [moves, \
-             50, 50, 1000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+             50, 125, 8000,   MOVE_SEG_CONSTANT, 0, 0, 0]
       
     #Ramp example
     #moves = 3
