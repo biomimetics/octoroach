@@ -6,4 +6,4 @@
 *.cof
 build
 dist
-version.c
+version-generated.c
