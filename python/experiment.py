@@ -14,7 +14,7 @@ from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
-SAVE_DATA   = True
+SAVE_DATA   = False
 RESET_ROBOT = True
 EXIT_WAIT   = False
 
@@ -55,7 +55,7 @@ def main():
     #
     steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
     #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
-    #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #steeringGains = [200,100,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
     setSteeringGains(steeringGains)
     
     phasegains = [0, 0, 0, 0, 0]
@@ -64,8 +64,24 @@ def main():
     #Constant example
     moves = 1
     moveq = [moves, \
-             50, 125, 8000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-      
+             100, 100, 6000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+    
+    #Move segment format:
+    # [value1, value2 , segtime , move_seg_type , param1 , param2, param3]
+    # - value1 , value2 are initial setpoints for leg speed for each segment
+    # - segtime is the length of the segment, in milliseconds
+    # - move_seg_type is one of the types enumerated at the top of or_helpers.py
+    # MOVE_SEG_CONSTANT: param1 , param2 , param3 have no effect, set to 0.
+    # MOVE_SEG_RAMP    : param1 and param2 are left/right ramp rates, in legs speed per
+    #       second. param3 has no effect.
+    # MOVE_SEG_SIN     : Not implemented.
+    # MOVE_SEG_TRI     : Not implemented.
+    # MOVE_SEG_SAW     : Not implemented.
+    # MOVE_SEG_IDLE    : value1,value2 and params have no efffect. Disables leg speed controller.
+    # MOVE_SEG_LOOP_DECL: Turns on move queue looping. value1,value2, and params have no effect.
+    # MOVE_SEG_LOOP_CLEAR: Turns off move queue looping.value1,value2, and params have no effect.
+    # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
+    
     #Ramp example
     #moves = 3
     #moveq = [moves, \
@@ -73,7 +89,7 @@ def main():
     #    0,   0,   5000,   MOVE_SEG_CONSTANT,    300, 300, 0,
     #    50, 50,   500 ,   MOVE_SEG_RAMP,    -100,  -100,  0]
 
-    #Loop example
+    #Looping example
     #moves = 5
     #moveq = [moves, \
     #    0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
@@ -113,7 +129,11 @@ def main():
     time.sleep(shared.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
-    sendMoveQueue(moveq)
+    #sendMoveQueue(moveq)
+    #Testing manual mode
+	setMotorSpeeds(100,100)
+    time.sleep(6)
+    setMotorSpeeds(0,0)
     
     #Clear loop
     #time.sleep(6)

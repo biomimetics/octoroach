@@ -63,7 +63,9 @@ int medianFilter3(int*);
 //This is an array to map legCtrl controller to PWM output channels
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
-volatile char inMotion;
+//Global flag for wether or not the robot is in motion
+char inMotion;
+char manualMode = 0;
 
 //Function to be installed into T1, and setup function
 static void SetupTimer1(void);
@@ -302,6 +304,7 @@ void serviceMoveQueue(void) {
 
     //Blink red LED when executing move program
     if (currentMove != idleMove) {
+        inMotion = 1;
         if (blinkCtr == 0) {
             blinkCtr = 100;
             LED_RED = ~LED_RED;
@@ -311,7 +314,7 @@ void serviceMoveQueue(void) {
 
     //Service Move Queue if not empty
     if (!mqIsEmpty(moveq)) {
-        inMotion = 1;
+        //inMotion = 1;
         if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
             //MOVE_SEG_LOOP_DECL only needs to appear once
@@ -346,8 +349,8 @@ void serviceMoveQueue(void) {
         pidSetInput(&(motor_pidObjs[1]), 0);
         motor_pidObjs[1].onoff = PID_OFF;
         moveExpire = 0;
-        inMotion = 0; //for sleep, synthesis
-        steeringOff();
+        //inMotion = 0; //for sleep, synthesis
+        //steeringOff();
     }
 }
 
@@ -357,7 +360,7 @@ static void moveSynth() {
     long ySR = currentMove->inputR; // "
     int yL = 0;
     int yR = 0;
-    if (inMotion) {
+    if (inMotion && !manualMode) {
         if (currentMove->type == MOVE_SEG_IDLE) {
             yL = 0;
             yR = 0;
@@ -442,10 +445,14 @@ int medianFilter3(int* a) {
 
 void legCtrlSetInput(unsigned int num, int val){
     pidSetInput(&(motor_pidObjs[num]), val);
+    //if (val != 0) inMotion = 1;
+    inMotion = 1;
 }
 
 void legCtrlOnOff(unsigned int num, unsigned char state){
     motor_pidObjs[num].onoff = state;
+    //if (state == PID_ON) inMotion = 1;
+    //else                 inMotion = 0;
 }
 
 void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
@@ -454,4 +461,8 @@ void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
 
 void legCtrlSetPhaseGains(int Kp, int Ki, int Kd, int Kaw, int ff){
     pidSetGains(&phase_pidObj, Kp, Ki, Kd, Kaw, ff);
+}
+
+void legCtrlSetManualMode(){
+    manualMode = 1;
 }
