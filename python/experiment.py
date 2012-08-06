@@ -131,7 +131,7 @@ def main():
     #as soon as it is received
     #sendMoveQueue(moveq)
     #Testing manual mode
-	setMotorSpeeds(100,100)
+    setMotorSpeeds(100,100)
     time.sleep(6)
     setMotorSpeeds(0,0)
     
