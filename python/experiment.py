@@ -9,63 +9,92 @@ import serial
 import shared
 
 from or_helpers import *
-from hall_helpers import queryRobot
-
 
 
 ###### Operation Flags ####
-SAVE_DATA   = False
-RESET_ROBOT = True
+SAVE_DATA1 = True 
+SAVE_DATA2 = True
+RESET_R1 = True  
+RESET_R2 = True
+
 EXIT_WAIT   = False
 
 def main():    
-    setupSerial()
-
-    if SAVE_DATA:
-        shared.dataFileName = findFileName();
-        print "Data file:  ", shared.dataFileName
-
-    #sendEcho("echo test")
-    #time.sleep(0.2)
-
-    if RESET_ROBOT:
-        print "Resetting robot..."
-        resetRobot()
-        time.sleep(0.5)
-        
-    # Send robot a WHO_AM_I command, verify communications
-    queryRobot()
-        
-    #wakeRobot()    
-    #time.sleep(1)
-    #sleepRobot()
+    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
     
-    setSteeringRate(0)
+    R1 = Robot('\x20\x52', xb)
+    R2 = Robot('\x20\x53', xb)
+    
+    shared.ROBOTS = [R1, R2] #This is neccesary so callbackfunc can reference robots
+    shared.xb = xb           #This is neccesary so callbackfunc can halt before exit
+    
+    #if SAVE_DATA1:
+    #    shared.dataFileName = findFileName();
+    #    print "Data file:  ", shared.dataFileName
+
+    if RESET_R1:
+        R1.reset()
+        time.sleep(0.35)
+    if RESET_R2:
+        R2.reset()
+        time.sleep(0.35)
+    
+    # Query
+    R1.query( retries = 3 )
+    R2.query( retries = 8 )
+    
+    #Verify all robots can be queried
+    for r in shared.ROBOTS:
+        if not(r.robot_queried):
+            print "CRITICAL : Could not query robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+    
+    # Steering controller setpoint
+    R1.setSteeringRate(0 , retries = 3)
+    R2.setSteeringRate(0 , retries = 3)
+    
+    #Verify all robots have steering gains set
+    for r in shared.ROBOTS:
+        if not(r.steering_rate_set):
+            print "CRITICAL : Could not SET STEERING RATE on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+            
+    
 
     #Motor gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [32000,1,0,0,500 , 32000,1,0,0,500] #Hardware PID
+    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
-    setMotorGains(motorgains)
+
+    R1.setMotorGains(motorgains, retries = 3)
+    R2.setMotorGains(motorgains, retries = 3)
+    
+    #Verify all robots have motor gains set
+    for r in shared.ROBOTS:
+        if not(r.motor_gains_set):
+            print "CRITICAL : Could not SET MOTOR GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    #
-    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
-    #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
-    #steeringGains = [200,100,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
-    setSteeringGains(steeringGains)
     
-    phasegains = [0, 0, 0, 0, 0]
-    setPhaseGains(phasegains)
+    steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
-    #Constant example
-    moves = 1
-    moveq = [moves, \
-             100, 100, 6000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-    
+    R1.setSteeringGains(steeringGains, retries = 3)
+    R2.setSteeringGains(steeringGains, retries = 3)
+
+    for r in shared.ROBOTS:
+        if not(r.steering_gains_set):
+            print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+
+    #### Do not send more than 5 move segments per packet!   ####
+    #### Instead, send multiple packets, and don't use       ####
+    ####    calcNumSamples() below, manually calc numSamples ####
+    #### This will be fixed to be automatic in the future.   ####
+
     #Move segment format:
     # [value1, value2 , segtime , move_seg_type , param1 , param2, param3]
     # - value1 , value2 are initial setpoints for leg speed for each segment
@@ -81,77 +110,91 @@ def main():
     # MOVE_SEG_LOOP_DECL: Turns on move queue looping. value1,value2, and params have no effect.
     # MOVE_SEG_LOOP_CLEAR: Turns off move queue looping.value1,value2, and params have no effect.
     # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
-    
+
+    #Constant example
+    #moves = 1
+    #moveq = [moves, \
+    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
+             
     #Ramp example
-    #moves = 3
-    #moveq = [moves, \
-    #    0,   0,   500 ,   MOVE_SEG_RAMP,    100, 100, 0,
-    #    0,   0,   5000,   MOVE_SEG_CONSTANT,    300, 300, 0,
-    #    50, 50,   500 ,   MOVE_SEG_RAMP,    -100,  -100,  0]
+    numMoves = 3
+    moveq1 = [numMoves, \
+        0,   0,   500,   MOVE_SEG_RAMP,    0, 0, 0,
+        0, 0, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
 
-    #Looping example
-    #moves = 5
-    #moveq = [moves, \
-    #    0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
-    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-    #    150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
-    #    0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
+##        moveq1 = [moves, \
+##  NegC    right, left
+##  PosC    left, right
+##          0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+##          150, 150, 8000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+##          150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
 
-    #Sin example
-    #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
-    #phase = 3.1415/2 * RAD_TO_BAMS16
-    #moves = 2
-    #moveq = [moves, \
-    #         76,   76,   2000,   MOVE_SEG_SIN,  75, 1000, phase,
-    #	     75, 75, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0]
+    moveq2 = [numMoves, \
+        0,   0,   500,   MOVE_SEG_RAMP,    0, 0, 0,
+        0, 0, 1500,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
     
     
     #Timing settings
-    shared.leadinTime = 200;
-    shared.leadoutTime = 200;
+    R1.leadinTime = 500;
+    R1.leadoutTime = 500;
     
-    numSamples = calcNumSamples(moveq)
-    shared.imudata = [ [] ] * numSamples
+    R2.leadinTime = 500;
+    R2.leadoutTime = 500;
+    
+    #This needs to be done to prepare the .imudata variables in each robot object
+    R1.setupImudata(moveq1)
+    R2.setupImudata(moveq2)
     
     #Flash must be erased to save new data
-    if SAVE_DATA:
-        eraseFlashMem(numSamples)
+    if SAVE_DATA1:
+        R1.eraseFlashMem()
+    if SAVE_DATA2:
+        R2.eraseFlashMem()    
 
     # Pause and wait to start run, including leadin time
-    raw_input("Press enter to start run ...")
-    
+    print ""
+    print "  ***************************"
+    print "  *******    READY    *******"
+    print "  ***************************"
+    raw_input("  Press ENTER to start run ...")
+    print ""
     
     # Trigger telemetry save, which starts as soon as it is received
-    if SAVE_DATA:
-        startTelemetrySave(numSamples)
+    
+    #### Make when saving anything, this if is set ####
+    #### to the proper "SAVE_DATA"                 ####
+    
+    if SAVE_DATA1:
+        R1.startTelemetrySave()
+    if SAVE_DATA2:
+        R2.startTelemetrySave()
 
-    time.sleep(shared.leadinTime / 1000.0)
+    time.sleep(R1.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
-    #sendMoveQueue(moveq)
-    #Testing manual mode
-    setMotorSpeeds(100,100)
-    time.sleep(6)
-    setMotorSpeeds(0,0)
+    R1.sendMoveQueue(moveq1)
+    R2.sendMoveQueue(moveq2)
     
-    #Clear loop
-    #time.sleep(6)
-    #mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
-    #mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
+    maxtime = 0
+    for r in shared.ROBOTS:
+        tottime =  r.runtime + r.leadoutTime
+        if tottime > maxtime:
+            maxtime = tottime
+    
+    #Wait for robots to do runs
+    time.sleep(maxtime / 1000.0)
+    
+    raw_input("Press Enter to start telemtry readback ...")
+    
+    if SAVE_DATA1:
+        R1.downloadTelemetry()
 
-    if SAVE_DATA:
-        #print "Sending loop clear!!"
-        #sendMoveQueue(mqclear)
-        #time.sleep(0.05)
-        #print "Sending move queue flush!!"
-        #sendMoveQueue(mqflush)
-        downloadTelemetry(numSamples)
+    if SAVE_DATA2:
+        R2.downloadTelemetry()
 
-    #Wait for Ctrl+C to exit; this is done in case other messages come in
-    #from the robot, which are handled by callbackfunc
-    print "Ctrl + C to exit"
-
+    
     if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
         while True:
             try:
@@ -159,11 +202,9 @@ def main():
             except KeyboardInterrupt:
                 break
 
-    shared.xb.halt()
-    shared.ser.close()
-
-
     print "Done"
+    xb_safe_exit()
+
 
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better
@@ -181,6 +222,3 @@ if __name__ == '__main__':
         shared.xb.halt()
         shared.ser.close()
         sys.exit()
-    except serial.serialutil.SerialException:
-        shared.xb.halt()
-        shared.ser.close()
