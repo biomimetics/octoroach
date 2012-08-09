@@ -2,7 +2,7 @@ from lib import command
 from struct import pack,unpack
 import time
 
-import shared
+import shared_kd as shared
 
 #Dictionary of packet formats, for unpack()
 pktFormat = { \
@@ -38,7 +38,7 @@ def xbee_received(packet):
     #id = packet.get('id')
     #options = ord(packet.get('options'))
     
-    print "SRC: 0x%02X  |  " % src_addr,
+    print "SRC: 0x%02X | " % src_addr,
    
     status = ord(rf_data[0])
     type = ord(rf_data[1])
@@ -72,34 +72,46 @@ def xbee_received(packet):
             datum = unpack(pattern, data)
             if (datum[0] != -1):
                 dutycycles.append(datum)
+                
         # ECHO
         elif type == command.ECHO:
             print "echo: status = ",status," type=",type," data = ",data
+            
         # SET_PID_GAINS
         elif type == command.SET_PID_GAINS:
             print "Set PID gains"
             gains = unpack(pattern, data)
             print gains
-            shared.motor_gains_set = True 
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.motor_gains_set = True 
+                    
         # SET_STEERING_GAINS
         elif type == command.SET_STEERING_GAINS:
             print "Set Steering gains"
             gains = unpack(pattern, data)
             print gains
-            shared.steering_gains_set = True
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.steering_gains_set = True 
+                    
         # SET_CTRLD_TURN_RATE
         elif type == command.SET_CTRLD_TURN_RATE:
-            print "Set turning rate"
+            print "Set turning rate ",
             rate = unpack(pattern, data)[0]
-            print "degrees: ",shared.count2deg * rate
-            print "counts: ", rate
-            shared.steering_rate_set = True
+            print ", deg: ",shared.count2deg * rate,
+            print ", counts: ", rate
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.steering_rate_set = True 
+            
         # STREAM_TELEMETRY
         elif type == command.STREAM_TELEMETRY:
             print "Streaming telemtry packet:"
             datum = unpack(pattern, data)
             print datum
             #Do more here
+            
         # SPECIAL_TELEMETRY
         elif type == command.SPECIAL_TELEMETRY:
             shared.pkts = shared.pkts + 1
@@ -112,44 +124,57 @@ def xbee_received(packet):
             if (datum[0] != -1) and (telem_index) >= 0:
                 shared.imudata[telem_index] = datum
                 shared.bytesIn = shared.bytesIn + (2*4 + 15*2)
+                
         # ERASE_SECTORS
         elif type == command.ERASE_SECTORS:
             datum = unpack(pattern, data)
             #if datum[0] == 0:
             #    shared.flash_erased = True
             shared.flash_erased = datum[0]
+            
         # SLEEP
         elif type == command.SLEEP:
             datum = unpack(pattern, data)
             print "Sleep reply: ",datum[0]
             if datum[0] == 0:
                 shared.awake = True;
+                
         # SET_HALL_GAINS
         elif type == command.SET_HALL_GAINS:
             print "Set Hall Effect PID gains"
             gains = unpack(pattern, data)
             print gains
             shared.motor_gains_set = True 
+            
         # ZERO_POS
         elif type == command.ZERO_POS:
             print 'Hall zeros established; Previous motor positions:',
             motor = unpack(pattern,data)
             print motor
+            
         # SET_VEL_PROFILE
         elif (type == command.SET_VEL_PROFILE):
             print "Set Velocity Profile readback:"
             temp = unpack(pattern, data)
             print temp
+            
         # WHO_AM_I
         elif (type == command.WHO_AM_I):
-            #print "whoami:",status, hex(type), data
-            print "whoami:",data
-            shared.robotQueried = True
+            print "query : ",data
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.robot_queried = True 
+                    
+        #SET_PHASE_GAINS        
         elif type == command.SET_PHASE_GAINS:
             print "Set BEMF-Phase gains"
             gains = unpack(pattern, data)
             print gains
-            shared.phase_gains_set = True
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.phase_gains_set = True 
+                    
+        #No command
         else:    
             pass
     
@@ -157,7 +182,7 @@ def xbee_received(packet):
         print "\nGeneral exception from callbackfunc:",args
         print "Attemping to exit cleanly..."
         shared.xb.halt()
-        shared.ser.close()
+        sharedser.close()
         sys.exit()
 
 

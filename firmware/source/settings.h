@@ -13,7 +13,7 @@
 // Motile address ; all MRI robots were shipped with this configuration
 #define RADIO_CHANNEL		0x19
 #define RADIO_SRC_ADDR 		0x2052
-#define RADIO_SRC_PAN_ID  		0x2050
+#define RADIO_SRC_PAN_ID  	0x2050
 //Hard-coded destination address, must match basestation or XBee addr
 #define RADIO_DST_ADDR		0x2051
 

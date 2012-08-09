@@ -1,104 +1,84 @@
-import sys
-import numpy as np
-from lib import command 
-from struct import *
-import time
-from xbee import XBee
+from lib import command
+import time,sys
 import serial
-import pygame
-from callbackFunc import xbee_received
 import shared
+import pygame
 
-DEST_ADDR = '\x20\x52'
-imudata_file_name = 'imudata.txt'
-statedata_file_name = 'statedata.txt'
-dutycycle_file_name = 'dutycycle.txt'
-motordata_file_name = 'motordata.txt'
-
-imudata = []
-statedata = []
-dutycycles = []
-motordata = []
-gainsNotSet = True;
-
-MAXTHROT = 200
+from or_helpers import *
+from hall_helpers import queryRobot
 
 
-ser = serial.Serial(shared.BS_COMPORT, 230400,timeout=3, rtscts=1)
-xb = XBee(ser, callback = xbee_received)
+###### Operation Flags ####
+SAVE_DATA   = False
+RESET_ROBOT = True
+EXIT_WAIT   = False
 
-def xb_send(status, type, data):
-    payload = chr(status) + chr(type) + ''.join(data)
-    xb.tx(dest_addr = DEST_ADDR, data = payload)
+MAXTHROT = 100
 
-def resetRobot():
-    xb_send(0, command.SOFTWARE_RESET, pack('h',0))
-
+BUTTON_L1 = 4
+BUTTON_R1 = 5
 
 def main():
     global MAXTHROT
-    dataFileName = 'imudata.txt'
+    setupSerial()
+    
 
-    if ser.isOpen():
-        print "Serial open."
-
-    resetRobot()
-    time.sleep(1)
+    if RESET_ROBOT:
+        print "Resetting robot..."
+        resetRobot()
+        time.sleep(0.5)
+        
+    # Send robot a WHO_AM_I command, verify communications
+    queryRobot()
 
     try:
         pygame.init()
         j = pygame.joystick.Joystick(0)
         j.init()
         print j.get_name()
-    except:
+    except Exception as args:
         print 'No joystick'
-        xb.halt()
-        ser.close()
+        print 'Exception: ', args
+        shared.xb.halt()
+        shared.ser.close()
         sys.exit(-1)
 
-    motorgains = [200,2,0,2,0,    200,2,0,2,0]
-    while not(shared.motor_gains_set):
-        print "Setting motor gains..."
-        xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
-        time.sleep(1)
+    motorgains = [10000,300,0,0,25,    10000,300,0,0,25]
+    setMotorGains(motorgains)
     
     throttle = [0,0]
     tinc = 25;
+  
+    while True:
 
-    try:    
-        while True:
+        value = []
+        pygame.event.pump()
+        
+        #max throttle increase/decrease buttons
+        if j.get_button(BUTTON_L1) == 1 and MAXTHROT > 0:
+                MAXTHROT = MAXTHROT - 25
+        elif j.get_button(BUTTON_R1) ==1 and MAXTHROT < 900:
+                MAXTHROT = MAXTHROT + 25
+        
+        left_throt = -j.get_axis(1)
+        right_throt = -j.get_axis(3)
+        if left_throt < 0.05:
+            left_throt = 0
+        if right_throt < 0.05:
+            right_throt = 0
+        left_throt = int(MAXTHROT * left_throt)
+        right_throt = int(MAXTHROT * right_throt)
+        
+        sys.stdout.write(" "*60 + "\r")
+        sys.stdout.flush()
+        outstring = "L: {0:3d}  |   R: {1:3d} \r".format(left_throt,right_throt)
+        sys.stdout.write(outstring)
+        sys.stdout.flush()
+        
+        setMotorSpeeds(left_throt,right_throt)
+        
 
-            value = []
-            pygame.event.pump()
-            left_throt = -j.get_axis(1)
-            right_throt = -j.get_axis(2)
-            if left_throt < 0.01:
-                left_throt = 0
-            if right_throt < 0.01:
-                right_throt = 0
-            left_throt = MAXTHROT * left_throt
-            right_throt = MAXTHROT * right_throt
-            #print "L: ",left_throt,"  |   R: ",right_throt
-            sys.stdout.write(" "*60 + "\r")
-            sys.stdout.flush()
-            outstring = "L: {0:03.1f}  |   R: {1:03.1f} \r".format(left_throt,right_throt)
-            sys.stdout.write(outstring)
-            sys.stdout.flush()
-            #throttle = [0 if t<0 else t for t in throttle]
-            thrust = [left_throt, 0, right_throt, 0, 0]
-            xb_send(0, command.SET_THRUST_CLOSED_LOOP, pack('5h',*thrust))
-            #xb_send(0,command.SET_THRUST_OPEN_LOOP,pack('2h',*throttle))
-
-            time.sleep(0.25)
-
-    except:
-        print
-        print "closing"
-        try:
-            xb.halt()
-            ser.close()
-        except serial.SerialException:
-            print "Got SerialException."
+        time.sleep(0.25)
 
 
 #Provide a try-except over the whole main function
@@ -109,19 +89,14 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print "\nRecieved Ctrl+C, exiting."
-        xb.halt()
-        ser.close()
+        shared.xb.halt()
+        shared.ser.close()
     except Exception as args:
         print "\nGeneral exception:",args
         print "Attemping to exit cleanly..."
-        xb.halt()
-        ser.close()
+        shared.xb.halt()
+        shared.ser.close()
+        sys.exit()
     except serial.serialutil.SerialException:
-        xb.halt()
-        ser.close()
-
-
-
-
-
-
+        shared.xb.halt()
+        shared.ser.close()
