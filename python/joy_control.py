@@ -5,13 +5,11 @@ import shared
 import pygame
 
 from or_helpers import *
-from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
 SAVE_DATA   = False
 RESET_ROBOT = True
-EXIT_WAIT   = False
 
 MAXTHROT = 100
 
@@ -20,31 +18,28 @@ BUTTON_R1 = 5
 
 def main():
     global MAXTHROT
-    setupSerial()
+    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
+    shared.xb = xb
     
+    R1 = Robot('\x20\x52', xb)
+    shared.ROBOTS = [R1]
 
     if RESET_ROBOT:
         print "Resetting robot..."
-        resetRobot()
+        R1.reset()
         time.sleep(0.5)
+
+    motorgains = [30000,100,0,0,10,    30000,100,0,0,10]
+    R1.setMotorGains(motorgains, retries = 8)
+    
+    verifyAllMotorGainsSet()  #exits on failure
         
     # Send robot a WHO_AM_I command, verify communications
-    queryRobot()
+    R1.query()
 
-    try:
-        pygame.init()
-        j = pygame.joystick.Joystick(0)
-        j.init()
-        print j.get_name()
-    except Exception as args:
-        print 'No joystick'
-        print 'Exception: ', args
-        shared.xb.halt()
-        shared.ser.close()
-        sys.exit(-1)
+    j = setupJoystick()
 
-    motorgains = [10000,300,0,0,25,    10000,300,0,0,25]
-    setMotorGains(motorgains)
+
     
     throttle = [0,0]
     tinc = 25;
@@ -75,10 +70,23 @@ def main():
         sys.stdout.write(outstring)
         sys.stdout.flush()
         
-        setMotorSpeeds(left_throt,right_throt)
+        R1.setMotorSpeeds(left_throt,right_throt)
         
 
         time.sleep(0.25)
+
+def setupJoystick():
+    try:
+        pygame.init()
+        j = pygame.joystick.Joystick(0)
+        j.init()
+        print j.get_name()
+    except Exception as args:
+        print 'No joystick'
+        print 'Exception: ', args
+        xb_safe_exit()
+        
+    return j
 
 
 #Provide a try-except over the whole main function
@@ -94,9 +102,6 @@ if __name__ == '__main__':
     except Exception as args:
         print "\nGeneral exception:",args
         print "Attemping to exit cleanly..."
-        shared.xb.halt()
-        shared.ser.close()
-        sys.exit()
+        xb_safe_exit()
     except serial.serialutil.SerialException:
-        shared.xb.halt()
-        shared.ser.close()
+        xb_safe_exit()

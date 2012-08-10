@@ -283,4 +283,16 @@ def dlProgress(current, total):
     sys.stdout.flush()
     
     
-        
+def verifyAllMotorGainsSet():
+    #Verify all robots have motor gains set
+    for r in shared.ROBOTS:
+        if not(r.motor_gains_set):
+            print "CRITICAL : Could not SET MOTOR GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+
+def verifyAllSteeringGainsSet():
+    #Verify all robots have motor gains set
+    for r in shared.ROBOTS:
+        if not(r.steering_gains_set):
+            print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()

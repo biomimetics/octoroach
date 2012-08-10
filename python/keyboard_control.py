@@ -5,36 +5,30 @@ import shared
 import msvcrt
 
 from or_helpers import *
-from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
 RESET_ROBOT = True
 ##########################
 
-def menu():
-    print "-------------------------------------"
-    print "Keyboard control Sep. 23, 2011"
-    print " m:menu    q:quit   w:left+    s:left-   x:left off"
-    print "e:right+   d:right-  c: right off  space: all off"
-
-    
 def main():
-    setupSerial()
+    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
+    shared.xb = xb
     
-    count = 0       # keep track of packet tries
-    print "using destination address 0x%x" % ord(shared.DEST_ADDR[0]),
-    print "%x" % ord(shared.DEST_ADDR[1])
+    R1 = Robot('\x20\x52', xb)
+    shared.ROBOTS = [R1]
     
     if RESET_ROBOT:
         print "Resetting robot..."
-        resetRobot()
-        time.sleep(1)  
+        R1.reset()
+        time.sleep(0.5)  
     
 
     motorgains = [30000,100,0,0,10,    30000,100,0,0,10]
-    setMotorGains(motorgains)
-        
+    R1.setMotorGains(motorgains, retries = 8)
+    
+    verifyAllMotorGainsSet()  #exits on failure
+    
     throttle = [0,0]
     tinc = 25;
 
@@ -65,10 +59,18 @@ def main():
             xb_safe_exit()
 
         throttle = [0 if t<0 else t for t in throttle]
-        setMotorSpeeds(throttle[0],throttle[1])
+        R1.setMotorSpeeds(throttle[0],throttle[1])
         
         print "Throttle = ",throttle
         time.sleep(0.1)
+
+def menu():
+    print "-------------------------------------"
+    print "Keyboard control Sep. 23, 2011"
+    print " m:menu    q:quit   w:left+    s:left-   x:left off"
+    print "e:right+   d:right-  c: right off  space: all off"
+
+    
 
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better
