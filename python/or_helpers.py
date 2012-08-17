@@ -141,6 +141,9 @@ class Robot:
         self.nummoves = n
         self.moveq = moveq
         
+        self.clAnnounce()
+        print "Sending move queue with",self.nummoves," segments"
+        
         segments = moveq[1:]
         #Convert to a list of lists, each sublist is one entry
         segments = [segments[i:i+SEG_LENGTH] for i in range(0,len(segments),SEG_LENGTH)]
