@@ -23,6 +23,7 @@
         <itemPath>../../imageproc-lib/pid_hw.h</itemPath>
         <itemPath>../../imageproc-lib/stopwatch.h</itemPath>
         <itemPath>../../imageproc-lib/pid.h</itemPath>
+        <itemPath>../../imageproc-lib/version.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../lib/adc_pid.h</itemPath>
@@ -72,6 +73,7 @@
         <itemPath>../../imageproc-lib/gyro.c</itemPath>
         <itemPath>../../imageproc-lib/pid_hw.c</itemPath>
         <itemPath>../../imageproc-lib/pid.c</itemPath>
+        <itemPath>../../imageproc-lib/version.c</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../../imageproc-lib/delay.s</itemPath>
@@ -91,7 +93,6 @@
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
-      <itemPath>version.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
