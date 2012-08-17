@@ -130,11 +130,35 @@ class Robot:
         self.tx( 0, command.SPECIAL_TELEMETRY, pack('L',self.numSamples))
         
     def sendMoveQueue(self, moveq):
+        SEG_LENGTH = 7  #might be changed in the future
+        
+        n = moveq[0]
+        if len(moveq[1:]) != n * SEG_LENGTH:
+            print "CRITICAL: Move queue length specification invalid."
+            print "Wrong number of entries."
+            xb_safe_exit()
+            
+        self.nummoves = n
         self.moveq = moveq
-        self.nummoves = moveq[0]
-        self.clAnnounce()
-        print "Sending move queue with",self.nummoves," segments"
-        self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+self.nummoves*'hhLhhhh', *moveq))
+        
+        segments = moveq[1:]
+        #Convert to a list of lists, each sublist is one entry
+        segments = [segments[i:i+SEG_LENGTH] for i in range(0,len(segments),SEG_LENGTH)]
+        toSend = segments[0:4]
+        
+        
+        while toSend != []:
+            print "Packet",pktCount
+            numToSend = len(toSend)         #Could be < 4, since toSend still a list of lists
+            toSend = [item for sublist in toSend for item in sublist]  #flatted toSend
+            data = [numToSend]
+            data.extend(toSend)    #Full moveq format to be given to pack()
+            #Actual TX
+            self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+numToSend*'hhLhhhh', *toSend))
+            time.sleep(0.05)                #simple holdoff, probably not neccesary
+            segments = segments[4:]         #remanining unsent ones
+            toSend = segments[0:4]          #Due to python indexing, this could be from 1-4
+        
         
     def setMotorSpeeds(self, spleft, spright):
         thrust = [spleft, 0, spright, 0, 0]
