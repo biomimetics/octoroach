@@ -296,3 +296,16 @@ def verifyAllSteeringGainsSet():
         if not(r.steering_gains_set):
             print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
             xb_safe_exit()
+            
+def verifyAllSteeringRateSet():
+    #Verify all robots have motor gains set
+    for r in shared.ROBOTS:
+        if not(r.steering_gains_set):
+            print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+            
+def verifyAllQueried():            
+    for r in shared.ROBOTS:
+        if not(r.robot_queried):
+            print "CRITICAL : Could not query robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
