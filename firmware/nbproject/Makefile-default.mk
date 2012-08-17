@@ -41,11 +41,11 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/_ext/1360930230/tail_queue.o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o ${OBJECTDIR}/_ext/1360930230/sys_service.o ${OBJECTDIR}/_ext/1360930230/hall.o ${OBJECTDIR}/_ext/1360930230/ams-enc.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/version.o ${OBJECTDIR}/source/imu.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1290873929/xl.o.d ${OBJECTDIR}/_ext/1290873929/battery.o.d ${OBJECTDIR}/_ext/1290873929/stopwatch.o.d ${OBJECTDIR}/_ext/1290873929/packet_queue.o.d ${OBJECTDIR}/_ext/1290873929/queue.o.d ${OBJECTDIR}/_ext/1290873929/at86rf.o.d ${OBJECTDIR}/_ext/1290873929/payload.o.d ${OBJECTDIR}/_ext/1290873929/ipspi1.o.d ${OBJECTDIR}/_ext/1290873929/radio.o.d ${OBJECTDIR}/_ext/1290873929/payload_queue.o.d ${OBJECTDIR}/_ext/1290873929/init_default.o.d ${OBJECTDIR}/_ext/1290873929/dfmem.o.d ${OBJECTDIR}/_ext/1290873929/i2c_driver.o.d ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o.d ${OBJECTDIR}/_ext/1290873929/gyro.o.d ${OBJECTDIR}/_ext/1290873929/pid_hw.o.d ${OBJECTDIR}/_ext/1290873929/pid.o.d ${OBJECTDIR}/_ext/1290873929/delay.o.d ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/traps.o.d ${OBJECTDIR}/_ext/1360930230/move_queue.o.d ${OBJECTDIR}/_ext/1360930230/sensors.o.d ${OBJECTDIR}/_ext/1360930230/estop.o.d ${OBJECTDIR}/_ext/1360930230/telem.o.d ${OBJECTDIR}/_ext/1360930230/steering.o.d ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/tail_queue.o.d ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/sys_service.o.d ${OBJECTDIR}/_ext/1360930230/hall.o.d ${OBJECTDIR}/_ext/1360930230/ams-enc.o.d ${OBJECTDIR}/source/cmd.o.d ${OBJECTDIR}/source/main.o.d ${OBJECTDIR}/version.o.d ${OBJECTDIR}/source/imu.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/_ext/1360930230/tail_queue.o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o ${OBJECTDIR}/_ext/1360930230/sys_service.o ${OBJECTDIR}/_ext/1360930230/hall.o ${OBJECTDIR}/_ext/1360930230/ams-enc.o ${OBJECTDIR}/source/imu.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/_ext/1290873929/version.o ${OBJECTDIR}/_ext/1360930230/imu.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1290873929/xl.o.d ${OBJECTDIR}/_ext/1290873929/battery.o.d ${OBJECTDIR}/_ext/1290873929/stopwatch.o.d ${OBJECTDIR}/_ext/1290873929/packet_queue.o.d ${OBJECTDIR}/_ext/1290873929/queue.o.d ${OBJECTDIR}/_ext/1290873929/at86rf.o.d ${OBJECTDIR}/_ext/1290873929/payload.o.d ${OBJECTDIR}/_ext/1290873929/ipspi1.o.d ${OBJECTDIR}/_ext/1290873929/radio.o.d ${OBJECTDIR}/_ext/1290873929/payload_queue.o.d ${OBJECTDIR}/_ext/1290873929/init_default.o.d ${OBJECTDIR}/_ext/1290873929/dfmem.o.d ${OBJECTDIR}/_ext/1290873929/i2c_driver.o.d ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o.d ${OBJECTDIR}/_ext/1290873929/gyro.o.d ${OBJECTDIR}/_ext/1290873929/pid_hw.o.d ${OBJECTDIR}/_ext/1290873929/pid.o.d ${OBJECTDIR}/_ext/1290873929/delay.o.d ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/traps.o.d ${OBJECTDIR}/_ext/1360930230/move_queue.o.d ${OBJECTDIR}/_ext/1360930230/sensors.o.d ${OBJECTDIR}/_ext/1360930230/estop.o.d ${OBJECTDIR}/_ext/1360930230/telem.o.d ${OBJECTDIR}/_ext/1360930230/steering.o.d ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/tail_queue.o.d ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o.d ${OBJECTDIR}/_ext/1360930230/sys_service.o.d ${OBJECTDIR}/_ext/1360930230/hall.o.d ${OBJECTDIR}/_ext/1360930230/ams-enc.o.d ${OBJECTDIR}/source/imu.o.d ${OBJECTDIR}/source/cmd.o.d ${OBJECTDIR}/source/main.o.d ${OBJECTDIR}/_ext/1290873929/version.o.d ${OBJECTDIR}/_ext/1360930230/imu.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/_ext/1360930230/tail_queue.o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o ${OBJECTDIR}/_ext/1360930230/sys_service.o ${OBJECTDIR}/_ext/1360930230/hall.o ${OBJECTDIR}/_ext/1360930230/ams-enc.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/version.o ${OBJECTDIR}/source/imu.o
+OBJECTFILES=${OBJECTDIR}/_ext/1290873929/xl.o ${OBJECTDIR}/_ext/1290873929/battery.o ${OBJECTDIR}/_ext/1290873929/stopwatch.o ${OBJECTDIR}/_ext/1290873929/packet_queue.o ${OBJECTDIR}/_ext/1290873929/queue.o ${OBJECTDIR}/_ext/1290873929/at86rf.o ${OBJECTDIR}/_ext/1290873929/payload.o ${OBJECTDIR}/_ext/1290873929/ipspi1.o ${OBJECTDIR}/_ext/1290873929/radio.o ${OBJECTDIR}/_ext/1290873929/payload_queue.o ${OBJECTDIR}/_ext/1290873929/init_default.o ${OBJECTDIR}/_ext/1290873929/dfmem.o ${OBJECTDIR}/_ext/1290873929/i2c_driver.o ${OBJECTDIR}/_ext/1290873929/dfilter_avg.o ${OBJECTDIR}/_ext/1290873929/gyro.o ${OBJECTDIR}/_ext/1290873929/pid_hw.o ${OBJECTDIR}/_ext/1290873929/pid.o ${OBJECTDIR}/_ext/1290873929/delay.o ${OBJECTDIR}/_ext/1360930230/adc_pid.o ${OBJECTDIR}/_ext/1360930230/motor_ctrl.o ${OBJECTDIR}/_ext/1360930230/traps.o ${OBJECTDIR}/_ext/1360930230/move_queue.o ${OBJECTDIR}/_ext/1360930230/sensors.o ${OBJECTDIR}/_ext/1360930230/estop.o ${OBJECTDIR}/_ext/1360930230/telem.o ${OBJECTDIR}/_ext/1360930230/steering.o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o ${OBJECTDIR}/_ext/1360930230/tail_queue.o ${OBJECTDIR}/_ext/1360930230/tail_ctrl.o ${OBJECTDIR}/_ext/1360930230/sys_service.o ${OBJECTDIR}/_ext/1360930230/hall.o ${OBJECTDIR}/_ext/1360930230/ams-enc.o ${OBJECTDIR}/source/imu.o ${OBJECTDIR}/source/cmd.o ${OBJECTDIR}/source/main.o ${OBJECTDIR}/_ext/1290873929/version.o ${OBJECTDIR}/_ext/1360930230/imu.o
 
 
 CFLAGS=
@@ -63,7 +63,7 @@ FIXDEPS=fixDeps
 
 # The following macros may be used in the pre and post step lines
 Device=dsPIC33FJ128MC706A
-ProjectDir="C:\Users\kohut\Desktop\GitCode\octoroach\firmware"
+ProjectDir="C:\Users\pullin\Desktop\GIT code\octoroach\firmware"
 ConfName=default
 ImagePath="dist\default\${IMAGE_TYPE}\firmware.${IMAGE_TYPE}.${OUTPUT_SUFFIX}"
 ImageDir="dist\default\${IMAGE_TYPE}"
@@ -179,12 +179,6 @@ ${OBJECTDIR}/_ext/1290873929/pid.o: ../../imageproc-lib/pid.c  nbproject/Makefil
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/pid.c  -o ${OBJECTDIR}/_ext/1290873929/pid.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/pid.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/pid.o.d" $(SILENT) 
 	
-${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
-	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
-	
 ${OBJECTDIR}/_ext/1360930230/adc_pid.o: ../lib/adc_pid.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d 
@@ -269,6 +263,12 @@ ${OBJECTDIR}/_ext/1360930230/ams-enc.o: ../lib/ams-enc.c  nbproject/Makefile-${C
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/ams-enc.c  -o ${OBJECTDIR}/_ext/1360930230/ams-enc.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/ams-enc.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/ams-enc.o.d" $(SILENT) 
 	
+${OBJECTDIR}/source/imu.o: source/imu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/source 
+	@${RM} ${OBJECTDIR}/source/imu.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  source/imu.c  -o ${OBJECTDIR}/source/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/imu.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/source/imu.o.d" $(SILENT) 
+	
 ${OBJECTDIR}/source/cmd.o: source/cmd.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/source 
 	@${RM} ${OBJECTDIR}/source/cmd.o.d 
@@ -281,17 +281,17 @@ ${OBJECTDIR}/source/main.o: source/main.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  source/main.c  -o ${OBJECTDIR}/source/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/main.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/source/main.o.d" $(SILENT) 
 	
-${OBJECTDIR}/version.o: version.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR} 
-	@${RM} ${OBJECTDIR}/version.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  version.c  -o ${OBJECTDIR}/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/version.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/version.o.d" $(SILENT) 
+${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
+	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
 	
-${OBJECTDIR}/source/imu.o: source/imu.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/source 
-	@${RM} ${OBJECTDIR}/source/imu.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  source/imu.c  -o ${OBJECTDIR}/source/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/imu.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/source/imu.o.d" $(SILENT) 
+${OBJECTDIR}/_ext/1360930230/imu.o: ../lib/imu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
+	@${RM} ${OBJECTDIR}/_ext/1360930230/imu.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/imu.o.d" $(SILENT) 
 	
 else
 ${OBJECTDIR}/_ext/1290873929/xl.o: ../../imageproc-lib/xl.c  nbproject/Makefile-${CND_CONF}.mk
@@ -396,12 +396,6 @@ ${OBJECTDIR}/_ext/1290873929/pid.o: ../../imageproc-lib/pid.c  nbproject/Makefil
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/pid.c  -o ${OBJECTDIR}/_ext/1290873929/pid.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/pid.o.d"        -g -omf=elf -DPID_HARDWARE -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/pid.o.d" $(SILENT) 
 	
-${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
-	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
-	
 ${OBJECTDIR}/_ext/1360930230/adc_pid.o: ../lib/adc_pid.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d 
@@ -486,6 +480,12 @@ ${OBJECTDIR}/_ext/1360930230/ams-enc.o: ../lib/ams-enc.c  nbproject/Makefile-${C
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/ams-enc.c  -o ${OBJECTDIR}/_ext/1360930230/ams-enc.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/ams-enc.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/ams-enc.o.d" $(SILENT) 
 	
+${OBJECTDIR}/source/imu.o: source/imu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/source 
+	@${RM} ${OBJECTDIR}/source/imu.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  source/imu.c  -o ${OBJECTDIR}/source/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/imu.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/source/imu.o.d" $(SILENT) 
+	
 ${OBJECTDIR}/source/cmd.o: source/cmd.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/source 
 	@${RM} ${OBJECTDIR}/source/cmd.o.d 
@@ -498,17 +498,17 @@ ${OBJECTDIR}/source/main.o: source/main.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  source/main.c  -o ${OBJECTDIR}/source/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/main.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/source/main.o.d" $(SILENT) 
 	
-${OBJECTDIR}/version.o: version.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR} 
-	@${RM} ${OBJECTDIR}/version.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  version.c  -o ${OBJECTDIR}/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/version.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/version.o.d" $(SILENT) 
+${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
+	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
 	
-${OBJECTDIR}/source/imu.o: source/imu.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/source 
-	@${RM} ${OBJECTDIR}/source/imu.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  source/imu.c  -o ${OBJECTDIR}/source/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/source/imu.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/source/imu.o.d" $(SILENT) 
+${OBJECTDIR}/_ext/1360930230/imu.o: ../lib/imu.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
+	@${RM} ${OBJECTDIR}/_ext/1360930230/imu.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/imu.o.d" $(SILENT) 
 	
 endif
 

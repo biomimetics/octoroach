@@ -23,6 +23,7 @@
         <itemPath>../../imageproc-lib/pid_hw.h</itemPath>
         <itemPath>../../imageproc-lib/stopwatch.h</itemPath>
         <itemPath>../../imageproc-lib/pid.h</itemPath>
+        <itemPath>../../imageproc-lib/version.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../lib/adc_pid.h</itemPath>
@@ -43,6 +44,7 @@
         <itemPath>../lib/hall.h</itemPath>
         <itemPath>../lib/ams-enc.h</itemPath>
         <itemPath>source/imu.h</itemPath>
+        <itemPath>../lib/imu.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
       <itemPath>source/settings.h</itemPath>
@@ -74,6 +76,7 @@
         <itemPath>../../imageproc-lib/gyro.c</itemPath>
         <itemPath>../../imageproc-lib/pid_hw.c</itemPath>
         <itemPath>../../imageproc-lib/pid.c</itemPath>
+        <itemPath>../../imageproc-lib/version.c</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../../imageproc-lib/delay.s</itemPath>
@@ -92,6 +95,7 @@
         <itemPath>../lib/hall.c</itemPath>
         <itemPath>../lib/ams-enc.c</itemPath>
         <itemPath>source/imu.c</itemPath>
+        <itemPath>../lib/imu.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
       <itemPath>source/main.c</itemPath>
