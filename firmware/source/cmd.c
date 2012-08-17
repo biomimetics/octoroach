@@ -120,7 +120,7 @@ void cmdSetup(void) {
     cmd_func[CMD_SET_PID_GAINS] = &cmdSetPIDGains;
     cmd_func[CMD_GET_PID_TELEMETRY] = &cmdGetPIDTelemetry;
     cmd_func[CMD_SET_CTRLD_TURN_RATE] = &cmdSetCtrldTurnRate;
-    cmd_func[CMD_GET_IMU_LOOP_ZGYRO] = &cmdGetImuLoopZGyro;
+    cmd_func[CMD_STREAM_TELEMETRY] = &cmdStreamTelemetry;
     cmd_func[CMD_SET_MOVE_QUEUE] = &cmdSetMoveQueue;
     cmd_func[CMD_SET_STEERING_GAINS] = &cmdSetSteeringGains;
     cmd_func[CMD_SOFTWARE_RESET] = &cmdSoftwareReset;
@@ -371,8 +371,6 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
     hallPIDSetInput(1 , argsPtr->chan1, argsPtr->runtime2);
     hallPIDOn(1);
 #else
-    //_args_cmdSetThrustClosedLoop* argsPtr =
-    //        (_args_cmdSetThrustClosedLoop*) (frame);
     PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
 
     legCtrlSetInput(LEG_CTRL_LEFT, argsPtr->chan1);

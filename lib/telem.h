@@ -3,6 +3,7 @@
 
 //Telemetry packet structure
 //This is specific to apullin's OctoROACH code
+
 typedef struct {
 		unsigned long timeStamp; 
 		int inputL;  
@@ -29,13 +30,13 @@ typedef struct {
 
 //TODO: A union is not neccesary here. Remove for clarity, and chage related
 //  code
+
 typedef union packedTelemUnion {
 	telemStruct_t telemStruct;
 	unsigned char dataArray[sizeof(telemStruct_t)];
 } telemU;
 
 #define PACKETSIZE sizeof(telemStruct_t)
-#define PKT_INDEX_SIZE 4 //for sending a 4-byte (ulong) telemetry packet index
 
 // Prototypes
 void telemSetup(); //To be called in main

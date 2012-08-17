@@ -22,7 +22,7 @@
 #define CMD_SET_PID_GAINS           0x82
 #define CMD_GET_PID_TELEMETRY       0x83
 #define CMD_SET_CTRLD_TURN_RATE     0x84
-#define CMD_GET_IMU_LOOP_ZGYRO      0x85
+#define CMD_STREAM_TELEMETRY        0x85
 #define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
@@ -37,6 +37,7 @@
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
 #define CMD_SET_TAIL_GAINS          0x93
+#define CMD_SET_PHASE_GAINS         0x94
 
 //Argument lengths
 //lenghts are in bytes
@@ -163,6 +164,16 @@ typedef struct {
 typedef struct{
 	int Kp, Ki, Kd, Kaw, Kff;
 } _args_cmdSetTailGains;
+
+//cmdStreamTelemetry
+typedef struct{
+    unsigned long count;
+} _args_cmdStreamTelemetry;
+
+//cmdSetPhaseGains
+typedef struct{
+	int Kp, Ki, Kd, Kaw, Kff;
+} _args_cmdSetPhaseGains;
 
 #endif // __CMD_H
 

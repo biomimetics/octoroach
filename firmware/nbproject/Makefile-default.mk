@@ -179,6 +179,12 @@ ${OBJECTDIR}/_ext/1290873929/pid.o: ../../imageproc-lib/pid.c  nbproject/Makefil
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/pid.c  -o ${OBJECTDIR}/_ext/1290873929/pid.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/pid.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/pid.o.d" $(SILENT) 
 	
+${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
+	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
+	
 ${OBJECTDIR}/_ext/1360930230/adc_pid.o: ../lib/adc_pid.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/adc_pid.o.d 
@@ -389,6 +395,12 @@ ${OBJECTDIR}/_ext/1290873929/pid.o: ../../imageproc-lib/pid.c  nbproject/Makefil
 	@${RM} ${OBJECTDIR}/_ext/1290873929/pid.o.d 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/pid.c  -o ${OBJECTDIR}/_ext/1290873929/pid.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/pid.o.d"        -g -omf=elf -DPID_HARDWARE -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/pid.o.d" $(SILENT) 
+	
+${OBJECTDIR}/_ext/1290873929/version.o: ../../imageproc-lib/version.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} ${OBJECTDIR}/_ext/1290873929 
+	@${RM} ${OBJECTDIR}/_ext/1290873929/version.o.d 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../../imageproc-lib/version.c  -o ${OBJECTDIR}/_ext/1290873929/version.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1290873929/version.o.d"        -g -omf=elf -DPID_HARDWARE -fast-math -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1290873929/version.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/adc_pid.o: ../lib/adc_pid.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 

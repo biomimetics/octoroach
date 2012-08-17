@@ -37,6 +37,7 @@ fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory"
 static unsigned int steeringMode;
 
 extern moveCmdT currentMove, idleMove;
+extern char inMotion;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5();
@@ -100,7 +101,7 @@ void steeringSetup(void) {
     //Averaging filter setup:
     //filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
-    steeringPID.onoff = PID_OFF; //OFF by default
+    steeringPID.onoff = PID_ON; //OFF by default
 
     steeringMode = STEERMODE_DECREASE;
 }
@@ -132,7 +133,7 @@ static void steeringHandleISR() {
 
     //Update the setpoints
     //if((currentMove->inputL != 0) && (currentMove->inputR != 0)){
-    if (currentMove != idleMove) {
+    if ((currentMove != idleMove) || (inMotion == 1) ) {
         //Only update steering controller if we are in motion
 #ifdef PID_SOFTWARE
         pidUpdate(&steeringPID, gyroAvgZ);

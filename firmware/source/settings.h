@@ -8,6 +8,7 @@
 #define __SETTINGS_H
 
 
+//#error "REQUIRED: Review and set radio channel & network parameters in firmware/source/settings.h  , then comment out this line."
 /////// Radio settings ///////
 #define RADIO_CHANNEL			0x14
 //#warning "You have changed the radio channel from 0x19 to something else"

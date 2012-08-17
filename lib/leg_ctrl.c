@@ -16,6 +16,9 @@
 #include <dsp.h>
 #include <stdlib.h> // for malloc
 
+#define INT_MIN -32768
+#define INT_MAX 32767
+
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
 #define STEERING_ON 1
@@ -53,6 +56,7 @@ int medianFilter3(int*);
 //This is an array to map legCtrl controller to PWM output channels
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
+//Global flag for wether or not the robot is in motion
 volatile char inMotion;
 
 //Function to be installed into T1, and setup function
@@ -78,11 +82,7 @@ static void SetupTimer1(void) {
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
             T1_SYNC_EXT_OFF & T1_IDLE_CON;  //correct
 
-	//T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_64 & T1_GATE_OFF &
-       //     T1_SYNC_EXT_OFF & T1_IDLE_CON; //NK
-
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
-	
     //T1PERvalue = 0x9C40/2;
     //getT1_ticks() = 0;
     //OpenTimer1(T1CON1value, T1PERvalue);
@@ -259,6 +259,7 @@ void serviceMoveQueue(void) {
 
     //Blink red LED when executing move program
     if (currentMove != idleMove) {
+        inMotion = 1;
         if (blinkCtr == 0) {
             blinkCtr = 100;
             LED_RED = ~LED_RED;
