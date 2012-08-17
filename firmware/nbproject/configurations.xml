@@ -94,7 +94,6 @@
         <itemPath>../lib/sys_service.c</itemPath>
         <itemPath>../lib/hall.c</itemPath>
         <itemPath>../lib/ams-enc.c</itemPath>
-        <itemPath>source/imu.c</itemPath>
         <itemPath>../lib/imu.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>

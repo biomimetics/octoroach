@@ -120,7 +120,7 @@ void cmdSetup(void) {
     cmd_func[CMD_SET_PID_GAINS] = &cmdSetPIDGains;
     cmd_func[CMD_GET_PID_TELEMETRY] = &cmdGetPIDTelemetry;
     cmd_func[CMD_SET_CTRLD_TURN_RATE] = &cmdSetCtrldTurnRate;
-    cmd_func[CMD_STREAM_TELEMETRY] = &cmdStreamTelemetry;
+    cmd_func[CMD_GET_IMU_LOOP_ZGYRO] = &cmdGetImuLoopZGyro;
     cmd_func[CMD_SET_MOVE_QUEUE] = &cmdSetMoveQueue;
     cmd_func[CMD_SET_STEERING_GAINS] = &cmdSetSteeringGains;
     cmd_func[CMD_SOFTWARE_RESET] = &cmdSoftwareReset;
@@ -575,30 +575,8 @@ static void cmdHallTelemetry(unsigned char status, unsigned char length, unsigne
     //TODO: Integration of hall telemetry is unfinished. Fuction will currently
     // do nothing.
 
-    PKT_UNPACK(_args_cmdHallTelemetry, argsPtr, frame);
-
-    //start time = argsPtr->startDealy + getT1_ticks();
-    //telemSetSkip(argsPtr->skip);
-    //telemSetSamplesToSave(argsPtr->count);
-    //swatchReset(); //This should probably be done within the telem module!
-
-    //int idx = 0;
-    //unsigned long temp;
-    //TelemControl.count = frame[idx] + (frame[idx + 1] << 8);
-    //idx += 2;
-    // start time is relative to current t1_ticks
-    //temp = t1_ticks; // need atomic read due to interrupts
-    //TelemControl.start =
-    //        (unsigned long) (frame[idx] + (frame[idx + 1] << 8))
-    //        + temp;
-    //idx += 2;
-    //samplesToSave = TelemControl.count; // **** this runs sample capture in T5 interrupt
-    
-    //TelemControl.skip = frame[idx]+(frame[idx + 1] << 8);
-    //swatchReset();
-    //if (TelemControl.count > 0) {
-    //    TelemControl.onoff = 1; // use just steering servo sample capture
-    //} // enable telemetry last
+    //This is only commented to supress the warning
+    //PKT_UNPACK(_args_cmdHallTelemetry, argsPtr, frame);
      
 }
 

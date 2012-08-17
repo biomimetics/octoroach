@@ -17,6 +17,7 @@
 #include "sys_service.h"
 #include "ams-enc.h"
 #include "imu.h"
+#include "cmd.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -105,32 +106,29 @@ void telemSetSamplesToSave(unsigned long n){
 	samplesToSave = n;
 }
 
-void telemReadbackSamples(unsigned long numSamples)
-{
-	//unsigned int page, bufferByte;// maxpage;
-	unsigned char dataPacket[PACKETSIZE + PKT_INDEX_SIZE];
-	//unsigned long bytesleft = PACKETSIZE * num;
-	//unsigned long telem_index = 0;
-	int delaytime_ms = READBACK_DELAY_TIME_MS;
+void telemReadbackSamples(unsigned long numSamples) {
+    //unsigned int page, bufferByte;// maxpage;
+    //unsigned char dataPacket[PACKETSIZE];
 
-	unsigned long i;
-	
-	LED_GREEN = 1;
-	//Disable motion interrupts for readback
-	//_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
-	//while(!dfmemIsReady());
+    int delaytime_ms = READBACK_DELAY_TIME_MS;
 
-	telemStruct_t sampleData;
+    unsigned long i = 0; //will actually be the same as the sampleIndex
 
-	for(i = 0; i < numSamples; i++){
-		//Retireve data from flash
-		//dfmemReadSample(i, sizeof(sampleData), (unsigned char*)(&sampleData));
-		dfmemReadSample(i, sizeof(sampleData), dataPacket + PKT_INDEX_SIZE);
-		//Write sample number to start of packet. TODO: fix this
-		*(unsigned long*)(dataPacket) = (long)i;
-		//Reliable send, with linear backoff
-		g_last_ackd = 0;
-		do{
+    LED_GREEN = 1;
+    //Disable motion interrupts for readback
+    //_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
+
+
+    telemStruct_t sampleData;
+
+    for (i = 0; i < numSamples; i++) {
+        //Retireve data from flash
+        //dfmemReadSample(i, sizeof(sampleData), (unsigned char*)(&sampleData));
+        dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
+
+        //Reliable send, with linear backoff
+        g_last_ackd = 0;
+        do {
             telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
             //trx_status = phyReadBit(SR_TRAC_STATUS);
             delaytime_ms += 2;
