@@ -12,9 +12,12 @@
 #include "dfilter_avg.h"
 #include "pid_hw.h"
 #include "leg_ctrl.h"
+#include "sys_service.h"
 
 //Inline functions
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
+
+//float lastGyroValue = 0.0;
 
 //Steering controller variables
 pidObj steeringPID;
@@ -24,10 +27,12 @@ fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory"
 
 //Averaging filter structures for gyroscope data
 //Initialzied in setup.
-filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
-#define GYRO_AVG_SAMPLES 	32
+//filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
+//#define GYRO_AVG_SAMPLES 	32
 
 #define GYRO_DRIFT_THRESH 5
+
+#define LSB2DEG    0.0695652174
 
 static unsigned int steeringMode;
 
@@ -55,7 +60,7 @@ static void steeringServiceRoutine(void){
     steeringHandleISR();
 }
 
-static void setupTimer5(){
+static void SetupTimer5(){
     ///// Timer 5 setup, Steering ISR, 300Hz /////
     // period value = Fcy/(prescale*Ftimer)
     unsigned int T5CON1value, T5PERvalue;
@@ -65,7 +70,7 @@ static void setupTimer5(){
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON); 
 }
 
 
@@ -88,12 +93,12 @@ void steeringSetup(void) {
 
     steeringSetAngRate(0);
 
-    setupTimer5(); //T5 ISR will update the steering controller
+    SetupTimer5(); //T5 ISR will update the steering controller
     int retval;
     retval = sysServiceInstallT5(steeringServiceRoutine);
 
     //Averaging filter setup:
-    filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
+    //filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
     steeringPID.onoff = PID_OFF; //OFF by default
 
@@ -115,17 +120,10 @@ void steeringSetMode(unsigned int sm) {
 
 static void steeringHandleISR() {
 
-    //int gyroAvg[3];
     int wz;
-    int gyroData[3];
-    int gyroOffsets[3];
 
-    gyroGetXYZ((unsigned char*) gyroData);
-    gyroGetOffsets(gyroOffsets);
-
-    filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
-
-    wz = filterAvgCalc(&gyroZavg);
+    wz = imuGetGyroZValueAvg();
+    
 
     //Threshold filter on gyro to account for minor drift
     //if (ABS(wz) < GYRO_DRIFT_THRESH) {

@@ -5,7 +5,7 @@
 
 void steeringSetup(void);
 void steeringSetAngRate(int angRate);
-void steeringSetGains(int Kp,int Ki,int Kd,int Kawm, int ff);
+void steeringSetGains(int Kp, int Ki, int Kd, int Kawm, int ff);
 void steeringSetMode(unsigned int mode);
 void steeringApplyCorrection(int* inputs, int* outputs);
 void steeringOff();
@@ -30,10 +30,11 @@ void steeringOn();
 
 #endif
 
-enum STEERING_MODES { 
-	STEERMODE_INCREASE = 1,
-	STEERMODE_DECREASE = 0,
-	STEERMODE_SPLIT	   = 2
+enum STEERING_MODES {
+    STEERMODE_OFF = 0,
+    STEERMODE_INCREASE = 1,
+    STEERMODE_DECREASE = 2,
+    STEERMODE_SPLIT = 3
 };
 
 #endif //__STEERING_H

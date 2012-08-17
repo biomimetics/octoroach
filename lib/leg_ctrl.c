@@ -18,6 +18,9 @@
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
 
+#define STEERING_ON 1
+#define STEEERING_OFF 0
+
 //PID container objects
 pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 //DSP PID stuff
@@ -73,9 +76,13 @@ static void legCtrlServiceRoutine(void){
 static void SetupTimer1(void) {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
-            T1_SYNC_EXT_OFF & T1_IDLE_CON;
+            T1_SYNC_EXT_OFF & T1_IDLE_CON;  //correct
+
+	//T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_64 & T1_GATE_OFF &
+       //     T1_SYNC_EXT_OFF & T1_IDLE_CON; //NK
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
+	
     //T1PERvalue = 0x9C40/2;
     //getT1_ticks() = 0;
     //OpenTimer1(T1CON1value, T1PERvalue);
@@ -110,7 +117,7 @@ void legCtrlSetup() {
 
     //Set which PWM output each PID Object will correspond to
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
-    legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
+    legCtrlOutputChannels[1] = MC_CHANNEL_PWM4;
 
     SetupTimer1(); // Timer 1 @ 1 Khz
     int retval;
@@ -128,6 +135,8 @@ void legCtrlSetup() {
     idleMove->params[0] = 0;
     idleMove->params[1] = 0;
     idleMove->params[2] = 0;
+    idleMove->steeringType = STEERMODE_OFF;
+    idleMove->steeringRate = 0;
     currentMove = idleMove;
 
     currentMoveStart = 0;
@@ -305,6 +314,18 @@ static void moveSynth() {
     long ySR = currentMove->inputR; // "
     int yL = 0;
     int yR = 0;
+
+
+
+    steeringSetAngRate(currentMove->steeringRate); //THIS TURNS THE STEERING ON!
+
+    if (currentMove->steeringType == STEERMODE_OFF) {
+        steeringOff();
+    } else {
+        steeringSetMode(currentMove->steeringType);
+    }
+             
+
     if (inMotion) {
         if (currentMove->type == MOVE_SEG_IDLE) {
             yL = 0;
@@ -313,7 +334,10 @@ static void moveSynth() {
         if (currentMove->type == MOVE_SEG_CONSTANT) {
             yL = ySL;
             yR = ySR;
-        }
+            
+            }
+
+        
         if (currentMove->type == MOVE_SEG_RAMP) {
             long rateL = (long) currentMove->params[0];
             long rateR = (long) currentMove->params[1];

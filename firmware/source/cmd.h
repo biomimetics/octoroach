@@ -153,7 +153,7 @@ typedef struct {
 //NOTE: This is not for the entire packet, just for one tailQ item,
 // the cmd handler will stride across the packet, unpacking these
 typedef struct {
-    float torque;
+    float angle;
     unsigned long duration;
     enum tailSegT type;
     int params[3];

@@ -23,10 +23,21 @@ MOVE_SEG_LOOP_DECL = 6
 MOVE_SEG_LOOP_CLEAR = 7
 MOVE_SEG_QFLUSH = 8
 
+###
+TAIL_SEG_CONSTANT = 0
+TAIL_SEG_RAMP = 1
+TAIL_SEG_SIN = 2
+TAIL_SEG_TRI = 3
+TAIL_SEG_SAW = 4
+TAIL_SEG_IDLE = 5
+TAIL_GYRO_CONTROL = 6
+
 ##
-STEER_MODE_DECREASE = 0
+STEER_MODE_OFF = 0
 STEER_MODE_INCREASE = 1
-STEER_MODE_SPLIT = 2
+STEER_MODE_DECREASE = 2
+STEER_MODE_SPLIT = 3
+
 
 
 ########## Helper functions #################
@@ -76,7 +87,7 @@ def writeFileHeader(dataFileName):
     fileout.write('%  numSamples    = ' + repr(shared.numSamples) + '\n')
     fileout.write('%  moveq         = ' + repr(shared.moveq) + '\n')
     fileout.write('% Columns: \n')
-    fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut | Vbatt | SteerAngle\n')
+    fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut | Vbatt | SteerAngle | Tail Angle\n')
     fileout.close()
 
 def dlProgress(current, total):
@@ -129,7 +140,7 @@ def downloadTelemetry(numSamples):
 
     print "readback done"
     fileout = open(shared.dataFileName, 'a')
-    np.savetxt(fileout , np.array(shared.imudata), '%d', delimiter = ',')
+    np.savetxt(fileout , np.array(shared.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')
 
     print "data saved to ",shared.dataFileName
     #Done with flash download and save
@@ -169,6 +180,7 @@ def setMotorGains(gains):
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_PID_GAINS, pack('10h',*gains))
         time.sleep(0.3)
+        count = count+1
         if count > 8:
             print "Unable to set motor gains, exiting."
             xb_safe_exit()
@@ -181,9 +193,24 @@ def setSteeringGains(gains):
         xb_send(shared.xb, shared.DEST_ADDR, \
                 0, command.SET_STEERING_GAINS, pack('6h',*gains))
         time.sleep(0.3)
+        count = count+1
         if count > 8:
             print "Unable to set steering gains, exiting."
             xb_safe_exit()
+
+def setTailGains(gains):
+    count = 1
+    shared.steeringGains = gains
+    while not (shared.tail_gains_set):
+        print "Setting tail gains...   ",count,"/8"
+        xb_send(shared.xb, shared.DEST_ADDR, \
+                0, command.SET_TAIL_GAINS, pack('5h',*gains))
+        time.sleep(0.3)
+        count = count+1
+        if count > 8:
+            print "Unable to set tail gains, exiting."
+            xb_safe_exit()
+        
 
 def eraseFlashMem(numSamples):
     eraseStartTime = time.time()
@@ -208,9 +235,17 @@ def startTelemetrySave(numSamples):
 def sendMoveQueue(moveq):
     shared.moveq = moveq
     nummoves = moveq[0]
+    #xb_send(shared.xb, shared.DEST_ADDR, \
+    #        0, command.SET_MOVE_QUEUE, pack('=h'+nummoves*'hhLhhhh', *moveq))
     xb_send(shared.xb, shared.DEST_ADDR, \
-            0, command.SET_MOVE_QUEUE, pack('=h'+nummoves*'hhLhhhh', *moveq))
-    
+            0, command.SET_MOVE_QUEUE, pack('=h'+nummoves*'hhLhhhhhh', *moveq))
+
+def sendTailQueue(tailq):
+    shared.tailq = tailq
+    nummoves = tailq[0]
+    xb_send(shared.xb, shared.DEST_ADDR, \
+            0, command.SET_TAIL_QUEUE, pack('=h'+nummoves*'fLhhhh', *tailq))
+
 def setMotorSpeeds(spleft, spright):
     thrust = [spleft, 0, spright, 0, 0]
     xb_send(shared.xb, shared.DEST_ADDR, \
@@ -220,7 +255,7 @@ def setupSerial():
     print "Setting up serial ..."
     try:
         shared.ser = serial.Serial(shared.BS_COMPORT, shared.BS_BAUDRATE, \
-                    timeout=3, rtscts=0)
+                    timeout=3, rtscts=1)
     except serial.serialutil.SerialException:
         print "Could not open serial port:",shared.BS_COMPORT
         sys.exit()
@@ -230,7 +265,7 @@ def setupSerial():
         
 def calcNumSamples(moveq):
     #Calculates the total movement time from the move queue above
-    shared.runtime = sum([moveq[i] for i in [ind*7+3 for ind in range(0,moveq[0])]])
+    shared.runtime = sum([moveq[i] for i in [ind*9+3 for ind in range(0,moveq[0])]])
    
     #calculate the number of telemetry packets we expect
     n = int(ceil(150 * (shared.runtime + shared.leadinTime + shared.leadoutTime) / 1000.0))

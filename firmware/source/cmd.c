@@ -655,14 +655,13 @@ static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned
 }
 
 static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned char *frame) {
-    //int Kp, Ki, Kd, Kaw, ff;
-    //int idx = 0;
 
     //Unpack unsigned char* frame into structured values
     //_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*) (frame);
     PKT_UNPACK(_args_cmdSetTailGains, argsPtr, frame);
 
     tailCtrlSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->Kff);
+	//tailCtrlSetGains(0,0,0,0,0);
 
     //Send confirmation packet
     Payload pld;
@@ -670,5 +669,6 @@ static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned
     pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_TAIL_GAINS;
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetTailGains));
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(macGetDestAddr(), pld);
 }
+

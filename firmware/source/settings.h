@@ -9,32 +9,26 @@
 
 
 /////// Radio settings ///////
-#define RADIO_CHANNEL			0x0E
+#define RADIO_CHANNEL			0x14
 //#warning "You have changed the radio channel from 0x19 to something else"
-#define RADIO_SRC_PAN_ID 		0x2050
+#define RADIO_SRC_PAN_ID 		0x2060
 #define RADIO_SRC_ADDR 		0x2052
 //Hard code in destination address for now, update to be dynamic later
-#define RADIO_DST_ADDR		0x2051
+#define RADIO_DST_ADDR		0x2011
 
-/*
-///// Motile radio config  /////
-/////// Radio settings ///////
-#define RADIO_CHANNEL			0x0E
-//#warning "You have changed the radio channel from 0x19 to something else"
-#define RADIO_SRC_PAN_ID 		0x3000
-#define RADIO_SRC_ADDR 		0x3002
-//Hard code in destination address for now, update to be dynamic later
-#define RADIO_DST_ADDR		0x3001
-*/
 
 // Radio queue sizes
+//#define RADIO_RXPQ_MAX_SIZE 	32
+//#define RADIO_TXPQ_MAX_SIZE	32
+
+
 #define RADIO_RXPQ_MAX_SIZE 	16
 #define RADIO_TXPQ_MAX_SIZE	16
-
 
 /////// System Service settings ///////
 #define SYS_SERVICE_T1 // For legCtrl, hall
 #define SYS_SERVICE_T2 // For hall, 400 Hz tick counter
+#define SYS_SERVICE_T4 // For IMU, 300Hz
 #define SYS_SERVICE_T5 // For steering, telemetry
 
 /////// Configuration options ///////

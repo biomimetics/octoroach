@@ -18,7 +18,7 @@ pktFormat = { \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+16*'h', \
+    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'f'+'hhf'+'f'+'LL'+'h', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -26,7 +26,8 @@ pktFormat = { \
     command.SET_VEL_PROFILE:        '24h' ,\
     command.WHO_AM_I:               '', \
     command.ZERO_POS:               '=2l', \
-    command.SET_HALL_GAINS:         '10h' \
+    command.SET_HALL_GAINS:         '10h', \
+    command.SET_TAIL_GAINS:         '5h' \
     }
                
 #XBee callback function, called every time a packet is recieved
@@ -143,6 +144,12 @@ def xbee_received(packet):
             #print "whoami:",status, hex(type), data
             print "whoami:",data
             shared.robotQueried = True
+        # SET_TAIL_GAINS
+        elif type == command.SET_TAIL_GAINS:
+            print "Set Tail gains"
+            gains = unpack(pattern, data)
+            print gains
+            shared.tail_gains_set = True
         else:    
             pass
     

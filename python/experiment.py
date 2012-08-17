@@ -14,7 +14,7 @@ from hall_helpers import queryRobot
 
 
 ###### Operation Flags ####
-SAVE_DATA = False
+SAVE_DATA = True
 RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
                       # This is a known bug.
 
@@ -40,7 +40,7 @@ def main():
     #time.sleep(1)
     #sleepRobot()
     
-    setSteeringRate(0)
+    
 
     #Motor gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
@@ -48,29 +48,80 @@ def main():
     
     motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
+    #motorgains = [0000,000,0,0,0 , 0000,000,0,0,0]
     setMotorGains(motorgains)
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
     #
-    steeringGains = [5000,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
+    #steeringGains = [5000,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
     #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
-    #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [500,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #steeringGains = [0000,0,0,0,0,  STEER_MODE_DECREASE] 
     setSteeringGains(steeringGains)
+    setSteeringRate(0)
 
+    #Tail gains format:
+    #  [ Kp , Ki , Kd , Kaw , Kff]
+    #
+    tailGains = [8000,20,1000,0,0] #tuned 7/12/12
+    #tailGains = [0,0,0,0,0] # Disables tail controller
+    setTailGains(tailGains)
+    time.sleep(1)
+
+
+    exp_time = 1000
+
+    start_angle = -45
+	
     #Constant example
-    #moves = 1
-    #moveq = [moves, \
-    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-             
-    #Ramp example
     moves = 5
     moveq = [moves, \
-        0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
-        0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
-        150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
-        0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
+             0, 0, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,
+             0, 0, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_INCREASE, 0,
+             300, 300, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,
+             300, 300, exp_time/2, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+             300, 300, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0
+             ]
+
+    #tmoves = 1
+
+    # Tail range of motion is between 140 and -125 deg! do not exceed
+    tailq = [moves, \
+             0, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+             0, exp_time, TAIL_SEG_RAMP, start_angle*10, 0, 0,
+             start_angle, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+             0, exp_time/2, TAIL_SEG_CONSTANT, 0, 0, 0,
+             0, exp_time, TAIL_SEG_IDLE, 0, 0, 0
+             ]
+
+    moves = 2
+    
+    moveq = [moves, \
+             300, 300, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+             200, 200, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 20]
+
+    
+
+    #tailq = [tmoves, \
+    #         0, exp_time, TAIL_GYRO_CONTROL, -20, 0, 0
+    #         ]
+
+    #tailq = [tmoves, \
+    #         90.0, 6000, MOVE_SEG_RAMP, -30*10, 0, 0,
+     #        -90.0, 6000, MOVE_SEG_RAMP, 30*10, 0, 0
+     #        ]
+    
+    
+      
+    #Ramp example
+    #moves = 5
+    #moveq = [moves, \
+    #    0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
+    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+    #    150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
+    #    0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
 
     #Sin example
     #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
@@ -80,13 +131,15 @@ def main():
     #         76,   76,   2000,   MOVE_SEG_SIN,  75, 1000, phase,
     #	     75, 75, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0]
     
+    shared.runtime = exp_time*moves
     
     #Timing settings
     shared.leadinTime = 500;
     shared.leadoutTime = 500;
     
     numSamples = calcNumSamples(moveq)
-    numSamples = 850
+    #numSamples = int(floor((tailq[2]+shared.leadinTime+shared.leadoutTime)*0.150))
+    
     shared.imudata = [ [] ] * numSamples
     
     #Flash must be erased to save new data
@@ -105,18 +158,19 @@ def main():
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
     sendMoveQueue(moveq)
+    #sendTailQueue(tailq)
     
     #Clear loop
-    time.sleep(6)
-    mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
-    mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
+    #time.sleep(6)
+    #mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
+    #mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
 
     if SAVE_DATA:
-        print "Sending loop clear!!"
-        sendMoveQueue(mqclear)
+        #print "Sending loop clear!!"
+        #sendMoveQueue(mqclear)
         time.sleep(0.05)
-        print "Sending move queue flush!!"
-        sendMoveQueue(mqflush)
+        #print "Sending move queue flush!!"
+        #sendMoveQueue(mqflush)
         
         downloadTelemetry(numSamples)
 

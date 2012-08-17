@@ -1,5 +1,4 @@
 DEST_ADDR = '\x20\x52'
-#DEST_ADDR = '\x30\x02'
 xb = []
 ser = []
 
@@ -13,6 +12,7 @@ BS_BAUDRATE = 57600
 motor_gains_set = False
 steering_gains_set = False
 steering_rate_set = False
+tail_gains_set = False
 flash_erased = 0
 pkts = 0
 deg2count = 14.375
@@ -36,6 +36,7 @@ steeringGains = "NOT SET"
 runtime = 0
 numSamples = 0
 moveq = "NOT SET"
+tailq = "NOT SET"
 
 robotQueried = False
 maxQueries = 8

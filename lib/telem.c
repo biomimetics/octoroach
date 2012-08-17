@@ -15,10 +15,13 @@
 #include "adc_pid.h"
 #include "leg_ctrl.h"
 #include "sys_service.h"
+#include "ams-enc.h"
+#include "imu.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
 #define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
+//#define LSB2DEG    0.0695652174 //DEFINED IN TWO PLACES!
 
 #if defined(__RADIO_HIGH_DATA_RATE)
 	#define READBACK_DELAY_TIME_MS 3
@@ -31,13 +34,22 @@
 extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
+extern pidObj tailPID;
 
 //global flag from radio module to know if last packet was ACK'd
 //TODO: fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
 
 //Filter stuctures for gyro variables
-extern filterAvgInt_t gyroZavg;
+//extern filterAvgInt_t gyroZavg;
+
+extern float lastTailPos;
+extern float tailTorque;
+extern float bodyPosition;
+
+extern long motor_count[2];
+
+float telemGyroValue = 0.0;
 
 ////////   Private variables   ////////////////
 static unsigned long samplesToSave = 0;
@@ -175,8 +187,7 @@ void telemErase(unsigned long numSamples){
 static void telemISRHandler(){
 	int samplesaved = 0;
 	telemU data;
-	int gyroAvg[3]; int gyroData[3]; int gyroOffsets[3];
-	int xldata[3];
+	
 
 	//float orZ[3];
 	//orientGetOrZ(orZ);
@@ -187,33 +198,49 @@ static void telemISRHandler(){
 		if( samplesToSave > 0)
 		{
 			/////// Get Gyro data and calc average via filter
-			gyroGetXYZ((unsigned char*)gyroData);
-			gyroGetOffsets(gyroOffsets);
+			//gyroGetXYZ((unsigned char*)gyroData);
+			//gyroGetOffsets(gyroOffsets);
 			//filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
 			//Only average for Z
-			gyroAvg[2] = filterAvgCalc(&gyroZavg);
+			//gyroAvg[2] = filterAvgCalc(&gyroZavg);
+
+                       
+
+
 	
 			/////// Get XL data
-			xlGetXYZ((unsigned char*)xldata);
+			//xlGetXYZ((unsigned char*)xldata); NK
 
 			//Stopwatch was already started in the cmdSpecialTelemetry function
 			data.telemStruct.timeStamp = (long)swatchTic(); 
 			data.telemStruct.inputL = motor_pidObjs[0].input;
 			data.telemStruct.inputR = motor_pidObjs[1].input;
-			data.telemStruct.dcL = PDC1;
-			data.telemStruct.dcR = PDC2;
-			data.telemStruct.gyroX = gyroData[0] - gyroOffsets[0];
-			data.telemStruct.gyroY = gyroData[1] - gyroOffsets[1];
-			data.telemStruct.gyroZ = gyroData[2] - gyroOffsets[2];
-			data.telemStruct.gyroAvg = gyroAvg[2];
-			data.telemStruct.accelX = xldata[0];
+			data.telemStruct.dcL = PDC3;
+			data.telemStruct.dcR = PDC4;
+			data.telemStruct.gyroX = imuGetGyroXValue();
+			data.telemStruct.gyroY = imuGetGyroYValue();
+			data.telemStruct.gyroZ = imuGetGyroZValue();
+			data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
+
+			/*data.telemStruct.accelX = xldata[0];
 			data.telemStruct.accelY = xldata[1];
-			data.telemStruct.accelZ = xldata[2];
+			data.telemStruct.accelZ = xldata[2]; */
+
+			data.telemStruct.accelX = 0;
+			data.telemStruct.accelY = 0;
+			data.telemStruct.accelZ = 0;
+
+
 			data.telemStruct.bemfL = bemf[0];
 			data.telemStruct.bemfR = bemf[1];
-			data.telemStruct.sOut = steeringPID.output;
+			data.telemStruct.tailTorque = tailTorque;
 			data.telemStruct.Vbatt = adcGetVBatt();
-			data.telemStruct.steerAngle = steeringPID.input;
+			data.telemStruct.steerAngle = tailPID.input;
+			data.telemStruct.tailAngle = lastTailPos;
+                        data.telemStruct.bodyPosition = bodyPosition;
+                        data.telemStruct.motor_count[0] = motor_count[0];
+                        data.telemStruct.motor_count[1] = motor_count[1];
+                        data.telemStruct.sOut = steeringPID.output;
 			telemSaveData(&data); 
 			samplesaved = 1;
 		}
@@ -228,3 +255,6 @@ static void telemISRHandler(){
 void telemSetSkip(unsigned int skipnum){
     telemSkipNum = skipnum;
 }
+
+
+
