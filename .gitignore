@@ -4,6 +4,7 @@
 *.hex
 *.map
 *.cof
+imudata*.txt
 build
 dist
-version.c
+version-string.h

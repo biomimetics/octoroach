@@ -13,7 +13,9 @@ from or_helpers import *
 
 ###### Operation Flags ####
 SAVE_DATA1 = True 
+SAVE_DATA2 = True
 RESET_R1 = True  
+RESET_R2 = True
 
 EXIT_WAIT   = False
 
@@ -21,8 +23,9 @@ def main():
     xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
     
     R1 = Robot('\x20\x52', xb)
+    R2 = Robot('\x20\x53', xb)
     
-    shared.ROBOTS = [R1] #This is neccesary so callbackfunc can reference robots
+    shared.ROBOTS = [R1, R2] #This is neccesary so callbackfunc can reference robots
     shared.xb = xb           #This is neccesary so callbackfunc can halt before exit
     
     #if SAVE_DATA1:
@@ -32,14 +35,32 @@ def main():
     if RESET_R1:
         R1.reset()
         time.sleep(0.35)
+    if RESET_R2:
+        R2.reset()
+        time.sleep(0.35)
     
     # Query
     R1.query( retries = 3 )
+    R2.query( retries = 8 )
     
     #Verify all robots can be queried
-    verifyAllQueried()  #exits on failure
-
+    for r in shared.ROBOTS:
+        if not(r.robot_queried):
+            print "CRITICAL : Could not query robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
     
+    # Steering controller setpoint
+    R1.setSteeringRate(0 , retries = 3)
+    R2.setSteeringRate(0 , retries = 3)
+    
+    #Verify all robots have steering gains set
+    for r in shared.ROBOTS:
+        if not(r.steering_rate_set):
+            print "CRITICAL : Could not SET STEERING RATE on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+            
+    
+
     #Motor gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
@@ -47,22 +68,27 @@ def main():
     motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
     #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
 
-    R1.setMotorGains(motorgains, retries = 8)
+    R1.setMotorGains(motorgains, retries = 3)
+    R2.setMotorGains(motorgains, retries = 3)
+    
     #Verify all robots have motor gains set
-    verifyAllMotorGainsSet()   #exits on failure
+    for r in shared.ROBOTS:
+        if not(r.motor_gains_set):
+            print "CRITICAL : Could not SET MOTOR GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
+    
     steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
-    R1.setSteeringGains(steeringGains, retries = 8)
-    #Verify all robots have steering gains set
-    verifyAllSteeringGainsSet()  #exits on failure
-    
-    # Steering controller setpoint
-    R1.setSteeringRate(0 , retries = 8)
-    #Verify all robots have steering rate set
-    verifyAllSteeringRateSet()  #exits on failure
+    R1.setSteeringGains(steeringGains, retries = 3)
+    R2.setSteeringGains(steeringGains, retries = 3)
+
+    for r in shared.ROBOTS:
+        if not(r.steering_gains_set):
+            print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
 
     #### Do not send more than 5 move segments per packet!   ####
     #### Instead, send multiple packets, and don't use       ####
@@ -97,17 +123,35 @@ def main():
         0, 0, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
         0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
 
+##        moveq1 = [moves, \
+##  NegC    right, left
+##  PosC    left, right
+##          0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+##          150, 150, 8000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+##          150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0]
+
+    moveq2 = [numMoves, \
+        0,   0,   500,   MOVE_SEG_RAMP,    0, 0, 0,
+        0, 0, 1500,   MOVE_SEG_CONSTANT, 0,  0,  0,
+        0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
+    
     
     #Timing settings
     R1.leadinTime = 500;
     R1.leadoutTime = 500;
     
+    R2.leadinTime = 500;
+    R2.leadoutTime = 500;
+    
     #This needs to be done to prepare the .imudata variables in each robot object
     R1.setupImudata(moveq1)
+    R2.setupImudata(moveq2)
     
     #Flash must be erased to save new data
     if SAVE_DATA1:
         R1.eraseFlashMem()
+    if SAVE_DATA2:
+        R2.eraseFlashMem()    
 
     # Pause and wait to start run, including leadin time
     print ""
@@ -124,11 +168,14 @@ def main():
     
     if SAVE_DATA1:
         R1.startTelemetrySave()
+    if SAVE_DATA2:
+        R2.startTelemetrySave()
 
     time.sleep(R1.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
     R1.sendMoveQueue(moveq1)
+    R2.sendMoveQueue(moveq2)
     
     maxtime = 0
     for r in shared.ROBOTS:
@@ -144,6 +191,10 @@ def main():
     if SAVE_DATA1:
         R1.downloadTelemetry()
 
+    if SAVE_DATA2:
+        R2.downloadTelemetry()
+
+    
     if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
         while True:
             try:

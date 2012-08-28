@@ -154,19 +154,6 @@ def proceed(params):
     print "Throttle = ",params.throttle,"duration =", params.duration
     time.sleep(0.1)
 
-def queryRobot():
-    shared.robotQueried = False
-    queries = 1
-    while not(shared.robotQueried) and (queries < shared.maxQueries):
-        print "Querying robot, try ",queries,"/",shared.maxQueries
-        xb_send(0, command.WHO_AM_I, "Robot Echo")
-        time.sleep(0.3)
-        queries = queries + 1
-    if queries == shared.maxQueries:
-        print "Unable to query robot."
-        xb_safe_exit()
-    #Otherwise, control falls through back to the program
-
 def setupSerial():
     print "Setting up serial ..."
     try:

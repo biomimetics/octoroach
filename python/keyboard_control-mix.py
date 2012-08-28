@@ -13,25 +13,25 @@ RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
 def menu():
     print "-------------------------------------"
     print "Keyboard control with Mixing,  May 6, 2011"
-    print " m:menu    q:quit   w:left+    s:left-   x:left off"
-    print "e:right+   d:right-  c: right off  space: all off"
+    print " up: increase throt     q:quit   left/right: steering"
+    print " down: decrease throt   s: reset to straight  space: all stop"
 
 def main():
-
-    setupSerial()
+    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
+    shared.xb = xb
+    
+    R1 = Robot('\x20\x52', xb)
+    shared.ROBOTS = [R1]
 
     if RESET_ROBOT:
         print "Resetting robot..."
-        resetRobot()
-        time.sleep(1)
+        R1.reset()
+        time.sleep(0.5)
 
-    menu()
-
-
-    #motorgains = [200,2,0,2,0,    200,2,0,2,0]
-    motorgains = [8000,100,0,0,10 , 8000,100,0,0,10] #Hardware PID
+    motorgains = [30000,100,0,0,10,    30000,100,0,0,10]
+    R1.setMotorGains(motorgains, retries = 8)
     
-    setMotorGains(motorgains)
+    verifyAllMotorGainsSet()  #exits on failure
     
     tinc = 20;
 
@@ -41,13 +41,10 @@ def main():
     left_throt = 0
     right_throt = 0
 
-    print "Go!"
-    # Print blank space, we'll use stdout.write to display throttle vals here
-    #sys.stdout.write(" "*60 + "\r")
-    #sys.stdout.flush()
     #blank out any keypresses leading in...
     while msvcrt.kbhit():
         ch = msvcrt.getch()
+    menu()  #Display command menu
     while True:
         keypress = msvcrt.getch()
         if keypress == ' ':
@@ -65,9 +62,7 @@ def main():
                 forward = min(left_throt, right_throt)
                 turn = 0
         elif (keypress == 'q') or (ord(keypress) == 26):
-                print "\nExiting..."
-                shared.xb.halt()
-                shared.ser.close()
+                xb_safe_exit()
                 sys.exit(0)
 
         if forward < 0:
@@ -88,12 +83,11 @@ def main():
         sys.stdout.write(outstring)
         sys.stdout.flush()
         
-        setMotorSpeeds(left_throt, right_throt)
+        R1.setMotorSpeeds(left_throt, right_throt)
         ### FOR REVERSED MOTORS:
         #setMotorSpeeds(right_throt, left_throt)
 
         time.sleep(0.05) #efective debounce, or rate limiting
-
 
 
 
