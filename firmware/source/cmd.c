@@ -491,10 +491,8 @@ static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsi
 }
 
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame) {
-    delay_ms(10);
     char* resetmsg = "RESET";
     radioSendPayload(macGetDestAddr(), payCreate(6, (unsigned char*)resetmsg, status, CMD_ECHO));
-    delay_ms(10);
 #ifndef __DEBUG
     __asm__ volatile ("reset");
 #endif
