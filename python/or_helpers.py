@@ -149,18 +149,21 @@ class Robot:
         segments = [segments[i:i+SEG_LENGTH] for i in range(0,len(segments),SEG_LENGTH)]
         toSend = segments[0:4]
         
+        pktCount = 1
         
         while toSend != []:
-            print "Packet",pktCount
+            self.clAnnounce()
+            print "Move queue packet",pktCount
             numToSend = len(toSend)         #Could be < 4, since toSend still a list of lists
             toSend = [item for sublist in toSend for item in sublist]  #flatted toSend
-            data = [numToSend]
-            data.extend(toSend)    #Full moveq format to be given to pack()
+            packet = [numToSend]
+            packet.extend(toSend)    #Full moveq format to be given to pack()
             #Actual TX
-            self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+numToSend*'hhLhhhh', *toSend))
-            time.sleep(0.05)                #simple holdoff, probably not neccesary
+            self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+numToSend*'hhLhhhh', *packet))
+            time.sleep(0.01)                #simple holdoff, probably not neccesary
             segments = segments[4:]         #remanining unsent ones
             toSend = segments[0:4]          #Due to python indexing, this could be from 1-4
+            pktCount = pktCount + 1
         
         
     def setMotorSpeeds(self, spleft, spright):

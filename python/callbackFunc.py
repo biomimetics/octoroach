@@ -14,20 +14,16 @@ pktFormat = { \
     command.SET_PID_GAINS:          '10h', \
     command.GET_PID_TELEMETRY:      '', \
     command.SET_CTRLD_TURN_RATE:    '=h', \
-    command.STREAM_TELEMETRY:       '=LL'+16*'h'+'l', \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+16*'h'+'l', \
+    command.SPECIAL_TELEMETRY:      '=LL'+16*'h', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
     command.ECHO:                   'c' ,\
     command.SET_VEL_PROFILE:        '24h' ,\
     command.WHO_AM_I:               '', \
-    command.ZERO_POS:               '=2l', \
-    command.SET_HALL_GAINS:         '10h', \
-    command.SET_PHASE_GAINS:        '5h' \
     }
                
 #XBee callback function, called every time a packet is recieved
@@ -108,12 +104,6 @@ def xbee_received(packet):
                 if r.DEST_ADDR_int == src_addr:
                     r.steering_rate_set = True 
             
-        # STREAM_TELEMETRY
-        elif type == command.STREAM_TELEMETRY:
-            print "Streaming telemtry packet:"
-            datum = unpack(pattern, data)
-            print datum
-            #Do more here
             
         # SPECIAL_TELEMETRY
         elif type == command.SPECIAL_TELEMETRY:
@@ -170,15 +160,6 @@ def xbee_received(packet):
             for r in shared.ROBOTS:
                 if r.DEST_ADDR_int == src_addr:
                     r.robot_queried = True 
-                    
-        #SET_PHASE_GAINS        
-        elif type == command.SET_PHASE_GAINS:
-            print "Set BEMF-Phase gains"
-            gains = unpack(pattern, data)
-            print gains
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.phase_gains_set = True 
                     
         #No command
         else:    
