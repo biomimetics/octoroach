@@ -27,7 +27,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 10
+#define READBACK_DELAY_TIME_MS 15
 #endif
 
 
@@ -46,7 +46,6 @@ extern volatile char g_last_ackd;
 
 extern float lastTailPos;
 extern float tailTorque;
-extern float bodyPosition;
 
 extern long motor_count[2];
 
@@ -57,6 +56,7 @@ static unsigned long samplesToSave = 0;
 //Skip counter for dividing the 300hz timer into lower telemetry rates
 static unsigned int telemSkipNum = DEFAULT_SKIP_NUM;
 static unsigned int skipcounter = DEFAULT_SKIP_NUM;
+static unsigned long sampIdx = 0;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
@@ -102,8 +102,8 @@ void telemSetup() {
     SetupTimer5();
 }
 
-void telemSetSamplesToSave(unsigned long n){
-	samplesToSave = n;
+void telemSetSamplesToSave(unsigned long n) {
+    samplesToSave = n;
 }
 
 void telemReadbackSamples(unsigned long numSamples) {
@@ -131,7 +131,7 @@ void telemReadbackSamples(unsigned long numSamples) {
         do {
             telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
             //trx_status = phyReadBit(SR_TRAC_STATUS);
-            delaytime_ms += 2;
+            delaytime_ms += 1;
         } while (g_last_ackd == 0);
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
@@ -173,6 +173,7 @@ void telemSaveData(telemU *data) {
 }
 
 void telemErase(unsigned long numSamples) {
+    sampIdx = 0;
     dfmemEraseSectorsForSamples(numSamples, sizeof (telemU));
 }
 
@@ -180,75 +181,61 @@ void telemErase(unsigned long numSamples) {
 ////   Private functions
 ////////////////////////
 
-static void telemISRHandler(){
-	int samplesaved = 0;
-	telemU data;
-	
+static void telemISRHandler() {
+    telemU data;
 
-	//float orZ[3];
-	//orientGetOrZ(orZ);
+    //skipcounter decrements to 0, triggering a telemetry save, and resets
+    // value of skicounter
+    if (skipcounter == 0) {
+        if (samplesToSave > 0) {
+            /////// Get XL data
+            //xlGetXYZ((unsigned char*)xldata); NK
+            //TODO: change this to use the IMU module
 
-        //skipcounter decrements to 0, triggering a telemetry save, and resets
-        // value of skicounter
-	if( skipcounter == 0){
-		if( samplesToSave > 0)
-		{
-			/////// Get Gyro data and calc average via filter
-			//gyroGetXYZ((unsigned char*)gyroData);
-			//gyroGetOffsets(gyroOffsets);
-			//filterAvgUpdate(&gyroZavg,gyroData[2] - gyroOffsets[2]);
-			//Only average for Z
-			//gyroAvg[2] = filterAvgCalc(&gyroZavg);
-
-                       
-
-
-	
-			/////// Get XL data
-			//xlGetXYZ((unsigned char*)xldata); NK
-
-			//Stopwatch was already started in the cmdSpecialTelemetry function
-			data.telemStruct.timeStamp = (long)swatchTic(); 
-			data.telemStruct.inputL = motor_pidObjs[0].input;
-			data.telemStruct.inputR = motor_pidObjs[1].input;
-			data.telemStruct.dcL = PDC3;
-			data.telemStruct.dcR = PDC4;
-			data.telemStruct.gyroX = imuGetGyroXValue();
-			data.telemStruct.gyroY = imuGetGyroYValue();
-			data.telemStruct.gyroZ = imuGetGyroZValue();
-			data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
-
-			/*data.telemStruct.accelX = xldata[0];
-			data.telemStruct.accelY = xldata[1];
-			data.telemStruct.accelZ = xldata[2]; */
-
-			data.telemStruct.accelX = 0;
-			data.telemStruct.accelY = 0;
-			data.telemStruct.accelZ = 0;
-
-
-			data.telemStruct.bemfL = bemf[0];
-			data.telemStruct.bemfR = bemf[1];
-			data.telemStruct.tailTorque = tailTorque;
-			data.telemStruct.Vbatt = adcGetVBatt();
-			data.telemStruct.steerAngle = tailPID.input;
-			data.telemStruct.tailAngle = lastTailPos;
-                        data.telemStruct.bodyPosition = bodyPosition;
-                        data.telemStruct.motor_count[0] = motor_count[0];
-                        data.telemStruct.motor_count[1] = motor_count[1];
-                        data.telemStruct.sOut = steeringPID.output;
-			telemSaveData(&data); 
-			samplesaved = 1;
-		}
-                //Reset value of skip counter
-                skipcounter = telemSkipNum;
-	}
-        //Always decrement skip counter at every interrupt, at 300Hz
-        //This way, if telemSkipNum = 1, a sample is saved at every interrupt.
-        skipcounter--;
+            //Stopwatch was already started in the cmdSpecialTelemetry function
+            //microsecond timer from stopwatch module
+            data.telemStruct.sampleIndex = sampIdx;
+            data.telemStruct.timeStamp = (long) swatchTic();
+            //Motor controller setpoints and duty cycles
+            data.telemStruct.inputL = motor_pidObjs[0].input;
+            data.telemStruct.inputR = motor_pidObjs[1].input;
+            data.telemStruct.dcL = PDC1; //MODIFIED
+            data.telemStruct.dcR = PDC2; //MODIFIED
+            //Gyro
+            data.telemStruct.gyroX = imuGetGyroXValue();
+            data.telemStruct.gyroY = imuGetGyroYValue();
+            data.telemStruct.gyroZ = imuGetGyroZValue();
+            data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
+            //XL
+            data.telemStruct.accelX = 0; //always zero, done to avoid i2c bus collision
+            data.telemStruct.accelY = 0; // since XL shares I2C line with AMS encoder
+            data.telemStruct.accelZ = 0;
+            //BEMF
+            data.telemStruct.bemfL = bemf[0];
+            data.telemStruct.bemfR = bemf[1];
+            //Jumbled order past this point
+            //TODO: revisit telemetry structuring
+            data.telemStruct.tailTorque = tailTorque;
+            data.telemStruct.Vbatt = adcGetVBatt();
+            //data.telemStruct.steerAngle = tailPID.input;
+            data.telemStruct.steerAngle = steeringPID.input;
+            data.telemStruct.tailAngle = lastTailPos;
+            data.telemStruct.bodyPosition = imuGetBodyZPositionDeg();
+            data.telemStruct.motor_count[0] = motor_count[0];
+            data.telemStruct.motor_count[1] = motor_count[1];
+            data.telemStruct.sOut = steeringPID.output;
+            telemSaveData(&data);
+            sampIdx++;
+        }
+        //Reset value of skip counter
+        skipcounter = telemSkipNum;
+    }
+    //Always decrement skip counter at every interrupt, at 300Hz
+    //This way, if telemSkipNum = 1, a sample is saved at every interrupt.
+    skipcounter--;
 }
 
-void telemSetSkip(unsigned int skipnum){
+void telemSetSkip(unsigned int skipnum) {
     telemSkipNum = skipnum;
 }
 

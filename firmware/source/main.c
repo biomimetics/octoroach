@@ -73,17 +73,19 @@ int main(void) {
     imuSetup();
 
 // #ifdef  NK 8/14/12
+#ifdef HALL_SENSORS
     hallSetup();    // Timer 1, Timer 2
     //hallSteeringSetup(); //doesn't exist yet
-//#else //No hall sensors, standard BEMF control
+#else //No hall sensors, standard BEMF control
     legCtrlSetup(); // Timer 1
     steeringSetup();  //Timer 5
-//#endif
+#endif
 
-   tailCtrlSetup(); //////////////////////
+   //tailCtrlSetup();
 
     //ovcamSetup();
 
+    //Read back the ID register from the radio; see datasheet
     //radioReadTrxId(id);
 
     LED_RED = 1; //Red is use an "alive" indicator

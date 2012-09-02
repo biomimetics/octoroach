@@ -13,15 +13,17 @@
 #include "imu.h"
 
 #define TIMER_FREQUENCY     300                 // 300 Hz
-#define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define LSB2DEG    0.0695652174 //DEFINED IN TWO PLACES!
-#define GYRO_AVG_SAMPLES 	32
+#define TIMER_PERIOD        1/TIMER_FREQUENCY   //This is used for numerical integration
 
+//Setup for Gyro Z averaging filter
+#define GYRO_AVG_SAMPLES 	32
 
 
 //Filter stuctures for gyro variables
 static filterAvgInt_t gyroZavg;
 
+
+//TODO: change these to arrays
 static int lastGyroXValue = 0;
 static int lastGyroYValue = 0;
 static int lastGyroZValue = 0;
@@ -66,16 +68,28 @@ static void imuISRHandler(){
         lastGyroYValue = gyroData[1] - gyroOffsets[1];
         lastGyroZValue = gyroData[2] - gyroOffsets[2];
 
+        //Threshold:
+        if((lastGyroXValue < 12) && (lastGyroXValue > -12)){
+            lastGyroXValue = lastGyroXValue >> 2; //fast divide by 4
+        }
+        if((lastGyroYValue < 12) && (lastGyroYValue > -12)){
+            lastGyroYValue = lastGyroYValue >> 2; //fast divide by 4
+        }
+        if((lastGyroZValue < 12) && (lastGyroZValue > -12)){
+            lastGyroZValue = lastGyroZValue >> 2; //fast divide by 4
+        }
+
         lastGyroXValueDeg = (float) (lastGyroXValue*LSB2DEG);
         lastGyroYValueDeg = (float) (lastGyroYValue*LSB2DEG);
-        lastGyroZValueDeg = (float) (lastGyroZValue*LSB2DEG);
+        lastGyroZValueDeg = (float) (lastGyroZValue*LSB2DEG); 
 
         filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
+
         lastGyroZValueAvg = filterAvgCalc(&gyroZavg);
 
         lastGyroZValueAvgDeg = (float)lastGyroZValueAvg*LSB2DEG;
 
-        lastBodyZPositionDeg = lastBodyZPositionDeg+lastGyroZValueDeg*TIMER_PERIOD;
+        lastBodyZPositionDeg = lastBodyZPositionDeg + lastGyroZValueDeg*TIMER_PERIOD;
 }
 
 static void SetupTimer4(){
@@ -137,8 +151,5 @@ float imuGetGyroZValueAvgDeg() {
 float imuGetBodyZPositionDeg() {
     return lastBodyZPositionDeg;
 }
-
-
-
 
 

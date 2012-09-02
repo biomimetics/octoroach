@@ -18,7 +18,7 @@ pktFormat = { \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'f'+'hhf'+'f'+'LL'+'h', \
+    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'fhhffLLh', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -166,23 +166,25 @@ def xbee_received(packet):
             
         # WHO_AM_I
         elif (type == command.WHO_AM_I):
-            #print "whoami:",status, hex(type), data
-            print "whoami:",data
-            shared.robotQueried = True
+            print "query : ",data
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.robot_queried = True 
+            
         # SET_TAIL_GAINS
         elif type == command.SET_TAIL_GAINS:
             print "Set Tail gains"
             gains = unpack(pattern, data)
             print gains
-            shared.tail_gains_set = True
+            
         else:    
             pass
     
     except Exception as args:
         print "\nGeneral exception from callbackfunc:",args
         print "Attemping to exit cleanly..."
-        self.xb.halt()
-        self.ser.close()
+        shared.xb.halt()
+        sharedser.close()
         sys.exit()
 
 

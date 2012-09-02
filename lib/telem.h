@@ -2,38 +2,39 @@
 #define __TELEM_H
 
 //Telemetry packet structure
-//This is specific to apullin's OctoROACH code
+//This is specific to NKohut's TAYLRoACH robot
 
 typedef struct {
-		unsigned long timeStamp; 
-		int inputL;  
-		int inputR;
-		int dcL;
-		int dcR;
-		int gyroX;
-		int gyroY;
-		int gyroZ;
-		int gyroAvg;
-		int accelX;
-		int accelY;
-		int accelZ;
-		int bemfL;
-		int bemfR;
-		float tailTorque;
-		int Vbatt;
-		int steerAngle;	
-		float tailAngle;
-                float bodyPosition;
-                unsigned long motor_count[2];
-                int sOut;
-	} telemStruct_t;
+    unsigned long sampleIndex;
+    unsigned long timeStamp;
+    int inputL;
+    int inputR;
+    int dcL;
+    int dcR;
+    int gyroX;
+    int gyroY;
+    int gyroZ;
+    int gyroAvg;
+    int accelX;
+    int accelY;
+    int accelZ;
+    int bemfL;
+    int bemfR;
+    float tailTorque;
+    int Vbatt;
+    int steerAngle;
+    float tailAngle;
+    float bodyPosition;
+    unsigned long motor_count[2];
+    int sOut;
+} telemStruct_t;
 
 //TODO: A union is not neccesary here. Remove for clarity, and chage related
 //  code
 
 typedef union packedTelemUnion {
-	telemStruct_t telemStruct;
-	unsigned char dataArray[sizeof(telemStruct_t)];
+    telemStruct_t telemStruct;
+    unsigned char dataArray[sizeof (telemStruct_t)];
 } telemU;
 
 #define PACKETSIZE sizeof(telemStruct_t)

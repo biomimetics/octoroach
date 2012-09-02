@@ -23,6 +23,11 @@ float imuGetGyroZValueAvgDeg();
 
 float imuGetBodyZPositionDeg();
 
+void imuTest(float* ptr);
+
+//Constants
+#define GYRO_DRIFT_THRESH 5
+#define LSB2DEG    0.0695652174
 
 #endif
 

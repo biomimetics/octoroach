@@ -34,7 +34,7 @@ def main():
         time.sleep(0.35)
     
     # Query
-    R1.query( retries = 3 )
+    R1.query( retries = 8 )
     
     #Verify all robots can be queried
     verifyAllQueried()  #exits on failure
@@ -44,8 +44,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
-    #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
+    motorgains = [20000,0,0,0,0 , 20000,0,0,0,0] #Hardware PID
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -53,16 +52,16 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [20,0,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
     verifyAllSteeringGainsSet()  #exits on failure
     
     # Steering controller setpoint
-    R1.setSteeringRate(0 , retries = 8)
+    #R1.setSteeringRate(0 , retries = 8)
     #Verify all robots have steering rate set
-    verifyAllSteeringRateSet()  #exits on failure
+    #verifyAllSteeringRateSet()  #exits on failure
 
     #### Do not send more than 5 move segments per packet!   ####
     #### Instead, send multiple packets, and don't use       ####
@@ -91,22 +90,18 @@ def main():
     #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #Ramp example
-    numMoves = 3
+    numMoves = 1
     moveq1 = [numMoves, \
-        0,   0,   500,   MOVE_SEG_RAMP,    0, 0, 0,
-        0, 0, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
+        0, 0, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0.0]
 
-    
     #Timing settings
     R1.leadinTime = 500;
     R1.leadoutTime = 500;
     
-    #This needs to be done to prepare the .imudata variables in each robot object
-    R1.setupImudata(moveq1)
-    
     #Flash must be erased to save new data
     if SAVE_DATA1:
+        #This needs to be done to prepare the .imudata variables in each robot object
+        R1.setupImudata(moveq1)
         R1.eraseFlashMem()
 
     # Pause and wait to start run, including leadin time
@@ -165,9 +160,9 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    except Exception as args:
-        print "\nGeneral exception:",args
-        print "Attemping to exit cleanly..."
-        shared.xb.halt()
-        shared.ser.close()
-        sys.exit()
+    #except Exception as args:
+    #    print "\nGeneral exception:",args
+    #    print "Attemping to exit cleanly..."
+    #    shared.xb.halt()
+    #    shared.ser.close()
+    #    sys.exit()

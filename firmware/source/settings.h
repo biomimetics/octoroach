@@ -1,21 +1,20 @@
 /******************************************************************************
-* Name: settings.h
-* Desc: Constants used by Andrew P. are included here.
-* Date: 2012-06-26
-* Author: pullin
-******************************************************************************/
+ * Name: settings.h
+ * Desc: Constants used by Andrew P. are included here.
+ * Date: 2012-06-26
+ * Author: pullin
+ ******************************************************************************/
 #ifndef __SETTINGS_H
 #define __SETTINGS_H
 
 
 //#error "REQUIRED: Review and set radio channel & network parameters in firmware/source/settings.h  , then comment out this line."
 /////// Radio settings ///////
-#define RADIO_CHANNEL			0x14
-//#warning "You have changed the radio channel from 0x19 to something else"
-#define RADIO_SRC_PAN_ID 		0x2060
+#define RADIO_CHANNEL		0x19
+#define RADIO_SRC_PAN_ID 	0x2050
 #define RADIO_SRC_ADDR 		0x2052
 //Hard code in destination address for now, update to be dynamic later
-#define RADIO_DST_ADDR		0x2011
+#define RADIO_DST_ADDR		0x2051
 
 
 // Radio queue sizes

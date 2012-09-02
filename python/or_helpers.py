@@ -37,6 +37,7 @@ STEER_MODE_OFF = 0
 STEER_MODE_INCREASE = 1
 STEER_MODE_DECREASE = 2
 STEER_MODE_SPLIT = 3
+STEER_MODE_YAW = 4
 
 
 
@@ -141,7 +142,7 @@ class Robot:
         self.tx( 0, command.SPECIAL_TELEMETRY, pack('L',self.numSamples))
         
     def sendMoveQueue(self, moveq):
-        SEG_LENGTH = 7  #might be changed in the future
+        SEG_LENGTH = 9  #might be changed in the future
         
         n = moveq[0]
         if len(moveq[1:]) != n * SEG_LENGTH:
@@ -160,18 +161,21 @@ class Robot:
         segments = [segments[i:i+SEG_LENGTH] for i in range(0,len(segments),SEG_LENGTH)]
         toSend = segments[0:4]
         
+        pktCount = 1
         
         while toSend != []:
-            print "Packet",pktCount
+            self.clAnnounce()
+            print "Move queue packet",pktCount
             numToSend = len(toSend)         #Could be < 4, since toSend still a list of lists
             toSend = [item for sublist in toSend for item in sublist]  #flatted toSend
-            data = [numToSend]
-            data.extend(toSend)    #Full moveq format to be given to pack()
+            packet = [numToSend]
+            packet.extend(toSend)    #Full moveq format to be given to pack()
             #Actual TX
-            self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+numToSend*'hhLhhhh', *toSend))
-            time.sleep(0.05)                #simple holdoff, probably not neccesary
+            self.tx( 0, command.SET_MOVE_QUEUE, pack('=h'+numToSend*'hhLhhhhhh', *packet))
+            time.sleep(0.01)                #simple holdoff, probably not neccesary
             segments = segments[4:]         #remanining unsent ones
             toSend = segments[0:4]          #Due to python indexing, this could be from 1-4
+            pktCount = pktCount + 1
         
         
     def setMotorSpeeds(self, spleft, spright):
@@ -229,7 +233,8 @@ class Robot:
         self.findFileName()
         self.writeFileHeader()
         fileout = open(self.dataFileName, 'a')
-		np.savetxt(fileout , np.array(shared.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')        fileout.close()
+        np.savetxt(fileout , np.array(self.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')
+        fileout.close()
         self.clAnnounce()
         print "Telemtry data saved to", self.dataFileName
     
@@ -252,9 +257,10 @@ class Robot:
         fileout.close()
 
     def setupImudata(self, moveq):
+        MOVE_QUEUE_ENTRY_LEN = 9
         #Calculates the total movement time from the move queue above
         #done by striding over moveq array and summing times
-        self.runtime = sum([moveq[i] for i in [ind*7+3 for ind in range(0,moveq[0])]])
+        self.runtime = sum([moveq[i] for i in [(ind*MOVE_QUEUE_ENTRY_LEN)+3 for ind in range(0,moveq[0])]])
        
         #calculate the number of telemetry packets we expect
         self.numSamples = int(ceil(150 * (self.runtime + self.leadinTime + self.leadoutTime) / 1000.0))
@@ -342,3 +348,4 @@ def verifyAllQueried():
     for r in shared.ROBOTS:
         if not(r.robot_queried):
             print "CRITICAL : Could not query robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()

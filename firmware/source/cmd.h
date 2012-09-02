@@ -10,9 +10,10 @@
 #include "cmd_const.h"
 
 //// Includes here should be to provide TYPES and ENUMS only
-#include "move_queue.h"
-#include "tail_queue.h"
+#include "move_queue.h" //for enum moveSegT
+#include "tail_queue.h" //for enum tailSegT
 #include "hall.h"
+#include "steering.h"   //for enum steerModeT
 
 #define CMD_VECTOR_SIZE				0xFF //full length vector
 #define MAX_CMD_FUNC				0x9F
@@ -103,8 +104,10 @@ typedef struct{
 typedef struct{
 	int inputL, inputR;
 	unsigned long duration;
-	enum moveSegT type;
+	enum moveSegT moveType;
 	int params[3];
+        enum steerModeT steerType;
+        int steerParam;
 } _args_cmdSetMoveQueue;
 
 //cmdSetSteeringGains

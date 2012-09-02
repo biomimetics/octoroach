@@ -30,11 +30,12 @@ void steeringOn();
 
 #endif
 
-enum STEERING_MODES {
+enum steerModeT{
     STEERMODE_OFF = 0,
     STEERMODE_INCREASE = 1,
     STEERMODE_DECREASE = 2,
-    STEERMODE_SPLIT = 3
+    STEERMODE_SPLIT = 3,
+    STEERMODE_YAW = 4
 };
 
 #endif //__STEERING_H
