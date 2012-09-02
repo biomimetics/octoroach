@@ -44,8 +44,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
-    #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
+    motorgains = [10000,0,0,0,0 , 10000,0,0,0,0] #Hardware PID
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -53,7 +52,8 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
@@ -91,11 +91,9 @@ def main():
     #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #Ramp example
-    numMoves = 3
+    numMoves = 1
     moveq1 = [numMoves, \
-        0,   0,   500,   MOVE_SEG_RAMP,    0, 0, 0,
-        0, 0, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
-        0, 0, 500,   MOVE_SEG_RAMP, 0,  0,  0]
+        0, 0, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0]
 
     
     #Timing settings
@@ -165,9 +163,9 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    except Exception as args:
-        print "\nGeneral exception:",args
-        print "Attemping to exit cleanly..."
-        shared.xb.halt()
-        shared.ser.close()
-        sys.exit()
+    #except Exception as args:
+    #    print "\nGeneral exception:",args
+    #    print "Attemping to exit cleanly..."
+    #    shared.xb.halt()
+    #    shared.ser.close()
+    #    sys.exit()

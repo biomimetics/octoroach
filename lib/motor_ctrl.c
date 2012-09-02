@@ -80,48 +80,7 @@ static void mcSetupPeripheral(void) {
 	SetDCMCPWM(2, 0, 0);
     OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
 
-	//Stan's
 	
-    // For 1KHz at MIPS == 40
-    /*
-	pwm_period_ = 624; 
-    
-    ConfigIntMCPWM(PWM_INT_DIS & PWM_FLTA_DIS_INT & PWM_FLTB_DIS_INT);
-
-    PTPER = pwm_period_;
-
-    PWMCON1bits.PMOD1 = 1;
-    PWMCON1bits.PMOD2 = 1;
-    PWMCON1bits.PMOD3 = 0;
-    PWMCON1bits.PMOD4 = 0;
-    PWMCON1bits.PEN1H = 0;
-    PWMCON1bits.PEN2H = 0;
-    PWMCON1bits.PEN3H = 0;
-    PWMCON1bits.PEN4H = 0;
-    PWMCON1bits.PEN1L = 1;
-    PWMCON1bits.PEN2L = 1;
-    PWMCON1bits.PEN3L = 0;
-    PWMCON1bits.PEN4L = 0;
-
-    PWMCON2bits.SEVOPS = 1; // postscale 1:1
-    PWMCON2bits.OSYNC = 0;
-    PWMCON2bits.IUE = 1;
-	PWMCON2 |= PWM_UEN;
-	
-	P1SECMPbits.SEVTDIR = 1;
-
-    PTCONbits.PTMOD = 0; // Free running mode
-    PTCONbits.PTOPS = 0b11; // postscale 1:1
-    PTCONbits.PTCKPS = 0b11; // postscale 1:64
-    PTCONbits.PTSIDL = 0; // runs in CPU idle mode
-    PTCONbits.PTEN = 1;
-	
-	PDC1 = 0x35;   // duty cycle = 0
-	PDC2 = 0x35;
-	SEVTCMP = 600; // Special Event Trigger Compare Value for ADC in phase with PWM
-	//P1SECMPbits.SEVTCMP = 600;
-	AD1CON1bits.SSRC = 0b011;
-	*/
 }
 
 

@@ -123,7 +123,7 @@ void legCtrlSetup() {
         motor_pidObjs[i].maxVal = FULLTHROT;
         motor_pidObjs[i].minVal = 0;
     }
-
+/*
 #ifdef PID_HARDWARE
     phase_pidObj.dspPID.abcCoefficients = phase_abcCoeffs;
     phase_pidObj.dspPID.controlHistory = phase_controlHists;
@@ -134,7 +134,7 @@ void legCtrlSetup() {
     phase_pidObj.maxVal = INT_MAX;
     phase_pidObj.minVal = INT_MIN;
 #endif
-
+*/
     
     //Set which PWM output each PID Object will correspond to
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
@@ -192,6 +192,7 @@ void serviceMotionPID() {
 
     updateBEMF();
 
+    //Phase correction, disabled due to it not working
     /*
     if(currentMove != idleMove){
         //Phase lead/lag correction
@@ -246,6 +247,14 @@ void serviceMotionPID() {
 
             //Set PWM duty cycle
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
+            if(motor_pidObjs[j].output > 0){
+                Nop();
+                Nop();
+            }
+            if((PDC1 > 0) || (PDC2 > 0)){
+                Nop();
+                Nop();
+            }
         }//end of if (on / off)
         else if (PID_ZEROING_ENABLE) { //if PID loop is off
             SetDCMCPWM(legCtrlOutputChannels[j], 0, 0);

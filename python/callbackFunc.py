@@ -14,11 +14,11 @@ pktFormat = { \
     command.SET_PID_GAINS:          '10h', \
     command.GET_PID_TELEMETRY:      '', \
     command.SET_CTRLD_TURN_RATE:    '=h', \
-    command.STREAM_TELEMETRY:       '=LL'+16*'h'+'l', \
+    command.STREAM_TELEMETRY:       '=LL'+16*'h', \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+16*'h'+'l', \
+    command.SPECIAL_TELEMETRY:      '=LL'+16*'h', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -93,7 +93,7 @@ def xbee_received(packet):
         # SET_STEERING_GAINS
         elif type == command.SET_STEERING_GAINS:
             gains = unpack(pattern, data)
-            print "Set motor gains to ", gains
+            print "Set steering gains to ", gains
             for r in shared.ROBOTS:
                 if r.DEST_ADDR_int == src_addr:
                     r.steering_gains_set = True 

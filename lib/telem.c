@@ -222,7 +222,6 @@ static void telemISRHandler() {
             data.telemStruct.sOut = steeringPID.output;
             data.telemStruct.Vbatt = adcGetVBatt();
             data.telemStruct.steerAngle = steeringPID.input;
-            data.telemStruct.phaseDiff = phaseDiff;
             telemSaveData(&data);
             sampIdx++;
         }
@@ -268,7 +267,6 @@ static void telemISRHandler() {
                 data.telemStruct.sOut = steeringPID.output;
                 data.telemStruct.Vbatt = adcGetVBatt();
                 data.telemStruct.steerAngle = steeringPID.input;
-                data.telemStruct.phaseDiff = phaseDiff;
                 sampIdx++;
                 //Send back data:
                 Payload pld;

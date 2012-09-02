@@ -23,7 +23,6 @@ typedef struct {
     int sOut;
     int Vbatt;
     int steerAngle;
-    long phaseDiff;
 } telemStruct_t;
 
 //TODO: A union is not neccesary here. Remove for clarity, and chage related
