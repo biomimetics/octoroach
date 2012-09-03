@@ -119,9 +119,10 @@ void steeringSetMode(unsigned int sm) {
         steeringPID.onoff = PID_ON;
     }
 
-    if (steeringMode == STEERMODE_YAW) {
-        steeringInitialYaw = imuGetBodyZPositionDeg();
-    }
+    //Only for RELATIVE turns
+    //if (steeringMode == STEERMODE_YAW) {
+    //    steeringInitialYaw = imuGetBodyZPositionDeg();
+    //}
 }
 
 static void steeringHandleISR() {
@@ -131,7 +132,7 @@ static void steeringHandleISR() {
 
     if(steeringMode == STEERMODE_YAW){
         relativeYaw = imuGetBodyZPositionDeg() - steeringInitialYaw;
-        steeringFeedback = (int)(32.0*relativeYaw);
+        steeringFeedback = (int)(14.375*relativeYaw);
     }
     else{
         steeringFeedback = imuGetGyroZValueAvg();
@@ -171,7 +172,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
     if (steeringPID.onoff == PID_ON) {
         int delta = steeringPID.output;
         
-        if (steeringMode == STEERMODE_DECREASE) {
+        if ((steeringMode == STEERMODE_DECREASE)|| (steeringMode == STEERMODE_YAW)) {
             // Depending on which way the bot is turning, choose which side to add correction to
             if (steeringPID.output <= 0) {
                 //right = right + steeringPID.output;
@@ -203,7 +204,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
                     left = 0;
                 } //clip right channel to zero
             }
-        } else if ((steeringMode == STEERMODE_SPLIT) || (steeringMode == STEERMODE_YAW)) {
+        } else if ((steeringMode == STEERMODE_SPLIT)) {
             right = right + delta / 2;
             left = left - delta / 2;
             if (right < 0) {

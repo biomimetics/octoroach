@@ -93,7 +93,7 @@ def xbee_received(packet):
         # SET_STEERING_GAINS
         elif type == command.SET_STEERING_GAINS:
             gains = unpack(pattern, data)
-            print "Set motor gains to ", gains
+            print "Set steering gains to ", gains
             for r in shared.ROBOTS:
                 if r.DEST_ADDR_int == src_addr:
                     r.steering_gains_set = True 

@@ -11,7 +11,8 @@ void steeringApplyCorrection(int* inputs, int* outputs);
 void steeringOff();
 void steeringOn();
 
-#define STEERING_SAT       1024
+//#define STEERING_SAT       1024
+#define STEERING_SAT       4000 //for yaw-control steering
 
 #ifdef PID_SOFTWARE
 #define STEERING_KP  0

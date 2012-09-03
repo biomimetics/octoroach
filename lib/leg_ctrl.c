@@ -290,12 +290,15 @@ void serviceMoveQueue(void) {
             moveExpire = getT1_ticks() + currentMove->duration;
             currentMoveStart = getT1_ticks();
 
-            //Handle steering types
+            ///// Steering settings from Move Queue
             steeringSetAngRate(currentMove->steeringRate); //THIS TURNS THE STEERING ON!
             if (currentMove->steeringType == STEERMODE_OFF) {
                 steeringOff();
             }
             steeringSetMode(currentMove->steeringType);
+            //This is not strictly correct when using STEER_MODE_YAW,
+            //Since we are labeling it as a "rate"
+            steeringSetAngRate(currentMove->steeringRate);
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {

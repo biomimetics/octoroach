@@ -230,13 +230,13 @@ ${OBJECTDIR}/_ext/1360930230/telem.o: ../lib/telem.c  nbproject/Makefile-${CND_C
 ${OBJECTDIR}/_ext/1360930230/steering.o: ../lib/steering.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/steering.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/steering.c  -o ${OBJECTDIR}/_ext/1360930230/steering.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/steering.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/steering.c  -o ${OBJECTDIR}/_ext/1360930230/steering.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/steering.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -fast-math -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/steering.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o: ../lib/leg_ctrl.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/leg_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -DPID_HARDWARE -msmart-io=1 -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/leg_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -fast-math -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/tail_queue.o: ../lib/tail_queue.c  nbproject/Makefile-${CND_CONF}.mk
@@ -272,7 +272,7 @@ ${OBJECTDIR}/_ext/1360930230/ams-enc.o: ../lib/ams-enc.c  nbproject/Makefile-${C
 ${OBJECTDIR}/_ext/1360930230/imu.o: ../lib/imu.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/imu.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -mlarge-data -O0 -I"source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1  -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -fast-math -mlarge-data -O0 -I"source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/imu.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/source/cmd.o: source/cmd.c  nbproject/Makefile-${CND_CONF}.mk
@@ -441,13 +441,13 @@ ${OBJECTDIR}/_ext/1360930230/telem.o: ../lib/telem.c  nbproject/Makefile-${CND_C
 ${OBJECTDIR}/_ext/1360930230/steering.o: ../lib/steering.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/steering.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/steering.c  -o ${OBJECTDIR}/_ext/1360930230/steering.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/steering.o.d"        -g -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/steering.c  -o ${OBJECTDIR}/_ext/1360930230/steering.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/steering.o.d"        -g -omf=elf -DPID_HARDWARE -D__IMAGEPROC2 -fast-math -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/steering.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o: ../lib/leg_ctrl.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/leg_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d"        -g -omf=elf -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -D__IMAGEPROC2 -DPID_HARDWARE -msmart-io=1 -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/leg_ctrl.c  -o ${OBJECTDIR}/_ext/1360930230/leg_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d"        -g -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -fast-math -mlarge-data -O0 -I"..\lib" -I"..\..\imageproc-lib" -I"source" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/leg_ctrl.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/_ext/1360930230/tail_queue.o: ../lib/tail_queue.c  nbproject/Makefile-${CND_CONF}.mk
@@ -483,7 +483,7 @@ ${OBJECTDIR}/_ext/1360930230/ams-enc.o: ../lib/ams-enc.c  nbproject/Makefile-${C
 ${OBJECTDIR}/_ext/1360930230/imu.o: ../lib/imu.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/1360930230 
 	@${RM} ${OBJECTDIR}/_ext/1360930230/imu.o.d 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -mlarge-data -O0 -I"source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../lib/imu.c  -o ${OBJECTDIR}/_ext/1360930230/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/_ext/1360930230/imu.o.d"        -g -omf=elf -D__IMAGEPROC2 -DPID_HARDWARE -fast-math -mlarge-data -O0 -I"source" -I"..\lib" -I"..\..\imageproc-lib" -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1360930230/imu.o.d" $(SILENT) 
 	
 ${OBJECTDIR}/source/cmd.o: source/cmd.c  nbproject/Makefile-${CND_CONF}.mk
