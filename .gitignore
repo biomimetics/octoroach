@@ -6,4 +6,4 @@
 *.cof
 build
 dist
-version-string.h
+version.c

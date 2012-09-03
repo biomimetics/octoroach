@@ -16,20 +16,17 @@
 #include <dsp.h>
 #include <stdlib.h> // for malloc
 
-#define INT_MIN -32768
-#define INT_MAX 32767
-
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
+
+#define STEERING_ON 1
+#define STEEERING_OFF 0
 
 //PID container objects
 pidObj motor_pidObjs[NUM_MOTOR_PIDS];
-
-#ifdef PID_HARDWARE
 //DSP PID stuff
 //These have to be declared here!
 fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
 fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
-#endif
 
 //Counter for blinking the red LED during motion
 int blinkCtr;
@@ -56,7 +53,6 @@ int medianFilter3(int*);
 //This is an array to map legCtrl controller to PWM output channels
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
-//Global flag for wether or not the robot is in motion
 volatile char inMotion;
 
 //Function to be installed into T1, and setup function
@@ -82,7 +78,11 @@ static void SetupTimer1(void) {
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
             T1_SYNC_EXT_OFF & T1_IDLE_CON;  //correct
 
+	//T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_64 & T1_GATE_OFF &
+       //     T1_SYNC_EXT_OFF & T1_IDLE_CON; //NK
+
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
+	
     //T1PERvalue = 0x9C40/2;
     //getT1_ticks() = 0;
     //OpenTimer1(T1CON1value, T1PERvalue);
@@ -117,8 +117,7 @@ void legCtrlSetup() {
 
     //Set which PWM output each PID Object will correspond to
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
-    //legCtrlOutputChannels[1] = MC_CHANNEL_PWM4;
-    legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
+    legCtrlOutputChannels[1] = MC_CHANNEL_PWM4;
 
     SetupTimer1(); // Timer 1 @ 1 Khz
     int retval;
@@ -210,7 +209,9 @@ void serviceMotionPID() {
     } // end of for(j)
 }
 
-void updateBEMF() {
+
+
+void updateBEMF(){
     //Back EMF measurements are made automatically by coordination of the ADC, PWM, and DMA.
     //Copy to local variables. Not strictly neccesary, just for clarity.
     //This **REQUIRES** that the divider on the battery & BEMF circuits have the same ratio.
@@ -239,8 +240,8 @@ void updateBEMF() {
     }
 
     // IIR filter on BEMF: y[n] = 0.2 * y[n-1] + 0.8 * x[n]
-    bemf[0] = (5 * (long) bemfLast[0] / 10) + 5 * (long) bemf[0] / 10;
-    bemf[1] = (5 * (long) bemfLast[1] / 10) + 5 * (long) bemf[1] / 10;
+    bemf[0] = (2 * (long) bemfLast[0] / 10) + 8 * (long) bemf[0] / 10;
+    bemf[1] = (2 * (long) bemfLast[1] / 10) + 8 * (long) bemf[1] / 10;
     bemfLast[0] = bemf[0]; //bemfLast will not be used after here, OK to set
     bemfLast[1] = bemf[1];
 
@@ -253,11 +254,11 @@ void updateBEMF() {
     }
 }
 
+
 void serviceMoveQueue(void) {
 
     //Blink red LED when executing move program
     if (currentMove != idleMove) {
-        inMotion = 1;
         if (blinkCtr == 0) {
             blinkCtr = 100;
             LED_RED = ~LED_RED;
@@ -271,34 +272,21 @@ void serviceMoveQueue(void) {
         if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
             //MOVE_SEG_LOOP_DECL only needs to appear once
-            //This will set up queue looping
-            if (currentMove->type == MOVE_SEG_LOOP_DECL) {
+            if(currentMove->type == MOVE_SEG_LOOP_DECL){
                 mqLoopingOnOff(1);
                 currentMove = mqPop(moveq);
             }
-            //Stop queue looping
-            if (currentMove->type == MOVE_SEG_LOOP_CLEAR) {
+            if(currentMove->type == MOVE_SEG_LOOP_CLEAR){
                 mqLoopingOnOff(0);
                 currentMove = mqPop(moveq);
             }
-            //Remove all remaining items from the queue
-            if (currentMove->type == MOVE_SEG_QFLUSH) {
-                while (mqPop(moveq)); //Terminate on NULL return, flushing queue
+            if(currentMove->type == MOVE_SEG_QFLUSH){
+                while(mqPop(moveq)); //Terminate on NULL return, flushing queue
                 currentMove = idleMove;
             }
             //TODO: handle NULL return from mqPop
             moveExpire = getT1_ticks() + currentMove->duration;
             currentMoveStart = getT1_ticks();
-
-            ///// Steering settings from Move Queue
-            steeringSetAngRate(currentMove->steeringRate); //THIS TURNS THE STEERING ON!
-            if (currentMove->steeringType == STEERMODE_OFF) {
-                steeringOff();
-            }
-            steeringSetMode(currentMove->steeringType);
-            //This is not strictly correct when using STEER_MODE_YAW,
-            //Since we are labeling it as a "rate"
-            steeringSetAngRate(currentMove->steeringRate);
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {
@@ -306,8 +294,7 @@ void serviceMoveQueue(void) {
                 motor_pidObjs[1].onoff = PID_ON;
             }
         }
-    }//Move Queue is empty
-        //Else if: exipry of last move in queue, return to idle
+    }    //Move Queue is empty
     else if ((getT1_ticks() >= moveExpire) && currentMove != idleMove) {
         //No more moves, go back to idle
         currentMove = idleMove;
@@ -328,6 +315,17 @@ static void moveSynth() {
     int yL = 0;
     int yR = 0;
 
+
+
+    steeringSetAngRate(currentMove->steeringRate); //THIS TURNS THE STEERING ON!
+
+    if (currentMove->steeringType == STEERMODE_OFF) {
+        steeringOff();
+    } else {
+        steeringSetMode(currentMove->steeringType);
+    }
+             
+
     if (inMotion) {
         if (currentMove->type == MOVE_SEG_IDLE) {
             yL = 0;
@@ -336,9 +334,10 @@ static void moveSynth() {
         if (currentMove->type == MOVE_SEG_CONSTANT) {
             yL = ySL;
             yR = ySR;
+            
+            }
 
-        }
-
+        
         if (currentMove->type == MOVE_SEG_RAMP) {
             long rateL = (long) currentMove->params[0];
             long rateR = (long) currentMove->params[1];
@@ -389,7 +388,6 @@ static void moveSynth() {
 
 
 //Poor implementation of a median filter for a 3-array of values
-
 int medianFilter3(int* a) {
     int b[3] = {a[0], a[1], a[2]};
     int temp;
@@ -414,14 +412,14 @@ int medianFilter3(int* a) {
     return b[1];
 }
 
-void legCtrlSetInput(unsigned int num, int val) {
+void legCtrlSetInput(unsigned int num, int val){
     pidSetInput(&(motor_pidObjs[num]), val);
 }
 
-void legCtrlOnOff(unsigned int num, unsigned char state) {
+void legCtrlOnOff(unsigned int num, unsigned char state){
     motor_pidObjs[num].onoff = state;
 }
 
-void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff) {
+void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
     pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
 }

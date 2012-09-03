@@ -24,7 +24,7 @@ motordata = []
 gainsNotSet = True;
 
 ###### Operation Flags ####
-RESET_ROBOT = True
+RESET_ROBOT = False
 ##########################
 
 # motorgains = [200,2,0,2,0,    200,2,0,2,0]

@@ -51,6 +51,30 @@
  *
  */
  
+#define ENC_ADDR_R_RD 0b10000011		//A1 on AS5048B Pulled High, A2 Low
+#define ENC_ADDR_R_WR 0b10000010
+
+#define ENC_ADDR_L_RD 0b10000101		//A2 on AS5048B Pulled High, A1 Low
+#define ENC_ADDR_L_WR 0b10000100
+
+#define ENC_ADDR_AUX1_RD 0b10000001		//A1, A2 = low
+#define ENC_ADDR_AUX1_WR 0b10000000
+
+#define ENC_REG_ANGLE_HI 0xFE //angle comes in two bytes
+#define ENC_REG_ANGLE_LOW 0xFF
+
+#define ENC_REG_DIAG 0xFB
+
+#define ENC_DIAG_COMP_HI 	0b00001000
+#define ENC_DIAG_COMP_LOW 	0b00000100
+#define ENC_DIAG_COF 		0b00000010
+#define ENC_DIAG_OCF 		0b00000001
+
+#define LSB2ENCDEG 0.0219
+//#define ZEROANGLE 211.0
+#define ZEROANGLE 338.1
+
+
  /*****************************************************************************
 * Function Name : encSetup
 * Description   : Initialize encoder
@@ -82,3 +106,17 @@ void encGetLPos();
 * Return Value  : None
 *****************************************************************************/
 float encGetAux1Pos(void);
+
+/*****************************************************************************
+* Function Name : encGetAux1PosRaw
+* Description   : Read the angular position of the 1st auxiliary encoder, returns an int
+* Parameters    : None
+* Return Value  : None
+*****************************************************************************/
+int encGetAux1PosRaw(void);
+
+//NK
+unsigned char encGetDiagnostics(void);
+
+
+

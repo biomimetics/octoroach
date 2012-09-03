@@ -1,9 +1,9 @@
 /*********************************************
- * Name: motor_ctrl.c
- * Desc: Motor Controller (PWM)
- * Date: 2010-05-30
- * Author: stanbaek
- *********************************************/
+* Name: motor_ctrl.c
+* Desc: Motor Controller (PWM)
+* Date: 2010-05-30
+* Author: stanbaek
+*********************************************/
 
 #include "motor_ctrl.h"
 #include "pwm.h"
@@ -30,18 +30,19 @@ static void mcSetupPeripheral(void);
 
 void mcSetSteerMode(unsigned char mode);
 
+
 void mcSetup(void) {
 
     mcSetupPeripheral();
-    //H-bridge for driving tail motor
-    mcSetSteerMode(MC_STEER_MODE_CONT);
+	//H-bridge for driving tail motor
+	mcSetSteerMode(MC_STEER_MODE_CONT);
 
 }
 
 void mcSetDutyCycle(unsigned char channel, float duty_cycle) {
 
     unsigned int pdc_value;
-    pdc_value = (unsigned int) (2 * duty_cycle / 100 * pwmPeriod);
+    pdc_value = (unsigned int)(2*duty_cycle/100*pwmPeriod);
     SetDCMCPWM(channel, pdc_value, 0);
 
 }
@@ -69,18 +70,19 @@ void mcSteer(float value) {
         }
 
     } else {
-        if (value > 0) {
+        if (value > 0) { 
             NO_TURN;
             RIGHT_TURN;
-        } else if (value < 0) {
+        } else if (value < 0) { 
             NO_TURN;
             LEFT_TURN;
-        } else {
+        } else { 
             NO_TURN;
         }
     }
 
 }
+
 
 void mcSetSteerMode(unsigned char mode) {
 
@@ -100,22 +102,72 @@ void mcSetSteerMode(unsigned char mode) {
 
 static void mcSetupPeripheral(void) {
 
-    unsigned int PTPERvalue = 2000;
+
+	unsigned int PTPERvalue = 8000;
     unsigned int SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value;
-    SEVTCMPvalue = 1988;
-    //    SEVTCMPvalue = 160; // Special Event Trigger Compare Value for ADC in phase with PWM
+	SEVTCMPvalue = 7952;
+//    SEVTCMPvalue = 160; // Special Event Trigger Compare Value for ADC in phase with PWM
     //PTCONvalue = PWM_EN & PWM_IDLE_CON & PWM_OP_SCALE1 &
     //             PWM_IPCLK_SCALE4 & PWM_MOD_FREE;
-    PTCONvalue = PWM_EN & PWM_IDLE_CON & PWM_OP_SCALE4 &
-            PWM_IPCLK_SCALE1 & PWM_MOD_FREE;
+	PTCONvalue = PWM_EN & PWM_IDLE_CON & PWM_OP_SCALE1 &
+                 PWM_IPCLK_SCALE1 & PWM_MOD_FREE;
     PWMCON1value = PWM_MOD1_IND & PWM_PEN1L & PWM_MOD2_IND & PWM_PEN2L &
-            PWM_MOD3_IND & PWM_PEN3L & PWM_MOD4_IND & PWM_PEN4L;
+                   PWM_MOD3_IND & PWM_PEN3L & PWM_MOD4_IND & PWM_PEN4L;
     PWMCON2value = PWM_SEVOPS4 & PWM_OSYNC_TCY & PWM_UEN;
     ConfigIntMCPWM(PWM_INT_DIS & PWM_FLTA_DIS_INT & PWM_FLTB_DIS_INT);
     SetDCMCPWM(1, 0, 0);
+    
+	SetDCMCPWM(2, 0, 0);
+    
+	SetDCMCPWM(3, 0, 0);
+    
+	SetDCMCPWM(4, 0, 0);
     OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
-    SetDCMCPWM(2, 0, 0);
-    OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
+
+	
+	pwmPeriod = PTPERvalue;
+
+	
+	/*
+    // For 1KHz at MIPS == 40
+    pwmPeriod = 624;
+ 
+    
+    ConfigIntMCPWM(PWM_INT_DIS & PWM_FLTA_DIS_INT & PWM_FLTB_DIS_INT);
+    
+    PDC1 = 0;   // duty cycle = 0
+    PDC2 = 0;   // duty cycle = 0
+    PDC3 = 0;   // duty cycle = 0
+    PDC4 = 0;   // duty cycle = 0
+
+    PTPER = pwmPeriod;
+
+    SEVTCMP = 1; // Special Event Trigger Compare Value for ADC in phase with PWM
+
+    PWMCON1bits.PMOD1 = 1;
+    PWMCON1bits.PMOD2 = 1;
+    PWMCON1bits.PMOD3 = 1;
+    PWMCON1bits.PMOD4 = 0;
+
+    PWMCON1bits.PEN1H = 0;
+    PWMCON1bits.PEN2H = 0;
+    PWMCON1bits.PEN3H = 0;
+    PWMCON1bits.PEN4H = 0;
+    PWMCON1bits.PEN1L = 1;
+    PWMCON1bits.PEN2L = 1;
+    PWMCON1bits.PEN3L = 1;
+    PWMCON1bits.PEN4L = 1;
+
+    PWMCON2bits.SEVOPS = 0; // postscale 1:1
+    PWMCON2bits.OSYNC = 0;
+    PWMCON2bits.IUE = 0;
+
+    PTCONbits.PTMOD = 0; // Free running mode
+    PTCONbits.PTOPS = 0; // postscale 1:1
+    PTCONbits.PTCKPS = 0b11; // postscale 1:64
+    PTCONbits.PTSIDL = 0; // runs in CPU idle mode
+    PTCONbits.PTEN = 1; 
+	*/
 
 }
 

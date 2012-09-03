@@ -1,50 +1,72 @@
-from lib import command
-import time,sys
+import sys
+import numpy as np
+from lib import command 
+from struct import *
+import time
+from xbee import XBee
 import serial
-import shared
 import pygame
+from callbackFunc import xbee_received
+import shared
 
-from or_helpers import *
+DEST_ADDR = '\x20\x52'
+#DEST_ADDR = '\x30\x02'
+imudata_file_name = 'imudata.txt'
+statedata_file_name = 'statedata.txt'
+dutycycle_file_name = 'dutycycle.txt'
+motordata_file_name = 'motordata.txt'
 
-###### Operation Flags ####
-SAVE_DATA   = False
-RESET_ROBOT = True
-EXIT_WAIT   = False
-
-MAXTHROT = 200
+imudata = []
+statedata = []
+dutycycles = []
+motordata = []
+gainsNotSet = True;
 
 BUTTON_L1 = 4
 BUTTON_R1 = 5
 
+MAXTHROT = 100
+
+
+ser = serial.Serial(shared.BS_COMPORT, shared.BS_BAUDRATE,timeout=3, rtscts=1)
+xb = XBee(ser, callback = xbee_received)
+
+def xb_send(status, type, data):
+    payload = chr(status) + chr(type) + ''.join(data)
+    xb.tx(dest_addr = DEST_ADDR, data = payload)
+
+def resetRobot():
+    xb_send(0, command.SOFTWARE_RESET, pack('h',0))
+
+
 def main():
     global MAXTHROT
-    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
-    shared.xb = xb
-    
-    R1 = Robot('\x20\x52', xb)
-    shared.ROBOTS = [R1]
+    dataFileName = 'imudata.txt'
 
-    if RESET_ROBOT:
-        print "Resetting robot..."
-        R1.reset()
-        time.sleep(0.5)
+    if ser.isOpen():
+        print "Serial open."
 
-    motorgains = [30000,100,0,0,10,    30000,100,0,0,10]
-    R1.setMotorGains(motorgains, retries = 8)
-    
-    verifyAllMotorGainsSet()  #exits on failure
-    
-    steeringgains = [0, 0, 0, 0, 0, 0]
-    R1.setSteeringGains(steeringgains)
-    
-    verifyAllSteeringGainsSet()  #exits on failure
-        
-    # Send robot a WHO_AM_I command, verify communications
-    R1.query()
+    resetRobot()
+    time.sleep(1)
 
-    j = setupJoystick()
+    try:
+        pygame.init()
+        j = pygame.joystick.Joystick(0)
+        j.init()
+        print j.get_name()
+    except:
+        print 'No joystick'
+        xb.halt()
+        ser.close()
+        sys.exit(-1)
+
+    motorgains = [350,2,0,2,0,    350,2,0,2,0]
+    while not(shared.motor_gains_set):
+        print "Setting motor gains..."
+        xb_send(0, command.SET_PID_GAINS, pack('10h',*motorgains))
+        time.sleep(1)
     
-    lastthrot = [0, 0]
+    lastthrust = [0, 0, 0, 0, 0]
     
     tinc = 25;
 
@@ -52,57 +74,58 @@ def main():
 
             value = []
             pygame.event.pump()
+            #left_throt = -j.get_axis(1)
+            #right_throt = -j.get_axis(2)
             
-            thrustInput = -j.get_axis(1)
             turnInput = -j.get_axis(4)
+            thrustInput = -j.get_axis(1)
             
             if j.get_button(BUTTON_L1) == 1 and MAXTHROT > 0:
-                MAXTHROT = MAXTHROT - tinc
-            elif j.get_button(BUTTON_R1) ==1 and MAXTHROT < 950:
-                MAXTHROT = MAXTHROT + tinc
+                MAXTHROT = MAXTHROT - 25
+            elif j.get_button(BUTTON_R1) ==1 and MAXTHROT < 900:
+                MAXTHROT = MAXTHROT + 25
             
-            DEADBAND = 0.05
+            #if left_throt < 0.01:
+            #    left_throt = 0
+            #if right_throt < 0.01:
+            #    right_throt = 0
+            #left_throt = MAXTHROT * left_throt
+            #right_throt = MAXTHROT * right_throt
+            
+            DEADBAND = 0.08
             if abs(turnInput) < DEADBAND:
                 turnInput = 0
             if (abs(thrustInput) < DEADBAND) or (thrustInput < 0):
                 thrustInput = 0
             
+            #turnInput = (turnInput + 1)/2  #change to range (0,1)
             
-            left_throt = int((1-turnInput) * MAXTHROT * thrustInput )
-            right_throt = int((1+turnInput) * MAXTHROT * thrustInput )
+            left_throt = (1-turnInput) * MAXTHROT * thrustInput 
+            right_throt = (1+turnInput) * MAXTHROT * thrustInput
             
             if left_throt > MAXTHROT:
                 left_throt = MAXTHROT
             if right_throt > MAXTHROT:
                 right_throt = MAXTHROT
             
+            
+            #print "L: ",left_throt,"  |   R: ",right_throt
             sys.stdout.write(" "*60 + "\r")
             sys.stdout.flush()
-            outstring = "L: {0:3d}  |   R: {1:3d}  ".format(left_throt,right_throt)
+            outstring = "L: {0:03.1f}  |   R: {1:03.1f}  ".format(left_throt,right_throt,MAXTHROT)
             outstring = outstring + "(" + str(MAXTHROT) + ")\r"
+            #outstring = "L: {0:03.3f}  |   R: {1:03.3f} \r".format(turnInput,thrustInput)
             sys.stdout.write(outstring)
             sys.stdout.flush()
-            
-            throt = [left_throt,right_throt]
-            if throt != lastthrot: #Only send new packet if throttles have changed
-                R1.setMotorSpeeds(left_throt, right_throt)
-                lastthrot = throt
-                
+	    #Build throttle array to send
+	    thrust = [left_throt, 0, right_throt, 0, 0]
+	    if thrust != lastthrust:
+            #throttle = [0 if t<0 else t for t in throttle]
+		thrust = [left_throt, 0, right_throt, 0, 0]
+		xb_send(0, command.SET_THRUST_CLOSED_LOOP, pack('5h',*thrust))
+		#xb_send(0,command.SET_THRUST_OPEN_LOOP,pack('2h',*throttle))
+		lastthrust = thrust
             time.sleep(0.2)
-
-
-def setupJoystick():
-    try:
-        pygame.init()
-        j = pygame.joystick.Joystick(0)
-        j.init()
-        print j.get_name()
-    except Exception as args:
-        print 'No joystick'
-        print 'Exception: ', args
-        xb_safe_exit()
-        
-    return j
 
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better
@@ -112,14 +135,19 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print "\nRecieved Ctrl+C, exiting."
-        shared.xb.halt()
-        shared.ser.close()
+        xb.halt()
+        ser.close()
     except Exception as args:
         print "\nGeneral exception:",args
         print "Attemping to exit cleanly..."
-        shared.xb.halt()
-        shared.ser.close()
-        sys.exit()
+        xb.halt()
+        ser.close()
     except serial.serialutil.SerialException:
-        shared.xb.halt()
-        shared.ser.close()
+        xb.halt()
+        ser.close()
+
+
+
+
+
+

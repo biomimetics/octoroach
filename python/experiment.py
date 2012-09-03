@@ -9,147 +9,263 @@ import serial
 import shared
 
 from or_helpers import *
+from hall_helpers import queryRobot
+
 
 
 ###### Operation Flags ####
-SAVE_DATA1 = True 
-RESET_R1 = True  
-
-EXIT_WAIT   = False
+SAVE_DATA = True
+RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
+                      # This is a known bug.
 
 def main():    
-    xb = setupSerial(shared.BS_COMPORT, shared.BS_BAUDRATE)
-    
-    R1 = Robot('\x20\x52', xb)
-    
-    shared.ROBOTS = [R1] #This is neccesary so callbackfunc can reference robots
-    shared.xb = xb           #This is neccesary so callbackfunc can halt before exit
-    
-    #if SAVE_DATA1:
-    #    shared.dataFileName = findFileName();
-    #    print "Data file:  ", shared.dataFileName
+    setupSerial()
 
-    if RESET_R1:
-        R1.reset()
-        time.sleep(0.35)
-    
-    # Query
-    R1.query( retries = 8 )
-    
-    #Verify all robots can be queried
-    verifyAllQueried()  #exits on failure
+    if SAVE_DATA:
+        shared.dataFileName = findFileName();
+        print "Data file:  ", shared.dataFileName
 
+    #sendEcho("echo test")
+    #time.sleep(0.2)
+
+    if RESET_ROBOT:
+        print "Resetting robot..."
+        resetRobot()
+        time.sleep(0.5)
+        
+    # Send robot a WHO_AM_I command, verify communications
+    queryRobot()
+        
+    #wakeRobot()    
+    #time.sleep(1)
+    #sleepRobot()
     
+    
+
     #Motor gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [20000,5,1,0,10 , 20000,5,1,0,10] #Hardware PID
-
-    R1.setMotorGains(motorgains, retries = 8)
-    #Verify all robots have motor gains set
-    verifyAllMotorGainsSet()   #exits on failure
+    motorgains = [8000,100,2,0,0 , 8000,100,2,0,0] #Hardware PID
+    #motorgains = [200,2,0,2,0,    200,2,0,2,0]       #Software PID
+    #motorgains = [0000,000,0,0,0 , 0000,000,0,0,0]
+    setMotorGains(motorgains)
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [15000,0,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #
+    #steeringGains = [5000,0,0,0,0,  STEER_MODE_DECREASE] # Disables steering controller
+    #steeringGains = [20,1,0,1,0,  STEER_MODE_DECREASE]
+    steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    #steeringGains = [0000,0,0,0,0,  STEER_MODE_DECREASE] 
+    setSteeringGains(steeringGains)
+    setSteeringRate(0)
 
-    R1.setSteeringGains(steeringGains, retries = 8)
-    #Verify all robots have steering gains set
-    verifyAllSteeringGainsSet()  #exits on failure
+    #Tail gains format:
+    #  [ Kp , Ki , Kd , Kaw , Kff]
+    #
+    tailGains = [8000,20,1000,0,0] #tuned 7/12/12
+    #tailGains = [0,0,0,0,0] # Disables tail controller
+    setTailGains(tailGains)
+    time.sleep(1)
+
+
     
-    # Steering controller setpoint
-    #R1.setSteeringRate(0 , retries = 8)
-    #Verify all robots have steering rate set
-    #verifyAllSteeringRateSet()  #exits on failure
 
-    #### Do not send more than 5 move segments per packet!   ####
-    #### Instead, send multiple packets, and don't use       ####
-    ####    calcNumSamples() below, manually calc numSamples ####
-    #### This will be fixed to be automatic in the future.   ####
+    # Gyro Control Experiment ###############################
 
-    #Move segment format:
-    # [value1, value2 , segtime , move_seg_type , param1 , param2, param3]
-    # - value1 , value2 are initial setpoints for leg speed for each segment
-    # - segtime is the length of the segment, in milliseconds
-    # - move_seg_type is one of the types enumerated at the top of or_helpers.py
-    # MOVE_SEG_CONSTANT: param1 , param2 , param3 have no effect, set to 0.
-    # MOVE_SEG_RAMP    : param1 and param2 are left/right ramp rates, in legs speed per
-    #       second. param3 has no effect.
-    # MOVE_SEG_SIN     : Not implemented.
-    # MOVE_SEG_TRI     : Not implemented.
-    # MOVE_SEG_SAW     : Not implemented.
-    # MOVE_SEG_IDLE    : value1,value2 and params have no efffect. Disables leg speed controller.
-    # MOVE_SEG_LOOP_DECL: Turns on move queue looping. value1,value2, and params have no effect.
-    # MOVE_SEG_LOOP_CLEAR: Turns off move queue looping.value1,value2, and params have no effect.
-    # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
+    #exp_time = 1000
 
-    #Constant example
+    #start_angle = -90
+
+    #throttle = 300
+
+    #tailq_init = [2, \
+    #         0, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+    #         0, exp_time, TAIL_SEG_RAMP, start_angle*10, 0, 0
+    #         ]
+    
+    #moves = 3
+    #moveq = [moves, \
+    #         throttle, throttle, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+    #         throttle, throttle, exp_time/2, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,
+    #         throttle, throttle, exp_time/2, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0
+    #         ]
+
+ 
+
+    # Tail range of motion is between 140 and -125 deg! do not exceed
+    #tailq = [moves, \
+    #         start_angle, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+    #         0, exp_time/2, TAIL_GYRO_CONTROL, -90, 0, 0,
+    #         0, exp_time/2, TAIL_SEG_IDLE, 0, 0, 0
+    #         ]
+
+#################################################33
+
+
+# Friction Experiments
+
+    exp_time = 1000
+
+    tailTime = 150
+
+    start_angle = -90
+
+    throttle = 0
+
+    init_moves = 2
+
+    tailq_init = [init_moves, \
+            0, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+            0, exp_time, TAIL_SEG_RAMP, start_angle*10, 0, 0
+             ]
+
+    moveq_init = [init_moves, \
+             throttle, throttle, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+             throttle, throttle, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0
+             ]
+    
+    moves = 3
+    moveq = [moves, \
+             throttle, throttle, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+             throttle, throttle, tailTime, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,
+             throttle, throttle, exp_time/2, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0
+             ]
+
+ 
+
+    # Tail range of motion is between 140 and -125 deg! do not exceed
+    tailq = [moves, \
+             start_angle, exp_time, TAIL_SEG_CONSTANT, 0, 0, 0,
+             0, tailTime, TAIL_GYRO_CONTROL, -100, 0, 0,
+             0, exp_time/2, TAIL_SEG_IDLE, 0, 0, 0
+             ]
+
+    ######################################3
+
+
+    # Friction Experiments - going straight up hill
+
+    #exp_time = 5000
+
+   
+
+    #start_angle = -90
+
+    #throttle = 400
+
+    
+    
     #moves = 1
     #moveq = [moves, \
-    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
-             
-    #Ramp example
-    numMoves = 2
-    moveq1 = [numMoves, \
-        150, 150, 6000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW, int(round(shared.deg2count*0.0)),
-        150, 150, 6000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW, int(round(shared.deg2count*-90.0))]
+     #        throttle, throttle, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE,0
+    #                ]
 
+ 
+
+    ######################################3
+
+
+
+    #moves = 2
+    
+    #moveq = [moves, \
+     #        300, 300, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 0,
+     #        200, 200, exp_time, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_DECREASE, 20]
+
+    
+
+    #tailq = [tmoves, \
+    #         0, exp_time, TAIL_GYRO_CONTROL, -20, 0, 0
+    #         ]
+
+    #tailq = [tmoves, \
+    #         90.0, 6000, MOVE_SEG_RAMP, -30*10, 0, 0,
+     #        -90.0, 6000, MOVE_SEG_RAMP, 30*10, 0, 0
+     #        ]
+    
+    
+      
+    #Ramp example
+    #moves = 5
+    #moveq = [moves, \
+    #    0,   0,   0,   MOVE_SEG_LOOP_DECL,    0, 0, 0,
+    #    0,   0,   500,   MOVE_SEG_RAMP,    300, 300, 0,
+    #    150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0,
+    #    150, 150, 500,   MOVE_SEG_RAMP, -300,  -300,  0,
+    #    0, 0, 100,   MOVE_SEG_CONSTANT, 0,  0,  0]
+
+    #Sin example
+    #RAD_TO_BAMS16 = (0x7FFF)/(3.1415)
+    #phase = 3.1415/2 * RAD_TO_BAMS16
+    #moves = 2
+    #moveq = [moves, \
+    #         76,   76,   2000,   MOVE_SEG_SIN,  75, 1000, phase,
+    #	     75, 75, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0]
+    
+    shared.runtime = exp_time*moves
+    
     #Timing settings
-    R1.leadinTime = 500;
-    R1.leadoutTime = 500;
+    shared.leadinTime = 500;
+    shared.leadoutTime = 500;
+    
+    numSamples = calcNumSamples(moveq)
+    #numSamples = int(floor((tailq[2]+shared.leadinTime+shared.leadoutTime)*0.150))
+    
+    shared.imudata = [ [] ] * numSamples
     
     #Flash must be erased to save new data
-    if SAVE_DATA1:
-        #This needs to be done to prepare the .imudata variables in each robot object
-        R1.setupImudata(moveq1)
-        R1.eraseFlashMem()
+    if SAVE_DATA:
+        eraseFlashMem(numSamples)
 
     # Pause and wait to start run, including leadin time
-    print ""
-    print "  ***************************"
-    print "  *******    READY    *******"
-    print "  ***************************"
-    raw_input("  Press ENTER to start run ...")
-    print ""
+    raw_input("Press enter to start run ...")
     
+    sendTailQueue(tailq_init)
+    #sendMoveQueue(moveq_init)
+    time.sleep(2)
     # Trigger telemetry save, which starts as soon as it is received
-    
-    #### Make when saving anything, this if is set ####
-    #### to the proper "SAVE_DATA"                 ####
-    
-    if SAVE_DATA1:
-        R1.startTelemetrySave()
+    if SAVE_DATA:
+        startTelemetrySave(numSamples)
 
-    time.sleep(R1.leadinTime / 1000.0)
+    time.sleep(shared.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
-    R1.sendMoveQueue(moveq1)
     
-    maxtime = 0
-    for r in shared.ROBOTS:
-        tottime =  r.runtime + r.leadoutTime
-        if tottime > maxtime:
-            maxtime = tottime
+    #sendMoveQueue(moveq)
+    sendTailQueue(tailq)
     
-    #Wait for robots to do runs
-    time.sleep(maxtime / 1000.0)
-    
-    raw_input("Press Enter to start telemtry readback ...")
-    
-    if SAVE_DATA1:
-        R1.downloadTelemetry()
+    #Clear loop
+    #time.sleep(6)
+    #mqclear = [1, 0,   0,   0,   MOVE_SEG_LOOP_CLEAR,    0, 0, 0]
+    #mqflush = [1, 0,   0,   0,   MOVE_SEG_QFLUSH,    0, 0, 0]
 
-    if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
-        while True:
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                break
+    if SAVE_DATA:
+        #print "Sending loop clear!!"
+        #sendMoveQueue(mqclear)
+        time.sleep(0.05)
+        #print "Sending move queue flush!!"
+        #sendMoveQueue(mqflush)
+        
+        downloadTelemetry(numSamples)
+
+    #Wait for Ctrl+C to exit; this is done in case other messages come in
+    #from the robot, which are handled by callbackfunc
+    print "Ctrl + C to exit"
+
+    while True:
+        try:
+            time.sleep(1)
+            #print ".",
+        except KeyboardInterrupt:
+            break
+
+    shared.xb.halt()
+    shared.ser.close()
+
 
     print "Done"
-    xb_safe_exit()
-
 
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better
@@ -161,9 +277,12 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    #except Exception as args:
-    #    print "\nGeneral exception:",args
-    #    print "Attemping to exit cleanly..."
-    #    shared.xb.halt()
-    #    shared.ser.close()
-    #    sys.exit()
+    except Exception as args:
+        print "\nGeneral exception:",args
+        print "Attemping to exit cleanly..."
+        shared.xb.halt()
+        shared.ser.close()
+        sys.exit()
+    except serial.serialutil.SerialException:
+        shared.xb.halt()
+        shared.ser.close()
