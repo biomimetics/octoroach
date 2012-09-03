@@ -2,10 +2,9 @@
 #define __TELEM_H
 
 //Telemetry packet structure
-//This is specific to NKohut's TAYLRoACH robot
+//This is specific to apullin's OctoROACH code
 
 typedef struct {
-    unsigned long sampleIndex;
     unsigned long timeStamp;
     int inputL;
     int inputR;

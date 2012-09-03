@@ -100,7 +100,28 @@ void mcSetSteerMode(unsigned char mode) {
 
 static void mcSetupPeripheral(void) {
 
-    unsigned int PTPERvalue = 2000;
+    //////////// NKOHUT ///////////
+    unsigned int PTPERvalue = 8000;
+    unsigned int SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value;
+    SEVTCMPvalue = 7952;
+    PTCONvalue = PWM_EN & PWM_IDLE_CON & PWM_OP_SCALE1 &
+            PWM_IPCLK_SCALE1 & PWM_MOD_FREE;
+    PWMCON1value = PWM_MOD1_IND & PWM_PEN1L & PWM_MOD2_IND & PWM_PEN2L &
+            PWM_MOD3_IND & PWM_PEN3L & PWM_MOD4_IND & PWM_PEN4L;
+    PWMCON2value = PWM_SEVOPS4 & PWM_OSYNC_TCY & PWM_UEN;
+    ConfigIntMCPWM(PWM_INT_DIS & PWM_FLTA_DIS_INT & PWM_FLTB_DIS_INT);
+    OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
+    SetDCMCPWM(1, 0, 0);
+    SetDCMCPWM(2, 0, 0);
+    SetDCMCPWM(3, 0, 0);
+    SetDCMCPWM(4, 0, 0);
+
+    pwmPeriod = PTPERvalue;
+
+
+    //////////// APULLIN ///////////
+    /*
+     unsigned int PTPERvalue = 2000;
     unsigned int SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value;
     SEVTCMPvalue = 1988;
     //    SEVTCMPvalue = 160; // Special Event Trigger Compare Value for ADC in phase with PWM
@@ -112,11 +133,8 @@ static void mcSetupPeripheral(void) {
             PWM_MOD3_IND & PWM_PEN3L & PWM_MOD4_IND & PWM_PEN4L;
     PWMCON2value = PWM_SEVOPS4 & PWM_OSYNC_TCY & PWM_UEN;
     ConfigIntMCPWM(PWM_INT_DIS & PWM_FLTA_DIS_INT & PWM_FLTB_DIS_INT);
+    OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
     SetDCMCPWM(1, 0, 0);
-    OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
     SetDCMCPWM(2, 0, 0);
-    OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
-
+     */
 }
-
-

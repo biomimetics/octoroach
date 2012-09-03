@@ -10,10 +10,9 @@
 #include "cmd_const.h"
 
 //// Includes here should be to provide TYPES and ENUMS only
-#include "move_queue.h" //for enum moveSegT
-#include "tail_queue.h" //for enum tailSegT
+#include "move_queue.h"
+#include "tail_queue.h"
 #include "hall.h"
-#include "steering.h"   //for enum steerModeT
 
 #define CMD_VECTOR_SIZE				0xFF //full length vector
 #define MAX_CMD_FUNC				0x9F
@@ -23,7 +22,7 @@
 #define CMD_SET_PID_GAINS           0x82
 #define CMD_GET_PID_TELEMETRY       0x83
 #define CMD_SET_CTRLD_TURN_RATE     0x84
-#define CMD_GET_IMU_LOOP_ZGYRO        0x85
+#define CMD_GET_IMU_LOOP_ZGYRO      0x85
 #define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
@@ -38,7 +37,6 @@
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
 #define CMD_SET_TAIL_GAINS          0x93
-#define CMD_SET_PHASE_GAINS         0x94
 
 //Argument lengths
 //lenghts are in bytes
@@ -92,7 +90,7 @@ typedef struct{
 
 //cmdSetCtrldTurnRate
 typedef struct{
-	int rate;
+	int steerInput;
 } _args_cmdSetCtrldTurnRate;
 
 //cmdGetImuLoopZGyro
@@ -104,10 +102,8 @@ typedef struct{
 typedef struct{
 	int inputL, inputR;
 	unsigned long duration;
-	enum moveSegT moveType;
+	enum moveSegT type;
 	int params[3];
-        enum steerModeT steerType;
-        int steerParam;
 } _args_cmdSetMoveQueue;
 
 //cmdSetSteeringGains
@@ -167,16 +163,6 @@ typedef struct {
 typedef struct{
 	int Kp, Ki, Kd, Kaw, Kff;
 } _args_cmdSetTailGains;
-
-//cmdStreamTelemetry
-typedef struct{
-    unsigned long count;
-} _args_cmdStreamTelemetry;
-
-//cmdSetPhaseGains
-typedef struct{
-	int Kp, Ki, Kd, Kaw, Kff;
-} _args_cmdSetPhaseGains;
 
 #endif // __CMD_H
 

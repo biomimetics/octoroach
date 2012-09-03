@@ -4,7 +4,7 @@
 #include "pid.h"
 
 void steeringSetup(void);
-void steeringSetAngRate(int angRate);
+void steeringSetInput(int angRate);
 void steeringSetGains(int Kp, int Ki, int Kd, int Kawm, int ff);
 void steeringSetMode(unsigned int mode);
 void steeringApplyCorrection(int* inputs, int* outputs);

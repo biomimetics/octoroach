@@ -87,7 +87,7 @@ void steeringSetup(void) {
     steeringPID.maxVal = STEERING_SAT;
     steeringPID.minVal = -STEERING_SAT;
 
-    steeringSetAngRate(0);
+    steeringSetInput(0);
 
     SetupTimer5(); //T5 ISR will update the steering controller
     int retval;
@@ -101,8 +101,8 @@ void steeringSetup(void) {
     steeringMode = STEERMODE_DECREASE;
 }
 
-void steeringSetAngRate(int angRate) {
-    steeringPID.input = angRate;
+void steeringSetInput(int steerInput) {
+    steeringPID.input = steerInput;
 }
 
 void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
