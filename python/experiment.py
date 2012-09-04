@@ -58,6 +58,11 @@ def main():
     #Verify all robots have steering gains set
     verifyAllSteeringGainsSet()  #exits on failure
     
+    tailGains = [0, 0, 0, 0, 0]
+    R1.setTailGains(tailGains)
+    #Verify all robots have tail gains set
+    verifyAllTailGainsSet()  #exits on failure
+    
     # Steering controller setpoint
     #R1.setSteeringRate(0 , retries = 8)
     #Verify all robots have steering rate set
