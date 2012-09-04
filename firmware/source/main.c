@@ -73,14 +73,14 @@ int main(void) {
     imuSetup();
 
 // #ifdef  NK 8/14/12
-    hallSetup();    // Timer 1, Timer 2
+    //hallSetup();    // Timer 1, Timer 2
     //hallSteeringSetup(); //doesn't exist yet
 //#else //No hall sensors, standard BEMF control
     legCtrlSetup(); // Timer 1
     steeringSetup();  //Timer 5
 //#endif
 
-   tailCtrlSetup(); //////////////////////
+   //tailCtrlSetup(); //////////////////////
 
     //ovcamSetup();
 

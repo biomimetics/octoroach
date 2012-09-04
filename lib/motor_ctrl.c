@@ -101,6 +101,7 @@ void mcSetSteerMode(unsigned char mode) {
 static void mcSetupPeripheral(void) {
 
     //////////// NKOHUT ///////////
+    /*
     unsigned int PTPERvalue = 8000;
     unsigned int SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value;
     SEVTCMPvalue = 7952;
@@ -117,10 +118,10 @@ static void mcSetupPeripheral(void) {
     SetDCMCPWM(4, 0, 0);
 
     pwmPeriod = PTPERvalue;
-
+    */
 
     //////////// APULLIN ///////////
-    /*
+    
      unsigned int PTPERvalue = 2000;
     unsigned int SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value;
     SEVTCMPvalue = 1988;
@@ -136,5 +137,5 @@ static void mcSetupPeripheral(void) {
     OpenMCPWM(PTPERvalue, SEVTCMPvalue, PTCONvalue, PWMCON1value, PWMCON2value);
     SetDCMCPWM(1, 0, 0);
     SetDCMCPWM(2, 0, 0);
-     */
+     
 }

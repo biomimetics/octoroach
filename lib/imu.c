@@ -57,33 +57,35 @@ static void imuServiceRoutine(void){
 
 static void imuISRHandler(){
 	
-	int gyroData[3]; int gyroOffsets[3];
+	int gyroData[3];
 
 	/////// Get Gyro data and calc average via filter
-	gyroGetXYZ((unsigned char*)gyroData);
-	gyroGetOffsets(gyroOffsets);
+        gyroReadXYZ(); //bad design of gyro module; todo: humhu
+	gyroGetIntXYZ(gyroData);
 	
 
-        lastGyroXValue = gyroData[0] - gyroOffsets[0];
-        lastGyroYValue = gyroData[1] - gyroOffsets[1];
-        lastGyroZValue = gyroData[2] - gyroOffsets[2];
+        lastGyroXValue = gyroData[0];
+        lastGyroYValue = gyroData[1];
+        lastGyroZValue = gyroData[2];
 
         //Threshold:
-        if((lastGyroXValue < 12) && (lastGyroXValue > -12)){
-            lastGyroXValue = lastGyroXValue >> 2; //fast divide by 4
+        
+        if((lastGyroXValue < 8) && (lastGyroXValue > -8)){
+            lastGyroXValue = lastGyroXValue >> 1; //fast divide by 2
         }
-        if((lastGyroYValue < 12) && (lastGyroYValue > -12)){
-            lastGyroYValue = lastGyroYValue >> 2; //fast divide by 4
+        if((lastGyroYValue < 8) && (lastGyroYValue > -8)){
+            lastGyroYValue = lastGyroYValue >> 1; //fast divide by 2
         }
-        if((lastGyroZValue < 12) && (lastGyroZValue > -12)){
-            lastGyroZValue = lastGyroZValue >> 2; //fast divide by 4
+        if((lastGyroZValue < 8) && (lastGyroZValue > -8)){
+            lastGyroZValue = lastGyroZValue >> 1; //fast divide by 2
         }
+        
 
         lastGyroXValueDeg = (float) (lastGyroXValue*LSB2DEG);
         lastGyroYValueDeg = (float) (lastGyroYValue*LSB2DEG);
         lastGyroZValueDeg = (float) (lastGyroZValue*LSB2DEG); 
 
-        filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
+        filterAvgUpdate(&gyroZavg, gyroData[2]);
 
         lastGyroZValueAvg = filterAvgCalc(&gyroZavg);
 

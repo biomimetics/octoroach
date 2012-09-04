@@ -27,7 +27,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 10
+#define READBACK_DELAY_TIME_MS 15
 #endif
 
 
@@ -41,12 +41,9 @@ extern pidObj tailPID;
 //TODO: fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
 
-//Filter stuctures for gyro variables
-//extern filterAvgInt_t gyroZavg;
 
 extern float lastTailPos;
 extern float tailTorque;
-extern float bodyPosition;
 
 extern long motor_count[2];
 
@@ -57,6 +54,7 @@ static unsigned long samplesToSave = 0;
 //Skip counter for dividing the 300hz timer into lower telemetry rates
 static unsigned int telemSkipNum = DEFAULT_SKIP_NUM;
 static unsigned int skipcounter = DEFAULT_SKIP_NUM;
+static unsigned long sampIdx = 0;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
@@ -101,6 +99,7 @@ void telemSetup() {
 
 void telemSetSamplesToSave(unsigned long n) {
     samplesToSave = n;
+    sampIdx = 0;
 }
 
 void telemReadbackSamples(unsigned long numSamples) {
@@ -178,7 +177,6 @@ void telemErase(unsigned long numSamples) {
 ////////////////////////
 
 static void telemISRHandler() {
-    int samplesaved = 0;
     telemU data;
 
     //skipcounter decrements to 0, triggering a telemetry save, and resets
@@ -186,14 +184,16 @@ static void telemISRHandler() {
     if (skipcounter == 0) {
         if (samplesToSave > 0) {
             /////// Get XL data
-            //xlGetXYZ((unsigned char*)xldata); NK
-
+            
+            data.telemStruct.sampleIndex = sampIdx;
             //Stopwatch was already started in the cmdSpecialTelemetry function
             data.telemStruct.timeStamp = (long) swatchTic();
             data.telemStruct.inputL = motor_pidObjs[0].input;
             data.telemStruct.inputR = motor_pidObjs[1].input;
-            data.telemStruct.dcL = PDC3;
-            data.telemStruct.dcR = PDC4;
+            //data.telemStruct.dcL = PDC3;
+            //data.telemStruct.dcR = PDC4;
+            data.telemStruct.dcL = PDC1;
+            data.telemStruct.dcR = PDC2;
             data.telemStruct.gyroX = imuGetGyroXValue();
             data.telemStruct.gyroY = imuGetGyroYValue();
             data.telemStruct.gyroZ = imuGetGyroZValue();
@@ -214,12 +214,12 @@ static void telemISRHandler() {
             data.telemStruct.Vbatt = adcGetVBatt();
             data.telemStruct.steerAngle = tailPID.input;
             data.telemStruct.tailAngle = lastTailPos;
-            data.telemStruct.bodyPosition = bodyPosition;
+            data.telemStruct.bodyPosition = imuGetBodyZPositionDeg();
             data.telemStruct.motor_count[0] = motor_count[0];
             data.telemStruct.motor_count[1] = motor_count[1];
             data.telemStruct.sOut = steeringPID.output;
             telemSaveData(&data);
-            samplesaved = 1;
+            sampIdx++;
         }
         //Reset value of skip counter
         skipcounter = telemSkipNum;

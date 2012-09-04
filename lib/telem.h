@@ -5,6 +5,7 @@
 //This is specific to apullin's OctoROACH code
 
 typedef struct {
+    unsigned long sampleIndex;
     unsigned long timeStamp;
     int inputL;
     int inputR;

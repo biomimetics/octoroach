@@ -52,7 +52,7 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [15000,0,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [15000,1,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
@@ -92,9 +92,10 @@ def main():
     #Ramp example
     numMoves = 2
     moveq1 = [numMoves, \
-        150, 150, 6000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW, int(round(shared.deg2count*0.0)),
+        150, 150, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW, int(round(shared.deg2count*0.0)),
         150, 150, 6000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW, int(round(shared.deg2count*-90.0))]
 
+        
     #Timing settings
     R1.leadinTime = 500;
     R1.leadoutTime = 500;
