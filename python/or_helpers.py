@@ -46,11 +46,13 @@ class Robot:
     motor_gains_set = False
     steering_gains_set = False
     steering_rate_set = False
+    tail_gains_set = False
     robot_queried = False
     flash_erased = False
     robot_awake = True
     motorGains = [0,0,0,0,0, 0,0,0,0,0]
     steeringGains = [0,0,0,0,0]
+    tailGains = [0,0,0,0,0]
     angRateDeg = 0;
     angRate = 0;
     dataFileName = ''
@@ -123,6 +125,16 @@ class Robot:
             self.tx( 0, command.SET_STEERING_GAINS, pack('6h',*gains))
             tries = tries + 1
             time.sleep(0.3)
+            
+    def setTailGains(self, gains, retries = 8):
+        tries = 1
+        self.tailGains = gains
+        while not (self.steering_gains_set) and (tries <= retries):
+            self.clAnnounce()
+            print "Setting TAIL gains...   ",tries,"/8"
+            self.tx( 0, command.SET_TAIL_GAINS, pack('5h',*gains))
+            tries = tries + 1
+            time.sleep(0.3)
 
     def eraseFlashMem(self, timeout = 8):
         eraseStartTime = time.time()
@@ -177,7 +189,42 @@ class Robot:
             segments = segments[4:]         #remanining unsent ones
             toSend = segments[0:4]          #Due to python indexing, this could be from 1-4
             pktCount = pktCount + 1
+    
+    def sendTailQueue(self, moveq):
+        SEG_LENGTH = 6  #might be changed in the future
         
+        n = moveq[0]
+        if len(moveq[1:]) != n * SEG_LENGTH:
+            print "CRITICAL: Tail queue length specification invalid."
+            print "Wrong number of entries."
+            xb_safe_exit()
+            
+        self.nummoves = n
+        self.moveq = moveq
+        
+        self.clAnnounce()
+        print "Sending TAIL queue with",self.nummoves," segments"
+        
+        segments = moveq[1:]
+        #Convert to a list of lists, each sublist is one entry
+        segments = [segments[i:i+SEG_LENGTH] for i in range(0,len(segments),SEG_LENGTH)]
+        toSend = segments[0:4]
+        
+        pktCount = 1
+        
+        while toSend != []:
+            self.clAnnounce()
+            print "TAIL queue packet",pktCount
+            numToSend = len(toSend)         #Could be < 4, since toSend still a list of lists
+            toSend = [item for sublist in toSend for item in sublist]  #flatted toSend
+            packet = [numToSend]
+            packet.extend(toSend)    #Full moveq format to be given to pack()
+            #Actual TX
+            self.tx( 0, command.SET_TAIL_QUEUE, pack('=h'+numToSend*'hLhhhh', *packet))
+            time.sleep(0.01)                #simple holdoff, probably not neccesary
+            segments = segments[4:]         #remanining unsent ones
+            toSend = segments[0:4]          #Due to python indexing, this could be from 1-4
+            pktCount = pktCount + 1
         
     def setMotorSpeeds(self, spleft, spright):
         thrust = [spleft, 0, spright, 0, 0]
@@ -343,6 +390,13 @@ def verifyAllSteeringRateSet():
     for r in shared.ROBOTS:
         if not(r.steering_gains_set):
             print "CRITICAL : Could not SET STEERING GAINS on robot 0x%02X" % r.DEST_ADDR_int
+            xb_safe_exit()
+            
+def verifyAllTailGainsSet():
+    #Verify all robots have motor gains set
+    for r in shared.ROBOTS:
+        if not(r.tail_gains_set):
+            print "CRITICAL : Could not SET TAIL GAINS on robot 0x%02X" % r.DEST_ADDR_int
             xb_safe_exit()
             
 def verifyAllQueried():            

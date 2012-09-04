@@ -173,9 +173,11 @@ def xbee_received(packet):
             
         # SET_TAIL_GAINS
         elif type == command.SET_TAIL_GAINS:
-            print "Set Tail gains"
             gains = unpack(pattern, data)
-            print gains
+            print "Set TAIL gains to ", gains
+            for r in shared.ROBOTS:
+                if r.DEST_ADDR_int == src_addr:
+                    r.tail_gains_set = True 
             
         else:    
             pass
