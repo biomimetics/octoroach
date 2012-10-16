@@ -17,7 +17,7 @@
 #define TAIL_DEFAULT_KD  0
 #define TAIL_DEFAULT_KAW 0
 #define TAIL_DEFAULT_KFF  0
-#define TAIL_PID_SCALER 32
+#define TAIL_PID_SCALER 8
 #endif
 
 

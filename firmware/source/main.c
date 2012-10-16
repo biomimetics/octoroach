@@ -27,6 +27,8 @@
 #include "telem.h"
 #include "hall.h"
 #include "tail_ctrl.h"
+#include "ams-enc.h"
+#include "imu.h"
 
 #include <stdlib.h>
 
@@ -61,22 +63,24 @@ int main(void) {
     macSetDestAddr(dst_addr_init);
 
     dfmemSetup();
-    xlSetup();
+    //xlSetup();
     gyroSetup();
     mcSetup();
     cmdSetup();
     adcSetup();
     telemSetup(); //Timer 5
+    encSetup();
+    imuSetup();
 
-#ifdef HALL_SENSORS
-    hallSetup();    // Timer 1, Timer 2
+// #ifdef  NK 8/14/12
+    //hallSetup();    // Timer 1, Timer 2
     //hallSteeringSetup(); //doesn't exist yet
-#else //No hall sensors, standard BEMF control
+//#else //No hall sensors, standard BEMF control
     legCtrlSetup(); // Timer 1
     steeringSetup();  //Timer 5
-#endif
+//#endif
 
-    //tailCtrlSetup();
+   //tailCtrlSetup(); //////////////////////
 
     //ovcamSetup();
 

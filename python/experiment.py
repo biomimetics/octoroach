@@ -34,7 +34,7 @@ def main():
         time.sleep(0.35)
     
     # Query
-    R1.query( retries = 3 )
+    R1.query( retries = 8 )
     
     #Verify all robots can be queried
     verifyAllQueried()  #exits on failure
@@ -44,7 +44,7 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [10000,0,0,0,0 , 10000,0,0,0,0] #Hardware PID
+    motorgains = [20000,5,1,0,10 , 20000,5,1,0,10] #Hardware PID
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -52,17 +52,21 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    #steeringGains = [50,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
-    steeringGains = [0,0,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [15000,1,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
     verifyAllSteeringGainsSet()  #exits on failure
     
+    tailGains = [0, 0, 0, 0, 0]
+    R1.setTailGains(tailGains)
+    #Verify all robots have tail gains set
+    verifyAllTailGainsSet()  #exits on failure
+    
     # Steering controller setpoint
-    R1.setSteeringRate(0 , retries = 8)
+    #R1.setSteeringRate(0 , retries = 8)
     #Verify all robots have steering rate set
-    verifyAllSteeringRateSet()  #exits on failure
+    #verifyAllSteeringRateSet()  #exits on failure
 
     #### Do not send more than 5 move segments per packet!   ####
     #### Instead, send multiple packets, and don't use       ####
@@ -91,20 +95,20 @@ def main():
     #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #Ramp example
-    numMoves = 1
+    numMoves = 2
     moveq1 = [numMoves, \
-        0, 0, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0]
+        150, 150, 5000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+        150, 150, 6000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0))]
 
-    
+        
     #Timing settings
     R1.leadinTime = 500;
     R1.leadoutTime = 500;
     
-    #This needs to be done to prepare the .imudata variables in each robot object
-    R1.setupImudata(moveq1)
-    
     #Flash must be erased to save new data
     if SAVE_DATA1:
+        #This needs to be done to prepare the .imudata variables in each robot object
+        R1.setupImudata(moveq1)
         R1.eraseFlashMem()
 
     # Pause and wait to start run, including leadin time

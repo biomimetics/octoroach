@@ -10,12 +10,13 @@ enum tailSegT{
 	TAIL_SEG_SIN,
 	TAIL_SEG_TRI,
 	TAIL_SEG_SAW,
-	TAIL_SEG_IDLE
+	TAIL_SEG_IDLE,
+	TAIL_GYRO_CONTROL
 };
 
 typedef struct
 {
-    float torque;  //-100.0 to 100.0
+    float angle; 
     unsigned long duration;
     enum tailSegT type;
     int params[3];

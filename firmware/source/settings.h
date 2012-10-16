@@ -8,23 +8,40 @@
 #define __SETTINGS_H
 
 
-//#error "REQUIRED: Review and set radio channel & network parameters in firmware/source/settings.h  , then comment out this line."
 /////// Radio settings ///////
-// Motile address ; all MRI robots were shipped with this configuration
-#define RADIO_CHANNEL		0x19
+//////////// NKOHUT ///////////
+/*
+#define RADIO_CHANNEL		0x14
+//#warning "You have changed the radio channel from 0x0E to something else"
+#define RADIO_SRC_PAN_ID 	0x2060
 #define RADIO_SRC_ADDR 		0x2052
-#define RADIO_SRC_PAN_ID  	0x2050
-//Hard-coded destination address, must match basestation or XBee addr
+//Hard code in destination address for now, update to be dynamic later
+#define RADIO_DST_ADDR		0x2011
+*/
+
+//////////// APULLIN ///////////
+
+#define RADIO_CHANNEL		0x19
+//#warning "You have changed the radio channel from 0x0E to something else"
+#define RADIO_SRC_PAN_ID 	0x2050
+#define RADIO_SRC_ADDR 		0x2052
+//Hard code in destination address for now, update to be dynamic later
 #define RADIO_DST_ADDR		0x2051
 
+
+
 // Radio queue sizes
+//#define RADIO_RXPQ_MAX_SIZE 	32
+//#define RADIO_TXPQ_MAX_SIZE	32
+
+
 #define RADIO_RXPQ_MAX_SIZE 	16
 #define RADIO_TXPQ_MAX_SIZE	16
-
 
 /////// System Service settings ///////
 #define SYS_SERVICE_T1 // For legCtrl, hall
 #define SYS_SERVICE_T2 // For hall, 400 Hz tick counter
+#define SYS_SERVICE_T4 // For IMU, 300Hz
 #define SYS_SERVICE_T5 // For steering, telemetry
 
 /////// Configuration options ///////
