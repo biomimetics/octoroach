@@ -55,6 +55,7 @@ typedef struct
 	unsigned long start_time;
 	int inputOffset;
 	int feedforward;
+    int phase_offset;
 } pidPos;
 
 // telemetry control structure 

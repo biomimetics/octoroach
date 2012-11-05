@@ -167,6 +167,7 @@ void initPIDObjPos(pidPos *pid, int Kp, int Ki, int Kd, int Kaw, int ff)
 	pid->p_error = 0;
 	pid->v_error = 0;
 	pid->i_error = 0;
+    pid->phase_offset = 0;
 }
 
 // called from steeringSetup()
@@ -415,7 +416,21 @@ void pidGetSetpoint()
 
 void pidSetControl()
 { int j;
+int phase_error;
 // 0 = right side
+
+//KCP HACK
+//Add a term to drive down the error between the sides based on hall effects
+static int phase_error_sum = 0;
+
+//if positive, motor 0 is ahead, if negative, motor 1 is ahead
+phase_error = motor_count[0] - motor_count[1];
+phase_error_sum += phase_error;
+
+//Speed up and slow down motors accordingly
+pidObjs[0].phase_offset = -phase_error*pidObjs[0].feedforward - phase_error_sum*20;
+pidObjs[1].phase_offset = phase_error*pidObjs[1].feedforward + phase_error_sum*20;
+
     for(j=0; j < NUM_PIDS; j++)
    {  //pidobjs[0] : right side
 	// p_input has scaled velocity interpolation to make smoother
@@ -423,23 +438,24 @@ void pidSetControl()
             pidObjs[j].v_error = pidObjs[j].v_input - measurements[j];  // v_input should be A/D volts per Hall count/ms
             //Update values
             UpdatePID(&(pidObjs[j]));
-   		if(pidObjs[j].onoff)
-		{
-            	//Might want to change this in the future, if we want to track error
-            	//even when the motor is off.
-            	//Set PWM duty cycle
-            	if(j == 0){ // PWM1.L
-               	 SetDCMCPWM(MC_CHANNEL_PWM1, pidObjs[0].output, 0); //PWM1.L
-            	} else if(j == 1){ // PWM2.l
-                 SetDCMCPWM(MC_CHANNEL_PWM2, pidObjs[1].output, 0); // PWM2.L
-                  }
-              } //end of if (on / off)
-             else 
-            { //if PID loop is off
-                if(j == 0){ SetDCMCPWM(MC_CHANNEL_PWM1, 0, 0); }
-                else if(j==1){ SetDCMCPWM(MC_CHANNEL_PWM2, 0, 0); }
-             }
      } // end of for(j)
+
+if(pidObjs[0].onoff)
+{
+    //Might want to change this in the future, if we want to track error
+    //even when the motor is off.
+    //Set PWM duty cycle
+
+     SetDCMCPWM(MC_CHANNEL_PWM1, pidObjs[0].output, 0); //PWM1.L
+     SetDCMCPWM(MC_CHANNEL_PWM2, pidObjs[1].output, 0); // PWM2.L
+} //end of if (on / off)
+ else
+    { //if PID loop is off
+        SetDCMCPWM(MC_CHANNEL_PWM1, 0, 0);
+        SetDCMCPWM(MC_CHANNEL_PWM2, 0, 0);
+        phase_error_sum = 0;
+    }
+
 }
 
 
@@ -451,8 +467,7 @@ void UpdatePID(pidPos *pid)
     // better check scale factors
 /* just use simple PID, offset is already subtracted in PID GetState */
 // scale so doesn't over flow
-    pid->preSat = pid->feedforward + pid->p +
-		 ((pid->i + pid->d) >> 4); // divide by 16
+    pid->preSat = pid->p + pid->phase_offset + ((pid->i + pid->d) >> 4); // divide by 16
 	pid->output = pid->preSat;
    //Clamp output above 0 since don't have H bridge
     if (pid->preSat < 0){pid->output=0;}
