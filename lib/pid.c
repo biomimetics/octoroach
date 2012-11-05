@@ -404,8 +404,8 @@ void pidGetSetpoint()
 					pidVel[j].leg_stride++;  // one full leg revolution
 	// need to correct for 426 counts per leg stride
       // 5 rev @ 42 counts/rev = 210, actual set point 5 rev @ 42.6 counts, so add 3 to p_input 
-					if ((pidVel[j].leg_stride % 5) == 0)
-					{ pidObjs[j].p_input +=3; }					
+			//		if ((pidVel[j].leg_stride % 5) == 0)
+			//		{ pidObjs[j].p_input +=3; }					
 				}  // loop on index
 
 			}

@@ -12,11 +12,11 @@
 #define NUM_PIDS	2
 #define NUM_VELS	4 // 8 velocity setpoints per cycle
 // actual gear ratio 21.3:1. So with 2 counts/rev, get 42.6:1
-#define COUNT_REVS  42   // depends on gear ratio- counts per leg rev
+#define COUNT_REVS  32   // depends on gear ratio- counts per leg rev
 // STRIDE_TICKS should be easily divisible
 #define STRIDE_TICKS (COUNT_REVS*16)  // number of t1 ticks/leg revolution
 /* The back emf constant can be measured by measuring velocity from Hall Effect sensor */
-#define K_EMF    ((1000/256)* 182.9/219.6)  // A/D units per hall count per ms, scale by >>8
+#define K_EMF    ((1000/256)* 0.27) //458.8/522.6)  // A/D units per hall count per ms, scale by >>8
 
 #ifndef ADC_MAX
 #define ADC_MAX             1024
