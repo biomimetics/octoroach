@@ -129,7 +129,7 @@ class Robot:
     def setTailGains(self, gains, retries = 8):
         tries = 1
         self.tailGains = gains
-        while not (self.steering_gains_set) and (tries <= retries):
+        while not (self.tail_gains_set) and (tries <= retries):
             self.clAnnounce()
             print "Setting TAIL gains...   ",tries,"/8"
             self.tx( 0, command.SET_TAIL_GAINS, pack('5h',*gains))
