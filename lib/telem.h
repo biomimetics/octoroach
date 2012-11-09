@@ -20,10 +20,13 @@ typedef struct {
     int accelZ;
     int bemfL;
     int bemfR;
-    int sOut;
+    float tailTorque;
     int Vbatt;
     int steerAngle;
-    long phaseDiff;
+    float tailAngle;
+    float bodyPosition;
+    unsigned long motor_count[2];
+    int sOut;
 } telemStruct_t;
 
 //TODO: A union is not neccesary here. Remove for clarity, and chage related
@@ -47,6 +50,5 @@ void telemSaveData(telemU *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 void telemSetSkip(unsigned int skipnum);
-void telemStartStreaming(unsigned long num);
 
 #endif  // __TELEM_H

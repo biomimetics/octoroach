@@ -92,6 +92,9 @@ file_064=lib
 file_065=lib
 file_066=lib
 file_067=lib
+file_068=lib
+file_069=lib
+file_070=lib
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -161,6 +164,9 @@ file_064=no
 file_065=no
 file_066=no
 file_067=no
+file_068=no
+file_069=no
+file_070=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -230,6 +236,9 @@ file_064=no
 file_065=no
 file_066=no
 file_067=no
+file_068=no
+file_069=no
+file_070=no
 [FILE_INFO]
 file_000=..\..\imageproc-lib\xl.c
 file_001=..\..\imageproc-lib\battery.c

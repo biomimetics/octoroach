@@ -12,7 +12,6 @@
 #include "tail_queue.h"
 #include "math.h"
 #include "steering.h"
-#include "dfilter_avg.h"
 #include "sys_service.h"
 #include <dsp.h>
 #include <stdlib.h> // for malloc
@@ -24,19 +23,13 @@
 
 //PID container objects
 pidObj motor_pidObjs[NUM_MOTOR_PIDS];
+
+#ifdef PID_HARDWARE
 //DSP PID stuff
 //These have to be declared here!
 fractional motor_abcCoeffs[NUM_MOTOR_PIDS][3] __attribute__((section(".xbss, bss, xmemory")));
 fractional motor_controlHists[NUM_MOTOR_PIDS][3] __attribute__((section(".ybss, bss, ymemory")));
-
-//Phase integrator
-pidObj phase_pidObj;
-fractional phase_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
-fractional phase_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
-long phaseL = 0;
-long phaseR = 0;
-long phaseDiff = 0;
-int phaseDiffLast = 0;
+#endif
 
 //Counter for blinking the red LED during motion
 int blinkCtr;
@@ -64,8 +57,7 @@ int medianFilter3(int*);
 int legCtrlOutputChannels[NUM_MOTOR_PIDS];
 
 //Global flag for wether or not the robot is in motion
-char inMotion;
-char manualMode = 0;
+volatile char inMotion;
 
 //Function to be installed into T1, and setup function
 static void SetupTimer1(void);
@@ -88,7 +80,7 @@ static void legCtrlServiceRoutine(void){
 static void SetupTimer1(void) {
     unsigned int T1CON1value, T1PERvalue;
     T1CON1value = T1_ON & T1_SOURCE_INT & T1_PS_1_1 & T1_GATE_OFF &
-            T1_SYNC_EXT_OFF & T1_IDLE_CON;
+            T1_SYNC_EXT_OFF & T1_IDLE_CON;  //correct
 
     T1PERvalue = 0x9C40; //clock period = 0.001s = (T1PERvalue/FCY) (1KHz)
     //T1PERvalue = 0x9C40/2;
@@ -113,7 +105,6 @@ void legCtrlSetup() {
                 motor_abcCoeffs[i];
         motor_pidObjs[i].dspPID.controlHistory =
                 motor_controlHists[i];
-
 #endif
         pidInitPIDObj(&(motor_pidObjs[i]), LEG_DEFAULT_KP, LEG_DEFAULT_KI,
                 LEG_DEFAULT_KD, LEG_DEFAULT_KAW, LEG_DEFAULT_KFF);
@@ -124,20 +115,9 @@ void legCtrlSetup() {
         motor_pidObjs[i].minVal = 0;
     }
 
-#ifdef PID_HARDWARE
-    phase_pidObj.dspPID.abcCoefficients = phase_abcCoeffs;
-    phase_pidObj.dspPID.controlHistory = phase_controlHists;
-    pidInitPIDObj(&phase_pidObj, PHASE_DEFAULT_KP, PHASE_DEFAULT_KI,
-            PHASE_DEFAULT_KD, PHASE_DEFAULT_KAW, PHASE_DEFAULT_KFF);
-    phase_pidObj.satValPos = 200;
-    phase_pidObj.satValNeg = -200;
-    phase_pidObj.maxVal = INT_MAX;
-    phase_pidObj.minVal = INT_MIN;
-#endif
-
-    
     //Set which PWM output each PID Object will correspond to
     legCtrlOutputChannels[0] = MC_CHANNEL_PWM1;
+    //legCtrlOutputChannels[1] = MC_CHANNEL_PWM4;
     legCtrlOutputChannels[1] = MC_CHANNEL_PWM2;
 
     SetupTimer1(); // Timer 1 @ 1 Khz
@@ -156,6 +136,8 @@ void legCtrlSetup() {
     idleMove->params[0] = 0;
     idleMove->params[1] = 0;
     idleMove->params[2] = 0;
+    idleMove->steeringType = STEERMODE_OFF;
+    idleMove->steeringRate = 0;
     currentMove = idleMove;
 
     currentMoveStart = 0;
@@ -177,7 +159,6 @@ void legCtrlSetup() {
         bemfHist[i][1] = 0;
         bemfHist[i][2] = 0;
     }
-    
 }
 
 // Runs the PID controllers for the legs
@@ -191,31 +172,6 @@ void serviceMotionPID() {
     motor_pidObjs[1].input = poststeer[1];
 
     updateBEMF();
-
-    /*
-    if(currentMove != idleMove){
-        //Phase lead/lag correction
-        phaseL += (unsigned long) bemf[0];
-        phaseR += (unsigned long) bemf[1];
-        phaseDiff = phaseR - phaseL;
-
-        // IIR filter
-        phaseDiff = (2 * (long) phaseDiffLast / 10) + 8 * (long) phaseDiff / 10;
-        phaseDiffLast = phaseDiff;
-
-        phase_pidObj.input = 0;
-        pidUpdate(&phase_pidObj, (int)phaseDiff);
-        //Apply update
-        //if(phase_pidObj.output < 0){
-        //    motor_pidObjs[0].input -= phase_pidObj.output;
-        //}
-        //else{
-        //    motor_pidObjs[1].input += phase_pidObj.output;
-        //}
-        //motor_pidObjs[0].input -= phase_pidObj.output / 2;
-        //motor_pidObjs[1].input += phase_pidObj.output / 2;
-    }
-     */
 
     /////////// PID Section //////////
 
@@ -246,6 +202,14 @@ void serviceMotionPID() {
 
             //Set PWM duty cycle
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
+            if(motor_pidObjs[j].output > 0){
+                Nop();
+                Nop();
+            }
+            if((PDC1 > 0) || (PDC2 > 0)){
+                Nop();
+                Nop();
+            }
         }//end of if (on / off)
         else if (PID_ZEROING_ENABLE) { //if PID loop is off
             SetDCMCPWM(legCtrlOutputChannels[j], 0, 0);
@@ -254,9 +218,7 @@ void serviceMotionPID() {
     } // end of for(j)
 }
 
-
-
-void updateBEMF(){
+void updateBEMF() {
     //Back EMF measurements are made automatically by coordination of the ADC, PWM, and DMA.
     //Copy to local variables. Not strictly neccesary, just for clarity.
     //This **REQUIRES** that the divider on the battery & BEMF circuits have the same ratio.
@@ -285,8 +247,8 @@ void updateBEMF(){
     }
 
     // IIR filter on BEMF: y[n] = 0.2 * y[n-1] + 0.8 * x[n]
-    bemf[0] = (2 * (long) bemfLast[0] / 10) + 8 * (long) bemf[0] / 10;
-    bemf[1] = (2 * (long) bemfLast[1] / 10) + 8 * (long) bemf[1] / 10;
+    bemf[0] = (5 * (long) bemfLast[0] / 10) + 5 * (long) bemf[0] / 10;
+    bemf[1] = (5 * (long) bemfLast[1] / 10) + 5 * (long) bemf[1] / 10;
     bemfLast[0] = bemf[0]; //bemfLast will not be used after here, OK to set
     bemfLast[1] = bemf[1];
 
@@ -298,7 +260,6 @@ void updateBEMF(){
         LED_YELLOW = 0;
     }
 }
-
 
 void serviceMoveQueue(void) {
 
@@ -314,25 +275,38 @@ void serviceMoveQueue(void) {
 
     //Service Move Queue if not empty
     if (!mqIsEmpty(moveq)) {
-        //inMotion = 1;
+        inMotion = 1;
         if ((currentMove == idleMove) || (getT1_ticks() >= moveExpire)) {
             currentMove = mqPop(moveq);
             //MOVE_SEG_LOOP_DECL only needs to appear once
-            if(currentMove->type == MOVE_SEG_LOOP_DECL){
+            //This will set up queue looping
+            if (currentMove->type == MOVE_SEG_LOOP_DECL) {
                 mqLoopingOnOff(1);
                 currentMove = mqPop(moveq);
             }
-            if(currentMove->type == MOVE_SEG_LOOP_CLEAR){
+            //Stop queue looping
+            if (currentMove->type == MOVE_SEG_LOOP_CLEAR) {
                 mqLoopingOnOff(0);
                 currentMove = mqPop(moveq);
             }
-            if(currentMove->type == MOVE_SEG_QFLUSH){
-                while(mqPop(moveq)); //Terminate on NULL return, flushing queue
+            //Remove all remaining items from the queue
+            if (currentMove->type == MOVE_SEG_QFLUSH) {
+                while (mqPop(moveq)); //Terminate on NULL return, flushing queue
                 currentMove = idleMove;
             }
             //TODO: handle NULL return from mqPop
             moveExpire = getT1_ticks() + currentMove->duration;
             currentMoveStart = getT1_ticks();
+
+            ///// Steering settings from Move Queue
+            steeringSetInput(currentMove->steeringRate); //THIS TURNS THE STEERING ON!
+            if (currentMove->steeringType == STEERMODE_OFF) {
+                steeringOff();
+            }
+            steeringSetMode(currentMove->steeringType);
+            //This is not strictly correct when using STEER_MODE_YAW,
+            //Since we are labeling it as a "rate"
+            steeringSetInput(currentMove->steeringRate);
 
             //If we are no on an Idle move, turn on controllers
             if (currentMove->type != MOVE_SEG_IDLE) {
@@ -340,7 +314,8 @@ void serviceMoveQueue(void) {
                 motor_pidObjs[1].onoff = PID_ON;
             }
         }
-    }    //Move Queue is empty
+    }//Move Queue is empty
+        //Else if: exipry of last move in queue, return to idle
     else if ((getT1_ticks() >= moveExpire) && currentMove != idleMove) {
         //No more moves, go back to idle
         currentMove = idleMove;
@@ -349,8 +324,8 @@ void serviceMoveQueue(void) {
         pidSetInput(&(motor_pidObjs[1]), 0);
         motor_pidObjs[1].onoff = PID_OFF;
         moveExpire = 0;
-        //inMotion = 0; //for sleep, synthesis
-        //steeringOff();
+        inMotion = 0; //for sleep, synthesis
+        steeringOff();
     }
 }
 
@@ -360,7 +335,8 @@ static void moveSynth() {
     long ySR = currentMove->inputR; // "
     int yL = 0;
     int yR = 0;
-    if (inMotion && !manualMode) {
+
+    if (inMotion) {
         if (currentMove->type == MOVE_SEG_IDLE) {
             yL = 0;
             yR = 0;
@@ -368,7 +344,9 @@ static void moveSynth() {
         if (currentMove->type == MOVE_SEG_CONSTANT) {
             yL = ySL;
             yR = ySR;
+
         }
+
         if (currentMove->type == MOVE_SEG_RAMP) {
             long rateL = (long) currentMove->params[0];
             long rateR = (long) currentMove->params[1];
@@ -419,6 +397,7 @@ static void moveSynth() {
 
 
 //Poor implementation of a median filter for a 3-array of values
+
 int medianFilter3(int* a) {
     int b[3] = {a[0], a[1], a[2]};
     int temp;
@@ -443,26 +422,14 @@ int medianFilter3(int* a) {
     return b[1];
 }
 
-void legCtrlSetInput(unsigned int num, int val){
+void legCtrlSetInput(unsigned int num, int val) {
     pidSetInput(&(motor_pidObjs[num]), val);
-    //if (val != 0) inMotion = 1;
-    inMotion = 1;
 }
 
-void legCtrlOnOff(unsigned int num, unsigned char state){
+void legCtrlOnOff(unsigned int num, unsigned char state) {
     motor_pidObjs[num].onoff = state;
-    //if (state == PID_ON) inMotion = 1;
-    //else                 inMotion = 0;
 }
 
-void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff){
+void legCtrlSetGains(unsigned int num, int Kp, int Ki, int Kd, int Kaw, int ff) {
     pidSetGains(&(motor_pidObjs[num]), Kp, Ki, Kd, Kaw, ff);
-}
-
-void legCtrlSetPhaseGains(int Kp, int Ki, int Kd, int Kaw, int ff){
-    pidSetGains(&phase_pidObj, Kp, Ki, Kd, Kaw, ff);
-}
-
-void legCtrlSetManualMode(){
-    manualMode = 1;
 }

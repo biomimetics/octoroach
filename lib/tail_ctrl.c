@@ -9,9 +9,27 @@
 #include "math.h"
 #include "sys_service.h"
 #include "move_queue.h"
+#include "ams-enc.h"
+#include "motor_ctrl.h"
+#include "gyro.h"
+#include "dfilter_avg.h"
+#include "imu.h"
 #include <stdlib.h> // for malloc
 
 #define ABS(my_val) ((my_val) < 0) ? -(my_val) : (my_val)
+//#define PIDOUT2HBRIDGETORQUE 0.00305185095 //convert signed 16 bit integer to -100 to 100
+#define PIDOUT2HBRIDGETORQUE 0.1
+
+#define POS 1
+#define NEG -1
+#define ZERO 0
+
+#define MAXTAILPOSITION 130.0
+#define MINTAILPOSITION -115.0
+
+//#define MAXTAILPOSITION 120.0
+//#define MINTAILPOSITION -100.0
+
 
 //PID container objects
 pidObj tailPID;
@@ -32,6 +50,19 @@ fractional tail_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
 TailQueue tailq;
 tailCmdT currentTail, idleTail;
 unsigned long currentTailStart, tailExpire;
+float lastTailPos;
+float tailTorque = 0.0;
+
+float bodyPosDeadband = 5.0;
+float bodyPosition = 0.0;
+//float dt = 0.001;
+// how do I get this from python
+float refBodyPosition = 0.0;
+float initialBodyPosition = 0.0;
+int gyroCtrlTorque;
+int tailCtrlFlag = 0;
+
+ 
 
 //Function to be installed into T1, and setup function
 static void SetupTimer1(void);
@@ -39,16 +70,21 @@ static void tailCtrlServiceRoutine(void); //To be installed with sysService
 //The following local functions are called by the service routine:
 static void serviceTailQueue(void);
 static void tailSynth();
+static void serviceTailPID();
 
-volatile char tailInMotion;
+//volatile char tailInMotion;
 
 /////////        Leg Control ISR       ////////
 /////////  Installed to Timer1 @ 1Khz  ////////
 //void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
+
+
+
 static void tailCtrlServiceRoutine(void) {
     serviceTailQueue(); //Update controllers
     tailSynth();
+    serviceTailPID();
 }
 
 static void SetupTimer1(void) {
@@ -69,16 +105,18 @@ static void SetupTimer1(void) {
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
 
+
+
+
 void tailCtrlSetup() {
 
     SetupTimer1(); // Timer 1 @ 1 Khz
-    int retval;
-    retval = sysServiceInstallT1(tailCtrlServiceRoutine);
+    
 
     //Tail queue
     tailq = tailqInit(16);
     idleTail = malloc(sizeof (tailCmdStruct));
-    idleTail->torque = 0.0;
+    idleTail->angle = 0.0;
     idleTail->duration = 0;
     idleTail->type = TAIL_SEG_IDLE;
     idleTail->params[0] = 0;
@@ -94,14 +132,17 @@ void tailCtrlSetup() {
     tailPID.dspPID.controlHistory = tail_controlHists;
 #endif
     pidInitPIDObj(&tailPID, TAIL_DEFAULT_KP, TAIL_DEFAULT_KI,
-            TAIL_DEFAULT_KD, TAIL_DEFAULT_KAW, 0);
-    tailPID.satValPos = 100;
-    tailPID.satValNeg = -100;
-    tailPID.maxVal = 100;
-    tailPID.minVal = -100;
+            TAIL_DEFAULT_KD, TAIL_DEFAULT_KAW, TAIL_DEFAULT_KFF);
+    tailPID.satValPos = 32767;
+    tailPID.satValNeg = -32768;
+    tailPID.maxVal = 32767;
+    tailPID.minVal = -32768;
 
-    tailPID.onoff = PID_OFF;
+    tailPID.onoff = PID_ON;
 
+	int retval;
+    retval = sysServiceInstallT1(tailCtrlServiceRoutine);
+ 
 }
 
 
@@ -110,15 +151,17 @@ void tailCtrlSetup() {
 static void serviceTailQueue(void) {
     //Service Move Queue if not empty
     if (!tailqIsEmpty(tailq)) {
-        tailInMotion = 1;
+        //tailInMotion = 1;
         if ((currentTail == idleTail) || (getT1_ticks() >= tailExpire)) {
-            currentTail = tailqPop(tailq);
+            currentTail = tailqPop(tailq); //grabs top command from tail queue
+            initialBodyPosition = imuGetBodyZPositionDeg();
             tailExpire = getT1_ticks() + currentTail->duration;
             currentTailStart = getT1_ticks();
 
             //If we are no on an Idle move, turn on controllers
             if (currentTail->type != TAIL_SEG_IDLE) {
                 //TODO: Turn on tail controller
+				tailPID.onoff = PID_ON;
             }
         }
     }//Move Queue is empty
@@ -126,17 +169,21 @@ static void serviceTailQueue(void) {
         //No more moves, go back to idle
         currentTail = idleTail;
         //TODO: Zero tail torque, turn off controller
+		tailPID.onoff = PID_OFF;
+		tailPID.output = 0;
         tailExpire = 0;
     }
 }
 
 static void tailSynth() {
+
+    //int gyroAvg[3]; int gyroData[3]; int gyroOffsets[3];
     //Move segment synthesis
-    long yS = currentTail->torque; //store in local variable to limit lookups
+    long yS = (int) (10.0*currentTail->angle); //store in local variable to limit lookups
     int y = 0;
-    if (tailInMotion) {
         if (currentTail->type == TAIL_SEG_IDLE) {
             y = 0;
+			tailPID.onoff = PID_OFF;
         }
         if (currentTail->type == TAIL_SEG_CONSTANT) {
             y = yS;
@@ -155,17 +202,59 @@ static void tailSynth() {
             float phase = BAMS16_TO_FLOAT * (float) currentTail->params[2]; //binary angle
             float fy = amp * sin(2 * 3.1415 * F * (float) (getT1_ticks() -
                     currentTailStart)*0.001 - phase) + yS;
-
+			
             //Clipping
             int temp = (int) fy;
             if (temp < 0) {
                 temp = 0;
             }
+
             y = (unsigned int) temp;
         }
+
+		// New code July 31 2012
+
+		//turn the tail until the body reaches a reference position
+		if (currentTail->type == TAIL_GYRO_CONTROL) {
+			//Set PID input to zero, turn PID off
+			y = 0;
+			tailPID.onoff = PID_OFF;
+			
+			//Throw a flag so you don't use the PID control
+			tailCtrlFlag = 1;
+
+
+
+			refBodyPosition = (float) currentTail->params[0];
+                            // nothing
+			bodyPosition = imuGetBodyZPositionDeg();// - initialBodyPosition;
+
+			if (bodyPosition < (refBodyPosition - bodyPosDeadband)) {
+				gyroCtrlTorque = POS; 
+			}	
+                        else if (bodyPosition > (refBodyPosition + bodyPosDeadband)) {
+				gyroCtrlTorque = NEG; 
+			}
+                        else {
+                            gyroCtrlTorque = ZERO;
+                        }
+
+			// if tail angle is at a max or min, apply no torque
+                       /* if (lastTailPos < MINTAILPOSITION) {
+                            gyroCtrlTorque = ZERO;
+                        }
+
+                         if (lastTailPos > MAXTAILPOSITION) {
+                            gyroCtrlTorque = ZERO;
+                        }
+                        */
+                        }
+			
+ 
+                        
         //TODO: Set tail input here
-        //motor_pidObjs[0].input = yL;
-    }
+        tailPID.input = y;
+    
     //Note here that pidObjs[n].input is not set if !inMotion, in case another behavior wants to
     // set it.
 }
@@ -181,3 +270,72 @@ void tailCtrlOnOff(unsigned char state) {
 void tailCtrlSetInput(int val){
     pidSetInput(&tailPID, val);
 }
+
+
+
+static void serviceTailPID() {
+
+	//update tail position
+	lastTailPos = encGetAux1Pos();
+	
+	int encAngle = (int) (lastTailPos*10.0);
+	//Update the setpoints
+    //if((currentMove->inputL != 0) && (currentMove->inputR != 0)){
+    if (currentTail != idleTail) {
+        //Only update steering controller if we are in motion
+
+
+#ifdef PID_SOFTWARE
+        pidUpdate(&tailPID, encAngle);
+#elif defined PID_HARDWARE
+        int temp = 0;
+        temp = tailPID.input; //Save unscaled input val
+        tailPID.input *= TAIL_PID_SCALER; //Scale input
+        pidUpdate(&tailPID,
+                 TAIL_PID_SCALER * encAngle); //Update with scaled feedback, sets tailPID.output
+       tailPID.input = temp;  //Reset unscaled input
+		
+
+#endif   //PID_SOFTWWARE vs PID_HARDWARE
+
+	
+	}
+	else {
+		tailPID.output = 0; //no output if idling
+    }
+
+	tailTorque = tailPID.output*PIDOUT2HBRIDGETORQUE;
+
+	if(tailTorque > 100.0) {
+		tailTorque = 100.0;
+	}
+
+	if(tailTorque < -100.0) {
+		tailTorque = -100.0;
+	}
+
+	
+	if (tailCtrlFlag == 1) {
+
+        // HOW DO I DO THIS "AND" CORRECTLY IN C
+
+        if (lastTailPos > MINTAILPOSITION && lastTailPos < MAXTAILPOSITION) {
+            if (gyroCtrlTorque == POS) {
+                mcSteer(-100.0);
+            }
+            if (gyroCtrlTorque == NEG) {
+                mcSteer(100.0);
+            }
+            if (gyroCtrlTorque == ZERO) {
+                mcSteer(0.0);
+            }
+        } else {
+            mcSteer(0.0);
+        }
+    } else {
+
+        mcSteer(tailTorque);
+    } //if tailCtrlFlag == 1
+
+}
+

@@ -55,7 +55,7 @@ SET_THRUST_CLOSED_LOOP =    0x81
 SET_PID_GAINS =             0x82
 GET_PID_TELEMETRY =         0x83
 SET_CTRLD_TURN_RATE =       0x84
-STREAM_TELEMETRY =          0x85
+GET_IMU_LOOP_ZGYRO =        0x85
 SET_MOVE_QUEUE =            0x86
 SET_STEERING_GAINS =        0x87
 SOFTWARE_RESET     =        0x88
@@ -70,6 +70,5 @@ ZERO_POS =                  0x90
 SET_HALL_GAINS =            0x91
 SET_TAIL_QUEUE =            0x92
 SET_TAIL_GAINS =            0x93
-SET_PHASE_GAINS =           0x94
 
 # CMD values of 0xF0(240) - 0xFF(255) are reserved for future use
