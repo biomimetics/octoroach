@@ -4,7 +4,6 @@
 #include "timer.h"
 #include "gyro.h"
 #include "steering.h"
-#include "stopwatch.h"
 #include "dfmem.h"
 #include "telem.h"
 #include "move_queue.h"

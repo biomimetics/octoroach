@@ -8,7 +8,7 @@
 #include "led.h"
 #include "gyro.h"
 #include "xl.h"
-#include "stopwatch.h"
+#include "sclock.h"
 #include "pid.h"
 #include "orient.h"
 #include "dfilter_avg.h"
@@ -192,8 +192,9 @@ static void telemISRHandler() {
             /////// Get XL data
             
             data.telemStruct.sampleIndex = sampIdx;
+            // TODO (fgb) : Modify this comment based on sclock mods
             //Stopwatch was already started in the cmdSpecialTelemetry function
-            data.telemStruct.timeStamp = (long) swatchTic();
+            data.telemStruct.timeStamp = (long) sclockGetTime();
             data.telemStruct.inputL = motor_pidObjs[0].input;
             data.telemStruct.inputR = motor_pidObjs[1].input;
             //data.telemStruct.dcL = PDC3;
@@ -244,9 +245,10 @@ static void telemISRHandler() {
                 /////// Get XL data
                 //xlGetXYZ((unsigned char*) xldata);
 
+                // TODO (fgb) : Modify this comment based on sclock mods
                 //Stopwatch was already started in the cmdSpecialTelemetry function
                 data.telemStruct.sampleIndex = sampIdx;
-                data.telemStruct.timeStamp = (long) swatchTic();
+                data.telemStruct.timeStamp = (long) sclockGetTime();
                 data.telemStruct.inputL = motor_pidObjs[0].input;
                 data.telemStruct.inputR = motor_pidObjs[1].input;
                 data.telemStruct.dcL = PDC1;

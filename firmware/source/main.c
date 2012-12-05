@@ -16,7 +16,7 @@
 #include "xl.h"
 #include "gyro.h"
 #include "utils.h"
-#include "stopwatch.h"
+#include "sclock.h"
 #include "motor_ctrl.h"
 #include "led.h"
 #include "dfmem.h"
@@ -57,7 +57,7 @@ int main(void) {
     int old_ipl;
     mSET_AND_SAVE_CPU_IP(old_ipl, 1)
 
-    swatchSetup();
+    sclockSetup();
     radioInit(src_addr_init, src_pan_id_init, RADIO_RXPQ_MAX_SIZE, RADIO_TXPQ_MAX_SIZE);
     radioSetChannel(RADIO_CHANNEL); //Set to my channel
     macSetDestAddr(dst_addr_init);

@@ -3,7 +3,6 @@
 #include "led.h"
 #include "gyro.h"
 #include "xl.h"
-#include "stopwatch.h"
 #include "pid.h"
 #include "dfilter_avg.h"
 #include "adc_pid.h"
