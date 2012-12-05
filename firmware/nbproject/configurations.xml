@@ -21,8 +21,8 @@
         <itemPath>../../imageproc-lib/dfilter_avg.h</itemPath>
         <itemPath>../../imageproc-lib/gyro.h</itemPath>
         <itemPath>../../imageproc-lib/pid_hw.h</itemPath>
-        <itemPath>../../imageproc-lib/stopwatch.h</itemPath>
         <itemPath>../../imageproc-lib/pid.h</itemPath>
+        <itemPath>../../imageproc-lib/sclock.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../lib/adc_pid.h</itemPath>
@@ -59,7 +59,6 @@
                      projectFiles="true">
         <itemPath>../../imageproc-lib/xl.c</itemPath>
         <itemPath>../../imageproc-lib/battery.c</itemPath>
-        <itemPath>../../imageproc-lib/stopwatch.c</itemPath>
         <itemPath>../../imageproc-lib/packet_queue.c</itemPath>
         <itemPath>../../imageproc-lib/queue.c</itemPath>
         <itemPath>../../imageproc-lib/at86rf.c</itemPath>
@@ -75,6 +74,7 @@
         <itemPath>../../imageproc-lib/pid_hw.c</itemPath>
         <itemPath>../../imageproc-lib/pid.c</itemPath>
         <itemPath>../../imageproc-lib/version.c</itemPath>
+        <itemPath>../../imageproc-lib/sclock.c</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../../imageproc-lib/delay.s</itemPath>

@@ -12,7 +12,7 @@
 #include "ports.h"
 #include "gyro.h"
 #include "xl.h"
-#include "stopwatch.h"
+#include "sclock.h"
 #include "led.h"
 #include "motor_ctrl.h"
 #include "payload.h"
@@ -255,8 +255,7 @@ static void cmdGetImuLoop(unsigned char status, unsigned char length, unsigned c
     count = frame[0] + (frame[1] << 8);
 
     tic_char = (unsigned char*) &tic;
-    swatchReset();
-    tic = swatchTic();
+    tic = sclockGetTime();
 
     while (count) {
 
@@ -271,7 +270,7 @@ static void cmdGetImuLoop(unsigned char status, unsigned char length, unsigned c
         count--;
         payDelete(pld);
         delay_ms(4);
-        tic = swatchTic();
+        tic = sclockGetTime();
     }
 
     LED_RED = 0;
@@ -489,7 +488,8 @@ static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsi
     count = *((unsigned long*) (frame));
 
     if (count != 0) {
-        swatchReset();
+        // TODO (fgb) : Needs work if resetting is necessary.
+        //swatchReset();
         telemSetSamplesToSave(count);
     }
 }
