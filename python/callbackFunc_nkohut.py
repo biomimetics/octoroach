@@ -1,6 +1,6 @@
 from lib import command
 from struct import pack,unpack
-import time, sys
+import time
 
 import shared
 
@@ -14,10 +14,11 @@ pktFormat = { \
     command.SET_PID_GAINS:          '10h', \
     command.GET_PID_TELEMETRY:      '', \
     command.SET_CTRLD_TURN_RATE:    '=h', \
+    command.GET_IMU_LOOP_ZGYRO:     '='+2*'Lhhh', \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'fhhffLLh', \
+    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'f'+'hhf'+'f'+'LL'+'h', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -33,16 +34,9 @@ pktFormat = { \
 def xbee_received(packet):
     rf_data = packet.get('rf_data')
     #rssi = ord(packet.get('rssi'))
-    (src_addr, ) = unpack('>H', packet.get('source_addr'))
+    #(src_addr, ) = unpack('H', packet.get('source_addr'))
     #id = packet.get('id')
     #options = ord(packet.get('options'))
-    
-    #Only print pertinent SRC lines
-    #This also allows us to turn off messages on the fly, for telem download
-    for r in shared.ROBOTS:
-        if r.DEST_ADDR_int == src_addr:
-            if r.VERBOSE:
-                print "SRC: 0x%02X | " % src_addr,
    
     status = ord(rf_data[0])
     type = ord(rf_data[1])
@@ -76,36 +70,28 @@ def xbee_received(packet):
             datum = unpack(pattern, data)
             if (datum[0] != -1):
                 dutycycles.append(datum)
-                
         # ECHO
         elif type == command.ECHO:
             print "echo: status = ",status," type=",type," data = ",data
-            
         # SET_PID_GAINS
         elif type == command.SET_PID_GAINS:
+            print "Set PID gains"
             gains = unpack(pattern, data)
-            print "Set motor gains to ", gains
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.motor_gains_set = True
-                    
+            print gains
+            shared.motor_gains_set = True 
         # SET_STEERING_GAINS
         elif type == command.SET_STEERING_GAINS:
+            print "Set Steering gains"
             gains = unpack(pattern, data)
-            print "Set steering gains to ", gains
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.steering_gains_set = True 
-                    
+            print gains
+            shared.steering_gains_set = True
         # SET_CTRLD_TURN_RATE
         elif type == command.SET_CTRLD_TURN_RATE:
-            print "Set turning rate ",
+            print "Set turning rate"
             rate = unpack(pattern, data)[0]
-            print ", deg: ",shared.count2deg * rate,
-            print ", counts: ", rate
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.steering_rate_set = True 
+            print "degrees: ",shared.count2deg * rate
+            print "counts: ", rate
+            shared.steering_rate_set = True
         # GET_IMU_LOOP_ZGYRO
         elif type == command.GET_IMU_LOOP_ZGYRO:
             pp = 2;
@@ -120,72 +106,58 @@ def xbee_received(packet):
             #print "Special Telemetry Data Packet, ",shared.pkts
             datum = unpack(pattern, data)
             datum = list(datum)
-            telem_index = datum.pop(0) #pop removes this from data array
-            #print "telem_index: ",telem_index
+            telem_index = datum.pop(0)
             #print "Special Telemetry Data Packet #",telem_index
             if (datum[0] != -1) and (telem_index) >= 0:
-                for r in shared.ROBOTS:
-                    if r.DEST_ADDR_int == src_addr:
-                        r.imudata[telem_index] = datum
-                
+                shared.imudata[telem_index] = datum
+                shared.bytesIn = shared.bytesIn + (2*4 + 15*2)
         # ERASE_SECTORS
         elif type == command.ERASE_SECTORS:
             datum = unpack(pattern, data)
-            print "Erased flash for", datum[0], " samples."
-            if datum[0] != 0:
-                for r in shared.ROBOTS:
-                    if r.DEST_ADDR_int == src_addr:
-                        r.flash_erased = datum[0] 
-            
+            #if datum[0] == 0:
+            #    shared.flash_erased = True
+            shared.flash_erased = datum[0]
         # SLEEP
         elif type == command.SLEEP:
             datum = unpack(pattern, data)
             print "Sleep reply: ",datum[0]
             if datum[0] == 0:
                 shared.awake = True;
-                
         # SET_HALL_GAINS
         elif type == command.SET_HALL_GAINS:
             print "Set Hall Effect PID gains"
             gains = unpack(pattern, data)
             print gains
             shared.motor_gains_set = True 
-            
         # ZERO_POS
         elif type == command.ZERO_POS:
             print 'Hall zeros established; Previous motor positions:',
             motor = unpack(pattern,data)
             print motor
-            
         # SET_VEL_PROFILE
         elif (type == command.SET_VEL_PROFILE):
             print "Set Velocity Profile readback:"
             temp = unpack(pattern, data)
             print temp
-            
         # WHO_AM_I
         elif (type == command.WHO_AM_I):
-            print "query : ",data
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.robot_queried = True 
-            
+            #print "whoami:",status, hex(type), data
+            print "whoami:",data
+            shared.robotQueried = True
         # SET_TAIL_GAINS
         elif type == command.SET_TAIL_GAINS:
+            print "Set Tail gains"
             gains = unpack(pattern, data)
-            print "Set TAIL gains to ", gains
-            for r in shared.ROBOTS:
-                if r.DEST_ADDR_int == src_addr:
-                    r.tail_gains_set = True 
-            
+            print gains
+            shared.tail_gains_set = True
         else:    
             pass
     
     except Exception as args:
         print "\nGeneral exception from callbackfunc:",args
         print "Attemping to exit cleanly..."
-        shared.xb.halt()
-        sharedser.close()
+        self.xb.halt()
+        self.ser.close()
         sys.exit()
 
 

@@ -22,6 +22,9 @@ typedef struct
 	unsigned long duration;
 	enum moveSegT type;
 	int params[3];
+        unsigned int steeringType;
+        int steeringRate;
+
 } moveCmdStruct;
 
 typedef moveCmdStruct* moveCmdT;

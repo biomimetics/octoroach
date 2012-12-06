@@ -42,7 +42,7 @@
 
 #include "sensors.h"
 #include "timer.h"
-#include "stopwatch.h"
+#include "sclock.h"
 #include "utils.h"
 #include "flashmem.h"
 #include "xl.h"
@@ -263,7 +263,7 @@ static void senSavePose(void) {
     count++;
 
     tic_char = (unsigned char*)&tic;
-    tic = swatchTic();
+    tic = sclockGetTime();
 
     // save imu data to the memory.
     dfmemWriteBuffer(tic_char, 4, MemLoc.index.byte, buf_index); 
@@ -298,7 +298,7 @@ static void senSaveImuData(void) {
     count++;
 
     tic_char = (unsigned char*)&tic;
-    tic = swatchTic();
+    tic = sclockGetTime();
     xl_data = xlReadXYZ();
     gyro_data = gyroReadXYZ();
 

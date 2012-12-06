@@ -22,7 +22,7 @@
 #define CMD_SET_PID_GAINS           0x82
 #define CMD_GET_PID_TELEMETRY       0x83
 #define CMD_SET_CTRLD_TURN_RATE     0x84
-#define CMD_GET_IMU_LOOP_ZGYRO      0x85
+#define CMD_STREAM_TELEMETRY        0x85
 #define CMD_SET_MOVE_QUEUE	    0x86
 #define CMD_SET_STEERING_GAINS      0x87
 #define CMD_SOFTWARE_RESET          0x88
@@ -36,6 +36,8 @@
 #define CMD_ZERO_POS                0x90
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
+#define CMD_SET_TAIL_GAINS          0x93
+#define CMD_SET_THRUST_HALL         0x94
 
 //Argument lengths
 //lenghts are in bytes
@@ -89,11 +91,13 @@ typedef struct{
 
 //cmdSetCtrldTurnRate
 typedef struct{
-	int rate;
+	int steerInput;
 } _args_cmdSetCtrldTurnRate;
 
-//cmdGetImuLoopZGyro
-//obsolete
+//cmdStreamTelemetry
+typedef struct{
+    unsigned long count;
+} _args_cmdStreamTelemetry;
 
 //cmdSetMoveQueue
 //NOTE: This is not for the entire packet, just for one moveQ items,
@@ -152,11 +156,24 @@ typedef struct {
 //NOTE: This is not for the entire packet, just for one tailQ item,
 // the cmd handler will stride across the packet, unpacking these
 typedef struct {
-    float torque;
+    float angle;
     unsigned long duration;
     enum tailSegT type;
     int params[3];
 } _args_cmdSetTailQueue;
+
+//cmdSetTailGains
+typedef struct{
+	int Kp, Ki, Kd, Kaw, Kff;
+} _args_cmdSetTailGains;
+
+//cmdSetThrustHall
+typedef struct{
+	int chan1;
+        unsigned int runtime1;
+        int chan2;
+        unsigned int runtime2;
+} _args_cmdSetThrustHall;
 
 #endif // __CMD_H
 

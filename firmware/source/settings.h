@@ -12,18 +12,26 @@
 /////// Radio settings ///////
 // Motile address ; all MRI robots were shipped with this configuration
 #define RADIO_CHANNEL		0x0e
+//#warning "You have changed the radio channel from 0x0E to something else"
 #define RADIO_SRC_ADDR 		0x3002
 #define RADIO_SRC_PAN_ID  		0x3000
 //Hard-coded destination address, must match basestation or XBee addr
 #define RADIO_DST_ADDR		0x3001
 
+
+
 // Radio queue sizes
+//#define RADIO_RXPQ_MAX_SIZE 	32
+//#define RADIO_TXPQ_MAX_SIZE	32
+
+
 #define RADIO_RXPQ_MAX_SIZE 	16
 #define RADIO_TXPQ_MAX_SIZE	16
 
 /////// System Service settings ///////
 #define SYS_SERVICE_T1 // For legCtrl, hall
 #define SYS_SERVICE_T2 // For hall, 400 Hz tick counter
+#define SYS_SERVICE_T4 // For IMU, 300Hz
 #define SYS_SERVICE_T5 // For steering, telemetry
 
 /////// Configuration options ///////

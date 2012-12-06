@@ -4,18 +4,19 @@
 #include "timer.h"
 #include "gyro.h"
 #include "steering.h"
-#include "stopwatch.h"
 #include "dfmem.h"
 #include "telem.h"
 #include "move_queue.h"
 #include "xl.h"
-#include "dfilter_avg.h"
 #include "pid_hw.h"
 #include "leg_ctrl.h"
 #include "sys_service.h"
+#include "imu.h"
 
 //Inline functions
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
+
+//float lastGyroValue = 0.0;
 
 //Steering controller variables
 pidObj steeringPID;
@@ -23,16 +24,14 @@ pidObj steeringPID;
 fractional steering_abcCoeffs[3] __attribute__((section(".xbss, bss, xmemory")));
 fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory")));
 
-//Averaging filter structures for gyroscope data
-//Initialzied in setup.
-filterAvgInt_t gyroZavg; //This is exported for use in the telemetry module
-#define GYRO_AVG_SAMPLES 	32
-
-#define GYRO_DRIFT_THRESH 5
+//#define GYRO_AVG_SAMPLES 	32
 
 static unsigned int steeringMode;
 
+float steeringInitialYaw;
+
 extern moveCmdT currentMove, idleMove;
+extern char inMotion;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5();
@@ -49,7 +48,7 @@ static void steeringHandleISR();
 //void __attribute__((interrupt, no_auto_psv)) _T5Interrupt(void) {
 static void steeringServiceRoutine(void){
     //This intermediate function is used in case we want to tie other
-    //sub-taks to the steering service routine.
+    //sub-tasks to the steering service routine.
     //TODO: Is this neccesary?
 
     // Steering update ISR handler
@@ -66,7 +65,7 @@ static void SetupTimer5(){
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON); 
 }
 
 
@@ -87,23 +86,22 @@ void steeringSetup(void) {
     steeringPID.maxVal = STEERING_SAT;
     steeringPID.minVal = -STEERING_SAT;
 
-    steeringSetAngRate(0);
+    steeringSetInput(0);
 
     SetupTimer5(); //T5 ISR will update the steering controller
     int retval;
     retval = sysServiceInstallT5(steeringServiceRoutine);
 
     //Averaging filter setup:
-    filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
+    //filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 
-    steeringPID.onoff = PID_OFF; //OFF by default
+    steeringPID.onoff = PID_ON; //OFF by default
 
     steeringMode = STEERMODE_DECREASE;
 }
 
-void steeringSetAngRate(int angRate) {
-    steeringPID.input = angRate;
-    steeringPID.onoff = PID_ON;
+void steeringSetInput(int steerInput) {
+    steeringPID.input = steerInput;
 }
 
 void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
@@ -112,22 +110,32 @@ void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {
 
 void steeringSetMode(unsigned int sm) {
     steeringMode = sm;
+    //TODO: this could probably be put in a better place
+    if(steeringMode == STEERMODE_OFF){
+        steeringPID.onoff = PID_OFF;
+    }
+    else{ 
+        steeringPID.onoff = PID_ON;
+    }
+
+    //Only for RELATIVE turns
+    //if ((steeringMode == STEERMODE_YAW_DEC) || (steeringMode == STEERMODE_YAW_DEC))) {
+    //    steeringInitialYaw = imuGetBodyZPositionDeg();
+    //}
 }
 
 static void steeringHandleISR() {
 
-    //int gyroAvg[3];
-    int wz;
-    int gyroData[3];
-    int gyroOffsets[3];
+    int steeringFeedback;  //Could be yaw OR yaw rate
+    float relativeYaw = 0.0;
 
-    gyroGetXYZ((unsigned char*) gyroData);
-    gyroGetOffsets(gyroOffsets);
-
-    filterAvgUpdate(&gyroZavg, gyroData[2] - gyroOffsets[2]);
-
-    wz = filterAvgCalc(&gyroZavg);
-
+    if((steeringMode == STEERMODE_YAW_DEC) || (steeringMode == STEERMODE_YAW_SPLIT)){
+        relativeYaw = imuGetBodyZPositionDeg() - steeringInitialYaw;
+        steeringFeedback = (int)(14.375*relativeYaw);
+    }
+    else{
+        steeringFeedback = imuGetGyroZValueAvg();
+    }
     //Threshold filter on gyro to account for minor drift
     //if (ABS(wz) < GYRO_DRIFT_THRESH) {
     //    wz = 0;
@@ -135,16 +143,16 @@ static void steeringHandleISR() {
 
     //Update the setpoints
     //if((currentMove->inputL != 0) && (currentMove->inputR != 0)){
-    if (currentMove != idleMove) {
+    if ((currentMove != idleMove) || (inMotion == 1) ) {
         //Only update steering controller if we are in motion
 #ifdef PID_SOFTWARE
-        pidUpdate(&steeringPID, gyroAvgZ);
+        pidUpdate(&steeringPID, steeringFeedback);
 #elif defined PID_HARDWARE
         int temp = 0;
         temp = steeringPID.input; //Save unscaled input val
         steeringPID.input *= STEERING_PID_ERR_SCALER; //Scale input
         pidUpdate(&steeringPID,
-                 STEERING_PID_ERR_SCALER * wz); //Update with scaled feedback
+                 STEERING_PID_ERR_SCALER * steeringFeedback); //Update with scaled feedback
        steeringPID.input = temp;  //Reset unscaled input
 #endif   //PID_SOFTWWARE vs PID_HARDWARE
     }
@@ -163,7 +171,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
     if (steeringPID.onoff == PID_ON) {
         int delta = steeringPID.output;
         
-        if (steeringMode == STEERMODE_DECREASE) {
+        if ((steeringMode == STEERMODE_DECREASE) || (steeringMode == STEERMODE_YAW_DEC)) {
             // Depending on which way the bot is turning, choose which side to add correction to
             if (steeringPID.output <= 0) {
                 //right = right + steeringPID.output;
@@ -195,7 +203,7 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
                     left = 0;
                 } //clip right channel to zero
             }
-        } else if (steeringMode == STEERMODE_SPLIT) {
+        } else if ((steeringMode == STEERMODE_SPLIT) || (steeringMode == STEERMODE_YAW_SPLIT)) {
             right = right + delta / 2;
             left = left - delta / 2;
             if (right < 0) {
@@ -206,15 +214,14 @@ void steeringApplyCorrection(int* inputs, int* outputs) {
                 right = right - left; //increase right, since left < 0
                 left = 0;
             } //clip left channel to zero
+        } else if (steeringMode == STEERMODE_OFF)  {
+            //Do nothing, pass left and right unchanged
         }
-
     }//endif steeringPID.onoff
 
     outputs[0] = left;
     outputs[1] = right;
 
-    //pidObjs[0].input = left;
-    //pidObjs[1].input = right;
 }
 
 void steeringOff() {

@@ -4,7 +4,6 @@
 
 #include "p33Fxxxx.h"
 #include "led.h"
-#include "stopwatch.h"
 #include "pid.h"
 #include "hall.h"
 #include "adc_pid.h"
@@ -139,7 +138,6 @@ static void SetupInputCapture() {
 // Input Capture 8: right legs
 // handler for right leg
 void __attribute__((__interrupt__, no_auto_psv)) _IC8Interrupt(void) {
-    //  toc = swatchToc(); // elapsed time since last rising edge
     // Insert ISR code here
     motor_count[0]++; // increment count for right side - neglect overflow/wrap around
     //right_time = (long) IC8BUF + ((long) (t2_ticks) << 16);
@@ -149,7 +147,6 @@ void __attribute__((__interrupt__, no_auto_psv)) _IC8Interrupt(void) {
 
     LED_RED = ~LED_RED;
     IFS1bits.IC8IF = 0; // Clear CN interrupt
-    //  tic = swatchTic();
 }
 
 //handler for left leg
@@ -205,7 +202,7 @@ void hallSetup() {
     hallInitPIDVelProfile();
 
     //System setup
-    SetupTimer1(); // potentially conflicts with legCtrl!
+    SetupTimer1();
     SetupTimer2(); // used for leg hall effect sensors
     SetupInputCapture(); // setup input capture for hall effect sensors
     int retval;

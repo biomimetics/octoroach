@@ -4,14 +4,15 @@
 #include "pid.h"
 
 void steeringSetup(void);
-void steeringSetAngRate(int angRate);
-void steeringSetGains(int Kp,int Ki,int Kd,int Kawm, int ff);
+void steeringSetInput(int angRate);
+void steeringSetGains(int Kp, int Ki, int Kd, int Kawm, int ff);
 void steeringSetMode(unsigned int mode);
 void steeringApplyCorrection(int* inputs, int* outputs);
 void steeringOff();
 void steeringOn();
 
-#define STEERING_SAT       1024
+//#define STEERING_SAT       1024
+#define STEERING_SAT       4000 //for yaw-control steering
 
 #ifdef PID_SOFTWARE
 #define STEERING_KP  0
@@ -30,10 +31,13 @@ void steeringOn();
 
 #endif
 
-enum STEERING_MODES { 
-	STEERMODE_INCREASE = 1,
-	STEERMODE_DECREASE = 0,
-	STEERMODE_SPLIT	   = 2
+enum steerModeT{
+    STEERMODE_OFF = 0,
+    STEERMODE_INCREASE = 1,
+    STEERMODE_DECREASE = 2,
+    STEERMODE_SPLIT = 3,
+    STEERMODE_YAW_DEC = 4,
+    STEERMODE_YAW_SPLIT = 5
 };
 
 #endif //__STEERING_H
