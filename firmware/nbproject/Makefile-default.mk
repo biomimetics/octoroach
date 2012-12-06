@@ -541,8 +541,8 @@ endif
 
 .pre:
 	@echo "--------------------------------------"
-	@echo "User defined pre-build step: [python ../../imageproc-lib/version.py "APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD"]"
-	@python ../../imageproc-lib/version.py "APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD"
+	@echo "User defined pre-build step: [python ../../imageproc-lib/version.py 'APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD']"
+	@python ../../imageproc-lib/version.py 'APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD'
 	@echo "--------------------------------------"
 
 # Subprojects
