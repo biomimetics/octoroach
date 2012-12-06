@@ -50,5 +50,6 @@ void telemSaveData(telemU *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 void telemSetSkip(unsigned int skipnum);
+void telemSetStartTime(void);
 
 #endif  // __TELEM_H

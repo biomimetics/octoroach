@@ -202,11 +202,11 @@ void hallSetup() {
     hallInitPIDVelProfile();
 
     //System setup
-   // SetupTimer1(); // potentially conflicts with legCtrl! NK 8/14/12
-    //SetupTimer2(); // used for leg hall effect sensors
+    SetupTimer1();
+    SetupTimer2(); // used for leg hall effect sensors
     SetupInputCapture(); // setup input capture for hall effect sensors
-    //int retval;
-    //retval = sysServiceInstallT1(hallServiceRoutine); NK 8/14/12
+    int retval;
+    retval = sysServiceInstallT1(hallServiceRoutine);
 
     // returns pointer to queue with 8 move entries
     hallMoveq = mqInit(8);

@@ -37,6 +37,7 @@
 #define CMD_SET_HALL_GAINS          0x91
 #define CMD_SET_TAIL_QUEUE          0x92
 #define CMD_SET_TAIL_GAINS          0x93
+#define CMD_SET_THRUST_HALL         0x94
 
 //Argument lengths
 //lenghts are in bytes
@@ -165,6 +166,14 @@ typedef struct {
 typedef struct{
 	int Kp, Ki, Kd, Kaw, Kff;
 } _args_cmdSetTailGains;
+
+//cmdSetThrustHall
+typedef struct{
+	int chan1;
+        unsigned int runtime1;
+        int chan2;
+        unsigned int runtime2;
+} _args_cmdSetThrustHall;
 
 #endif // __CMD_H
 

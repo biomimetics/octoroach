@@ -94,12 +94,16 @@ def main():
     #moveq = [moves, \
     #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
-    #Ramp example
-    numMoves = 2
+    #YAW control: Straight then -90 degree turn 
+    #numMoves = 2
+    #moveq1 = [numMoves, \
+    #    150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+    #    150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0))]
+    
+    #No movements, just for static telemetry capture
+    numMoves = 1
     moveq1 = [numMoves, \
-        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0))]
-
+        0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
         
     #Timing settings
     R1.leadinTime = 500;

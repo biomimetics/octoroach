@@ -28,18 +28,18 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 15
+#define READBACK_DELAY_TIME_MS 8
 #endif
 
 
-//TODO: Remove externs by adding getters to other modules
+// TODO (apullin) : Remove externs by adding getters to other modules
 extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
 extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
 extern pidObj tailPID;
 
 //global flag from radio module to know if last packet was ACK'd
-//TODO: fix this, add a getter for the flag to radio code
+// TODO (apullin) : fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
 
 
@@ -61,6 +61,9 @@ static unsigned long samplesToStream = 0;
 static char telemStreamingFlag = TELEM_STREAM_OFF;
 static unsigned int streamSkipCounter = 0;
 static unsigned int streamSkipNum = 15;
+
+//Offset for time value when recording samples
+static unsigned long telemStartTime = 0;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
@@ -133,7 +136,8 @@ void telemReadbackSamples(unsigned long numSamples) {
         do {
             telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
             //trx_status = phyReadBit(SR_TRAC_STATUS);
-            delaytime_ms += 2;
+            //Linear backoff
+            delaytime_ms += 1;
         } while (g_last_ackd == 0);
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
@@ -190,15 +194,13 @@ static void telemISRHandler() {
     if (skipcounter == 0) {
         if (samplesToSave > 0) {
             /////// Get XL data
-            
+
             data.telemStruct.sampleIndex = sampIdx;
-            // TODO (fgb) : Modify this comment based on sclock mods
-            //Stopwatch was already started in the cmdSpecialTelemetry function
-            data.telemStruct.timeStamp = (unsigned long) sclockGetTime();
+            data.telemStruct.timeStamp = sclockGetTime() - telemStartTime;
             data.telemStruct.inputL = motor_pidObjs[0].input;
             data.telemStruct.inputR = motor_pidObjs[1].input;
-            //data.telemStruct.dcL = PDC3;
-            //data.telemStruct.dcR = PDC4;
+            //data.telemStruct.dcL = PDC3; //For IP2.4 modified to use Hbridge
+            //data.telemStruct.dcR = PDC4; //For IP2.4 modified to use Hbridge
             data.telemStruct.dcL = PDC1;
             data.telemStruct.dcR = PDC2;
             data.telemStruct.gyroX = imuGetGyroXValue();
@@ -206,6 +208,8 @@ static void telemISRHandler() {
             data.telemStruct.gyroZ = imuGetGyroZValue();
             data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
 
+            //XL temprorarily disabled to prevent collision with AM encoder
+            // TODO (apullin, fgb, nkohut) : bring XL access into imu module
             /*data.telemStruct.accelX = xldata[0];
             data.telemStruct.accelY = xldata[1];
             data.telemStruct.accelZ = xldata[2]; */
@@ -245,10 +249,8 @@ static void telemISRHandler() {
                 /////// Get XL data
                 //xlGetXYZ((unsigned char*) xldata);
 
-                // TODO (fgb) : Modify this comment based on sclock mods
-                //Stopwatch was already started in the cmdSpecialTelemetry function
                 data.telemStruct.sampleIndex = sampIdx;
-                data.telemStruct.timeStamp = (long) sclockGetTime();
+                data.telemStruct.timeStamp = sclockGetTime() - telemStartTime;
                 data.telemStruct.inputL = motor_pidObjs[0].input;
                 data.telemStruct.inputR = motor_pidObjs[1].input;
                 data.telemStruct.dcL = PDC1;
@@ -257,6 +259,8 @@ static void telemISRHandler() {
                 data.telemStruct.gyroY = imuGetGyroYValue();
                 data.telemStruct.gyroZ = imuGetGyroZValue();
                 data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
+                //XL temprorarily disabled to prevent collision with AM encoder
+                // TODO (apullin, fgb, nkohut) : bring XL access into imu module
                 data.telemStruct.accelX = 0; //xldata[0];
                 data.telemStruct.accelY = 0; //xldata[1];
                 data.telemStruct.accelZ = 0; //xldata[2];
@@ -288,4 +292,13 @@ static void telemISRHandler() {
 
 void telemSetSkip(unsigned int skipnum) {
     telemSkipNum = skipnum;
+}
+
+//This function is a setter for the telemStartTime variable,
+//which is used to offset the recorded times for telemetry, such that
+//they start at approx. 0, instead of reflecting the total number of
+//sclock ticks.
+
+void telemSetStartTime(void) {
+    telemStartTime = sclockGetTime();
 }

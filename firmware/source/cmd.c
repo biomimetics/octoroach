@@ -91,6 +91,7 @@ static void cmdZeroPos(unsigned char status, unsigned char length, unsigned char
 static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned char *frame);
+static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigned char *frame);
 
 /*-----------------------------------------------------------------------------
  *          Public functions
@@ -135,6 +136,7 @@ void cmdSetup(void) {
     cmd_func[CMD_SET_HALL_GAINS] = &cmdSetHallGains;
     cmd_func[CMD_SET_TAIL_QUEUE] = &cmdSetTailQueue;
     cmd_func[CMD_SET_TAIL_GAINS] = &cmdSetTailGains;
+    cmd_func[CMD_SET_THRUST_HALL] = &cmdSetThrustHall;
 
     //Set up command length vector
     /*cmd_len[CMD_SET_THRUST_OPENLOOP] = LEN_CMD_SET_THRUST_OPENLOOP;
@@ -350,8 +352,6 @@ static void cmdNop(unsigned char status, unsigned char length, unsigned char *fr
  *         User function
 -----------------------------------------------------------------------------*/
 static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, unsigned char *frame) {
-    //Unpack unsigned char* frame into structured values
-    //_args_cmdSetThrustOpenLoop* argsPtr = (_args_cmdSetThrustOpenLoop*) (frame);
     PKT_UNPACK(_args_cmdSetThrustOpenLoop, argsPtr, frame);
 
     //set motor duty cycles
@@ -362,14 +362,6 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
 }
 
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
-#ifdef HALL_SENSORS
-    PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
-
-    hallPIDSetInput(0 , argsPtr->chan1, argsPtr->runtime1);
-    hallPIDOn(0);
-    hallPIDSetInput(1 , argsPtr->chan1, argsPtr->runtime2);
-    hallPIDOn(1);
-#else
     PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
 
     legCtrlSetInput(LEG_CTRL_LEFT, argsPtr->chan1);
@@ -377,22 +369,9 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 
     legCtrlSetInput(LEG_CTRL_RIGHT, argsPtr->chan2);
     legCtrlOnOff(LEG_CTRL_RIGHT, PID_ON); //Motor PID #2 -> ON
-
-    //This is now obsolete
-    //unsigned char temp[2];
-    //*(unsigned int*)temp = 1000;
-    //if (argsPtr->telem_samples > 0) {
-    //    cmdGetPIDTelemetry(0, 2, (unsigned char*) (&telem_samples));
-    //}
-#endif
 }
 
 static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned char *frame) {
-    //int Kp, Ki, Kd, Kaw, ff;
-    //int idx = 0;
-
-    //Unpack unsigned char* frame into structured values
-    //_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*) (frame);
     PKT_UNPACK(_args_cmdSetPIDGains, argsPtr, frame);
 
     legCtrlSetGains(0, argsPtr->Kp1, argsPtr->Ki1, argsPtr->Kd1, argsPtr->Kaw1, argsPtr->Kff1);
@@ -480,30 +459,23 @@ static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigne
 }
 
 static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
-    //unsigned int count;
-    unsigned long count; //count changed to long to accomodate 64Mbit flash
-    //count = (unsigned long)frame[0] + ((unsigned long)frame[1] << 8)
-    //		+ ((unsigned long)frame[2] << 16) + ((unsigned long)frame[3] << 24);
+    PKT_UNPACK(_args_cmdSpecialTelemetry, argsPtr, frame);
 
-    count = *((unsigned long*) (frame));
-
-    if (count != 0) {
-        // TODO (fgb) : Needs work if resetting is necessary.
-        //swatchReset();
-        telemSetSamplesToSave(count);
+    if (argsPtr->count != 0) {
+        telemSetStartTime(); // Start telemetry samples from approx 0 time
+        telemSetSamplesToSave(argsPtr->count);
     }
 }
 
 static void cmdEraseSector(unsigned char status, unsigned char length, unsigned char *frame) {
-    //unsigned int numSamples = frame[0] + (frame[1] << 8);
-    unsigned long numSamples = *((unsigned long*) (frame));
+    PKT_UNPACK(_args_cmdEraseSector, argsPtr, frame);
 
-    telemErase(numSamples);
+    telemErase(argsPtr->samples);
 
     //Send a confirmation packet
     Payload pld;
     pld = payCreateEmpty(4);
-    paySetData(pld, 4, (unsigned char*) (&numSamples));
+    paySetData(pld, 4, (unsigned char*) (&(argsPtr->samples)));
     paySetStatus(pld, status);
     paySetType(pld, CMD_ERASE_SECTORS);
     radioSendPayload((WordVal) macGetDestAddr(), pld);
@@ -511,9 +483,9 @@ static void cmdEraseSector(unsigned char status, unsigned char length, unsigned 
 
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame) {
     LED_YELLOW = 1;
-    //unsigned int count = frame[0] + (frame[1] << 8);
-    unsigned long count = *((unsigned long*) (frame));
-    telemReadbackSamples(count);
+    PKT_UNPACK(_args_cmdFlashReadback, argsPtr, frame);
+
+    telemReadbackSamples(argsPtr->samples);
 }
 
 static void cmdSleep(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -638,3 +610,12 @@ static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned
     radioSendPayload(macGetDestAddr(), pld);
 }
 
+
+static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigned char *frame) {
+    PKT_UNPACK(_args_cmdSetThrustHall, argsPtr, frame);
+
+    hallPIDSetInput(0 , argsPtr->chan1, argsPtr->runtime1);
+    hallPIDOn(0);
+    hallPIDSetInput(1 , argsPtr->chan1, argsPtr->runtime2);
+    hallPIDOn(1);
+}
