@@ -618,3 +618,4 @@ static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigne
     hallPIDOn(0);
     hallPIDSetInput(1 , argsPtr->chan1, argsPtr->runtime2);
     hallPIDOn(1);
+}
