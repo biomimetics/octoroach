@@ -194,7 +194,7 @@ static void telemISRHandler() {
             data.telemStruct.sampleIndex = sampIdx;
             // TODO (fgb) : Modify this comment based on sclock mods
             //Stopwatch was already started in the cmdSpecialTelemetry function
-            data.telemStruct.timeStamp = (long) sclockGetTime();
+            data.telemStruct.timeStamp = (unsigned long) sclockGetTime();
             data.telemStruct.inputL = motor_pidObjs[0].input;
             data.telemStruct.inputR = motor_pidObjs[1].input;
             //data.telemStruct.dcL = PDC3;

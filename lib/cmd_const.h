@@ -44,7 +44,6 @@
 
 #define CMD_ERASE_MEM_SECTOR        0x3A
 
-// TODO (fgb) : Modify this comment based on sclock mods
 #define CMD_RESET_STOPWATCH         0x3B
 
 #define CMD_BASE_ECHO               0x3F        // send back the received packet

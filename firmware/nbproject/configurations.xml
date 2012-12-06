@@ -131,7 +131,7 @@
       </compileType>
       <makeCustomizationType>
         <makeCustomizationPreStepEnabled>true</makeCustomizationPreStepEnabled>
-        <makeCustomizationPreStep>python ..\..\imageproc-lib\version.py APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD </makeCustomizationPreStep>
+        <makeCustomizationPreStep>python ..\..\imageproc-lib\version.py "APULLIN-OCTOROACH-MASTER;PID-HARD;STEER-HARD"</makeCustomizationPreStep>
         <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
         <makeCustomizationPostStep></makeCustomizationPostStep>
         <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>

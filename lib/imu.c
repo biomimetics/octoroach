@@ -15,7 +15,7 @@
 #define TIMER_PERIOD        1/TIMER_FREQUENCY   //This is used for numerical integration
 
 //Setup for Gyro Z averaging filter
-#define GYRO_AVG_SAMPLES 	32
+#define GYRO_AVG_SAMPLES 	8
 
 
 //Filter stuctures for gyro variables

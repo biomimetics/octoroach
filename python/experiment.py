@@ -97,8 +97,8 @@ def main():
     #Ramp example
     numMoves = 2
     moveq1 = [numMoves, \
-        150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        150, 150, 1000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0))]
+        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0))]
 
         
     #Timing settings
