@@ -1,10 +1,9 @@
-
 #Base station
-BS_COMPORT = 'COM3'
-BS_BAUDRATE = 230400
+#BS_COMPORT = 'COM3'
+#BS_BAUDRATE = 230400
 #XBee
-#BS_COMPORT = 'COM7'
-#BS_BAUDRATE = 57600
+BS_COMPORT = 'COM4'
+BS_BAUDRATE = 57600
 
 deg2count = 14.375
 count2deg = 1/deg2count

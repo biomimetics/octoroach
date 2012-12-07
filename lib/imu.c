@@ -153,4 +153,6 @@ float imuGetBodyZPositionDeg() {
     return lastBodyZPositionDeg;
 }
 
-
+void imuResetGyroZAvg(){
+    filterZero(&gyroZavg);
+}
