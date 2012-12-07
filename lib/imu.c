@@ -19,7 +19,7 @@
 
 
 //Filter stuctures for gyro variables
-static filterAvgInt_t gyroZavg;
+static dfilterAvgInt_t gyroZavg;
 
 
 //TODO: change these to arrays
@@ -84,9 +84,9 @@ static void imuISRHandler(){
         lastGyroYValueDeg = (float) (lastGyroYValue*LSB2DEG);
         lastGyroZValueDeg = (float) (lastGyroZValue*LSB2DEG); 
 
-        filterAvgUpdate(&gyroZavg, gyroData[2]);
+        dfilterAvgUpdate(&gyroZavg, gyroData[2]);
 
-        lastGyroZValueAvg = filterAvgCalc(&gyroZavg);
+        lastGyroZValueAvg = dfilterAvgCalc(&gyroZavg);
 
         lastGyroZValueAvgDeg = (float)lastGyroZValueAvg*LSB2DEG;
 
@@ -111,7 +111,7 @@ void imuSetup(){
     int retval;
     retval = sysServiceInstallT4(imuServiceRoutine);
     SetupTimer4();
-    filterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
+    dfilterAvgCreate(&gyroZavg, GYRO_AVG_SAMPLES);
 }
 
 int imuGetGyroXValue() {
