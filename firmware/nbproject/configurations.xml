@@ -787,6 +787,9 @@
         <property key="UART 2" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="false"/>
+        <property key="memories.configurationmemory" value="false"/>
         <property key="memories.eeprom" value="true"/>
         <property key="memories.flashdata" value="true"/>
         <property key="memories.id" value="true"/>

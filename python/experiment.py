@@ -88,18 +88,13 @@ def main():
     # MOVE_SEG_LOOP_DECL: Turns on move queue looping. value1,value2, and params have no effect.
     # MOVE_SEG_LOOP_CLEAR: Turns off move queue looping.value1,value2, and params have no effect.
     # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
-
-    #Constant example
-    #moves = 1
-    #moveq = [moves, \
-    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #YAW control: Straight then -90 degree turn 
     numMoves = 3
     moveq1 = [numMoves, \
-        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        150, 150, 10000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0)),
-        150, 150, 10000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0))]
+        0, 0, 500,   MOVE_SEG_RAMP, 400,  400,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+        200, 200, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+        200, 200, 500,   MOVE_SEG_RAMP, -400,  -400,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0))]
     
     #No movements, just for static telemetry capture
     #numMoves = 1

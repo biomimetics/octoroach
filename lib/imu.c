@@ -154,5 +154,5 @@ float imuGetBodyZPositionDeg() {
 }
 
 void imuResetGyroZAvg(){
-    filterZero(&gyroZavg);
+    dfilterZero(&gyroZavg);
 }
