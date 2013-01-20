@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 //leg_ctrl.c
 
 #include "pid.h"

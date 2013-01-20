@@ -1,3 +1,5 @@
+// Authors: nkohut
+
 #include "utils.h"
 #include "payload.h"
 #include "led.h"
@@ -154,5 +156,5 @@ float imuGetBodyZPositionDeg() {
 }
 
 void imuResetGyroZAvg(){
-    filterZero(&gyroZavg);
+    dfilterZero(&gyroZavg);
 }

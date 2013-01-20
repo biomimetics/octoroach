@@ -1,3 +1,10 @@
+"""
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
+
+"""
+
 import msvcrt, sys, time
 from lib import command 
 import shared
@@ -12,7 +19,7 @@ RESET_ROBOT = True   #Note: This MUST be False if you're using an XBee
 
 def menu():
     print "-------------------------------------"
-    print "Keyboard control with Mixing,  May 6, 2011"
+    print "Keyboard control with Mixing"
     print " up: increase throt     q:quit   left/right: steering"
     print " down: decrease throt   s: reset to straight  space: all stop"
 
@@ -21,6 +28,7 @@ def main():
     shared.xb = xb
     
     R1 = Robot('\x20\x52', xb)
+    #R1 = Robot('\x20\x27', xb)
     shared.ROBOTS = [R1]
 
     if RESET_ROBOT:

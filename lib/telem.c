@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #include "utils.h"
 #include "dfmem.h"
 #include "telem.h"
@@ -28,7 +30,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 8
+#define READBACK_DELAY_TIME_MS 12
 #endif
 
 

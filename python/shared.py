@@ -1,3 +1,7 @@
+"""
+Contents of this file are copyright Andrew Pullin, 2013
+"""
+
 #Base station
 #BS_COMPORT = 'COM3'
 #BS_BAUDRATE = 230400

@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __TELEM_H
 #define __TELEM_H
 

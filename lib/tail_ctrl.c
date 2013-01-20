@@ -1,4 +1,4 @@
-//tail_ctrl.c
+// Contents of this file are copyright Andrew Pullin, 2013
 
 #include "tail_ctrl.h"
 #include "pid.h"

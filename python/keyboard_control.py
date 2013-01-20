@@ -1,3 +1,10 @@
+"""
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
+
+"""
+
 from lib import command
 import time,sys
 import serial
@@ -66,7 +73,7 @@ def main():
 
 def menu():
     print "-------------------------------------"
-    print "Keyboard control Sep. 23, 2011"
+    print "Keyboard control"
     print " m:menu    q:quit   w:left+    s:left-   x:left off"
     print "e:right+   d:right-  c: right off  space: all off"
 

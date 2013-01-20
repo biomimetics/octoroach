@@ -1,3 +1,10 @@
+"""
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
+
+"""
+
 from lib import command
 import time,sys
 import serial
@@ -11,7 +18,7 @@ SAVE_DATA   = False
 RESET_ROBOT = True
 EXIT_WAIT   = False
 
-MAXTHROT = 200
+MAXTHROT = 100
 
 BUTTON_L1 = 4
 BUTTON_R1 = 5
@@ -22,6 +29,7 @@ def main():
     shared.xb = xb
     
     R1 = Robot('\x20\x52', xb)
+    #R1 = Robot('\x20\x27', xb)
     shared.ROBOTS = [R1]
 
     if RESET_ROBOT:
@@ -29,7 +37,9 @@ def main():
         R1.reset()
         time.sleep(0.5)
 
-    motorgains = [30000,100,0,0,10,    30000,100,0,0,10]
+    motorgains = [15000,1,0,0,0,    15000,1,0,0,0]
+    #motorgains = [25000,50,0,0,25,    25000,50,0,0,25]
+
     R1.setMotorGains(motorgains, retries = 8)
     
     verifyAllMotorGainsSet()  #exits on failure
