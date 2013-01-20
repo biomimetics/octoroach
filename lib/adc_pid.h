@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __ADC_PID_H
 #define __ADC_PID_H
 

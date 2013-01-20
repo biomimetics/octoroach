@@ -1,6 +1,4 @@
-/* Queue (FIFO) for moveCmdT
-
- */
+// Contents of this file are copyright Andrew Pullin, 2013
 
 #include "tail_queue.h"
 #include "payload.h"

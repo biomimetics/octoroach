@@ -2,6 +2,8 @@
 """
 authors: apullin
 
+Contents of this file are copyright Andrew Pullin, 2013
+
 """
 from lib import command
 from struct import *

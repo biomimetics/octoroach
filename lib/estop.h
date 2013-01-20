@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 /***************************************************************************
 * Name: estop.h
 * Desc: handle emergency stop condition

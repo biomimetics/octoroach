@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 /* 
  * File:   sys_service.h
  * Author: pullin

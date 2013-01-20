@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __LEG_CTRL_H
 #define __LEG_CTRL_H
 

@@ -2,7 +2,11 @@
 * Name: cmd.h
 * Desc: application specific command definitions are defined here.
 * Date: 2010-07-10
-* Author: stanbaek
+* Author: stanbaek, apullin
+Modifications and additions to this file made by Andrew Pullin are copyright, 2013
+Copyrights are acknowledged for portions of this code extant before modifications by Andrew Pullin 
+Any application of BSD or other license to copyright content without the authors express approval
+is invalid and void.
 ******************************************************************************/
 #ifndef __CMD_H
 #define __CMD_H

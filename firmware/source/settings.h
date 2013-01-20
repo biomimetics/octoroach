@@ -1,7 +1,8 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 /******************************************************************************
 * Name: settings.h
 * Desc: Constants used by Andrew P. are included here.
-* Date: 2012-06-26
 * Author: pullin
 ******************************************************************************/
 #ifndef __SETTINGS_H

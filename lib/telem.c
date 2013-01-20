@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #include "utils.h"
 #include "dfmem.h"
 #include "telem.h"

@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __MOVE_QUEUE_H
 #define __MOVE_QUEUE_H
 
