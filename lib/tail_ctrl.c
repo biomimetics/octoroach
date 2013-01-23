@@ -276,7 +276,7 @@ void tailCtrlSetInput(int val){
 static void serviceTailPID() {
 
 	//update tail position
-	lastTailPos = encGetAux1Pos();
+	lastTailPos = encGetFloatPos(4);
 	
 	int encAngle = (int) (lastTailPos*10.0);
 	//Update the setpoints
