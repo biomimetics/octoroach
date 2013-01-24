@@ -14,7 +14,7 @@ from or_helpers import *
 
 
 ###### Operation Flags ####
-SAVE_DATA1 = True 
+SAVE_DATA1 = False 
 RESET_R1 = True  
 
 EXIT_WAIT   = False
@@ -46,7 +46,8 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [15000,5,0,0,10 , 15000,5,0,0,10] #Hardware PID
+    #motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0] #Hardware PID
+    motorgains = [20000,500,250,0,0,    20000,500,250,0,0] #Hardware PID
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -54,7 +55,7 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [5000,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [15000,5,0,0,0,  STEER_MODE_SPLIT] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
@@ -92,11 +93,20 @@ def main():
     # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
              
     #YAW control: Straight then -90 degree turn 
-    numMoves = 3
+    #numMoves = 5
+    #moveq1 = [numMoves, \
+    #    0, 0, 500,   MOVE_SEG_RAMP, 30, 30,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+    #    60, 60, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+    #    60, 60, 4000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0)),
+    #    60, 60, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0)),
+    #    60, 60, 500,   MOVE_SEG_RAMP, -30,  -30,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0))]
+    
+    numMoves = 4
     moveq1 = [numMoves, \
-        0, 0, 500,   MOVE_SEG_RAMP, 400,  400,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        200, 200, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        200, 200, 500,   MOVE_SEG_RAMP, -400,  -400,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0))]
+        85, 85, 5300,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*0.0)),
+        85, 85, 5900,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*80.0)),
+        85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
+        85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
@@ -128,24 +138,22 @@ def main():
     
     if SAVE_DATA1:
         R1.startTelemetrySave()
-
+        
     time.sleep(R1.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
     R1.sendMoveQueue(moveq1)
     
-    maxtime = 0
-    for r in shared.ROBOTS:
-        tottime =  r.runtime + r.leadoutTime
-        if tottime > maxtime:
-            maxtime = tottime
-    
-    #Wait for robots to do runs
-    time.sleep(maxtime / 1000.0)
-    
-    raw_input("Press Enter to start telemtry readback ...")
-    
     if SAVE_DATA1:
+        maxtime = 0
+        for r in shared.ROBOTS:
+            tottime =  r.runtime + r.leadoutTime
+            if tottime > maxtime:
+                maxtime = tottime
+    
+        #Wait for robots to do runs
+        time.sleep(maxtime / 1000.0)
+        raw_input("Press Enter to start telemtry readback ...")
         R1.downloadTelemetry()
 
     if EXIT_WAIT:  #Pause for a Ctrl + Cif specified

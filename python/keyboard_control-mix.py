@@ -36,7 +36,7 @@ def main():
         R1.reset()
         time.sleep(0.5)
 
-    motorgains = [15000,200,0,0,0,    15000,200,0,0,0]
+    motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0]
     R1.setMotorGains(motorgains, retries = 8)
     
     verifyAllMotorGainsSet()  #exits on failure

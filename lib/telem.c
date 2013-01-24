@@ -30,7 +30,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 12
+#define READBACK_DELAY_TIME_MS 9
 #endif
 
 
@@ -97,7 +97,7 @@ static void SetupTimer5() {
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_7 & T5_INT_ON);
     //OpenTimer5(con_reg, period);
     //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
@@ -225,11 +225,11 @@ static void telemISRHandler() {
             data.telemStruct.bemfR = bemf[1];
             data.telemStruct.tailTorque = tailTorque;
             data.telemStruct.Vbatt = adcGetVBatt();
-            data.telemStruct.steerAngle = tailPID.input;
-            data.telemStruct.tailAngle = lastTailPos;
+            data.telemStruct.steerAngle = 0;
+            data.telemStruct.tailAngle = 0.0;
             data.telemStruct.bodyPosition = imuGetBodyZPositionDeg();
-            data.telemStruct.motor_count[0] = motor_count[0];
-            data.telemStruct.motor_count[1] = motor_count[1];
+            data.telemStruct.motor_count[0] = 0;
+            data.telemStruct.motor_count[1] = 0;
             data.telemStruct.sOut = steeringPID.output;
             telemSaveData(&data);
             sampIdx++;
