@@ -114,7 +114,7 @@
         <targetDevice>dsPIC33FJ128MC706A</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>ICD3PlatformTool</platformTool>
+        <platformTool>RealICEPlatformTool</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>1.10</languageToolchainVersion>
         <platform>3</platform>

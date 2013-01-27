@@ -37,7 +37,7 @@ def main():
         R1.reset()
         time.sleep(0.5)
 
-    motorgains = [15000,1,0,0,0,    15000,1,0,0,0]
+    motorgains = [15000,100,0,0,10 , 15000,5,0,0,10]
     #motorgains = [25000,50,0,0,25,    25000,50,0,0,25]
 
     R1.setMotorGains(motorgains, retries = 8)
