@@ -47,7 +47,7 @@ def main():
     #    ----------LEFT----------        ---------_RIGHT----------
     
     #motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0] #Hardware PID
-    motorgains = [20000,500,250,0,0,    20000,500,250,0,0] #Hardware PID
+    motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0]
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -101,12 +101,17 @@ def main():
     #    60, 60, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0)),
     #    60, 60, 500,   MOVE_SEG_RAMP, -30,  -30,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0))]
     
-    numMoves = 4
+    #numMoves = 4
+    #moveq1 = [numMoves, \
+    #    85, 85, 5300,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*0.0)),
+    #    85, 85, 5900,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*80.0)),
+    #    85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
+    #    85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
+    
+    numMoves = 2
     moveq1 = [numMoves, \
-        85, 85, 5300,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*0.0)),
-        85, 85, 5900,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*80.0)),
-        85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
-        85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
+        0, 0, 2000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0, 
+        60, 60, 10000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
