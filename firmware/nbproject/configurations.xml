@@ -115,7 +115,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>RealICEPlatformTool</platformTool>
         <languageToolchain>XC16</languageToolchain>
-        <languageToolchainVersion>1.00</languageToolchainVersion>
+        <languageToolchainVersion>1.11</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

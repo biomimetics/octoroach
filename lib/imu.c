@@ -10,7 +10,7 @@
 #include "adc_pid.h"
 #include "leg_ctrl.h"
 #include "sys_service.h"
-#include "ams-enc.h"
+//#include "ams-enc.h"
 #include "imu.h"
 
 #define TIMER_FREQUENCY     300.0                 // 300 Hz
