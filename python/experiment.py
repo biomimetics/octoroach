@@ -14,7 +14,7 @@ from or_helpers import *
 
 
 ###### Operation Flags ####
-SAVE_DATA1 = False 
+SAVE_DATA1 = True 
 RESET_R1 = True  
 
 EXIT_WAIT   = False
@@ -110,8 +110,8 @@ def main():
     
     numMoves = 2
     moveq1 = [numMoves, \
-        0, 0, 2000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0, 
-        60, 60, 10000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+        0, 0, 1000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0, 
+        0, 0, 1000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
