@@ -8,19 +8,11 @@
 #include "at86rf231.h"
 #include "ipspi1.h"
 #include "led.h"
-#include "gyro.h"
-#include "xl.h"
 #include "sclock.h"
-#include "pid.h"
-#include "orient.h"
-#include "dfilter_avg.h"
-#include "adc_pid.h"
-#include "leg_ctrl.h"
 #include "sys_service.h"
-#include "ams-enc.h"
-#include "imu.h"
 #include "cmd.h" //for CMD codes
 #include <string.h> //for memcpy
+#include "or_telem.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
@@ -34,23 +26,14 @@
 #endif
 
 
-// TODO (apullin) : Remove externs by adding getters to other modules
-extern pidObj motor_pidObjs[NUM_MOTOR_PIDS];
-extern int bemf[NUM_MOTOR_PIDS];
-extern pidObj steeringPID;
-extern pidObj tailPID;
+char* telemBuffer;
+unsigned int telemSize;
+
+
 
 //global flag from radio module to know if last packet was ACK'd
 // TODO (apullin) : fix this, add a getter for the flag to radio code
 extern volatile char g_last_ackd;
-
-
-extern float lastTailPos;
-extern float tailTorque;
-
-extern long motor_count[2];
-
-float telemGyroValue = 0.0;
 
 ////////   Private variables   ////////////////
 static unsigned long samplesToSave = 0;
@@ -66,6 +49,8 @@ static unsigned int streamSkipNum = 15;
 
 //Offset for time value when recording samples
 static unsigned long telemStartTime = 0;
+
+static DfmemGeometryStruct mem_geo;
 
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
@@ -103,6 +88,12 @@ static void SetupTimer5() {
 }
 
 void telemSetup() {
+    
+    dfmemGetGeometryParams(&mem_geo); // Read memory chip sizing
+    
+    telemSize = orTelemGetSize();
+    telemBuffer = malloc(telemSize);
+
     int retval;
     retval = sysServiceInstallT5(telemServiceRoutine);
     SetupTimer5();
@@ -192,43 +183,12 @@ static void telemISRHandler() {
     // value of skicounter
     if (skipcounter == 0) {
         if (samplesToSave > 0) {
-            /////// Get XL data
-
-            data.telemStruct.sampleIndex = sampIdx;
-            data.telemStruct.timeStamp = sclockGetTime() - telemStartTime;
-            data.telemStruct.inputL = motor_pidObjs[0].input;
-            data.telemStruct.inputR = motor_pidObjs[1].input;
-            //data.telemStruct.dcL = PDC3; //For IP2.4 modified to use Hbridge
-            //data.telemStruct.dcR = PDC4; //For IP2.4 modified to use Hbridge
-            data.telemStruct.dcL = PDC1;
-            data.telemStruct.dcR = PDC2;
-            data.telemStruct.gyroX = imuGetGyroXValue();
-            data.telemStruct.gyroY = imuGetGyroYValue();
-            data.telemStruct.gyroZ = imuGetGyroZValue();
-            data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
-
-            //XL temprorarily disabled to prevent collision with AM encoder
-            // TODO (apullin, fgb, nkohut) : bring XL access into imu module
-            /*data.telemStruct.accelX = xldata[0];
-            data.telemStruct.accelY = xldata[1];
-            data.telemStruct.accelZ = xldata[2]; */
-
-            data.telemStruct.accelX = 0;
-            data.telemStruct.accelY = 0;
-            data.telemStruct.accelZ = 0;
-
-
-            data.telemStruct.bemfL = bemf[0];
-            data.telemStruct.bemfR = bemf[1];
-            data.telemStruct.tailTorque = tailTorque;
-            data.telemStruct.Vbatt = adcGetVBatt();
-            data.telemStruct.steerAngle = 0;
-            data.telemStruct.tailAngle = 0.0;
-            data.telemStruct.bodyPosition = imuGetBodyZPositionDeg();
-            data.telemStruct.motor_count[0] = 0;
-            data.telemStruct.motor_count[1] = 0;
-            data.telemStruct.sOut = steeringPID.output;
-            telemSaveData(&data);
+            
+            orTelemGetData(telemBuffer);
+            tptr->timeStamp = sclockGetTime() - telemStartTime;
+            tptr->timeStamp = sclockGetTime() - telemStartTime;
+           
+            telemSaveData(telemBuffer, telemSize);
             sampIdx++;
         }
         //Reset value of skip counter
@@ -245,29 +205,6 @@ static void telemISRHandler() {
         if (streamSkipCounter == 0) {
             if (samplesToStream > 0) {
 
-                /////// Get XL data
-                //xlGetXYZ((unsigned char*) xldata);
-
-                data.telemStruct.sampleIndex = sampIdx;
-                data.telemStruct.timeStamp = sclockGetTime() - telemStartTime;
-                data.telemStruct.inputL = motor_pidObjs[0].input;
-                data.telemStruct.inputR = motor_pidObjs[1].input;
-                data.telemStruct.dcL = PDC1;
-                data.telemStruct.dcR = PDC2;
-                data.telemStruct.gyroX = imuGetGyroXValue();
-                data.telemStruct.gyroY = imuGetGyroYValue();
-                data.telemStruct.gyroZ = imuGetGyroZValue();
-                data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
-                //XL temprorarily disabled to prevent collision with AM encoder
-                // TODO (apullin, fgb, nkohut) : bring XL access into imu module
-                data.telemStruct.accelX = 0; //xldata[0];
-                data.telemStruct.accelY = 0; //xldata[1];
-                data.telemStruct.accelZ = 0; //xldata[2];
-                data.telemStruct.bemfL = bemf[0];
-                data.telemStruct.bemfR = bemf[1];
-                data.telemStruct.sOut = steeringPID.output;
-                data.telemStruct.Vbatt = adcGetVBatt();
-                data.telemStruct.steerAngle = steeringPID.input;
                 sampIdx++;
                 //Send back data:
                 Payload pld;
