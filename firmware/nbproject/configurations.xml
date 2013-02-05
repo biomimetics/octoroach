@@ -24,6 +24,7 @@
         <itemPath>../../imageproc-lib/pid.h</itemPath>
         <itemPath>../../imageproc-lib/ams-enc.h</itemPath>
         <itemPath>../../imageproc-lib/spi_controller.h</itemPath>
+        <itemPath>../../imageproc-lib/dfmem.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../lib/motor_ctrl.h</itemPath>
@@ -34,7 +35,6 @@
         <itemPath>../lib/sensors.h</itemPath>
         <itemPath>../lib/estop.h</itemPath>
         <itemPath>../lib/telem.h</itemPath>
-        <itemPath>../../imageproc-lib/dfmem.h</itemPath>
         <itemPath>../../imageproc-lib/i2c_driver.h</itemPath>
         <itemPath>../lib/leg_ctrl.h</itemPath>
         <itemPath>../lib/tail_queue.h</itemPath>

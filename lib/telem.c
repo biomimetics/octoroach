@@ -12,6 +12,7 @@
 #include "sys_service.h"
 #include "cmd.h" //for CMD codes
 #include <string.h> //for memcpy
+//This include will set the telemtry format
 #include "or_telem.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
@@ -25,16 +26,11 @@
 #define READBACK_DELAY_TIME_MS 10
 #endif
 
-
 telemStruct_t telemBuffer;
 unsigned int telemDataSize;
 unsigned int telemPacketSize;
 
-
-
-//global flag from radio module to know if last packet was ACK'd
-// TODO (apullin) : fix this, add a getter for the flag to radio code
-extern volatile char g_last_ackd;
+#define TELEM_HEADER_SIZE   sizeof(telemBuffer.sampleIndex) + sizeof(telemBuffer.timestamp)
 
 ////////   Private variables   ////////////////
 static unsigned long samplesToSave = 0;
@@ -53,6 +49,7 @@ static unsigned long telemStartTime = 0;
 
 static DfmemGeometryStruct mem_geo;
 
+///////////// Private functions //////////////
 //Function to be installed into T5, and setup function
 static void SetupTimer5(); // Might collide with setup in steering module!
 static void telemServiceRoutine(void); //To be installed with sysService
@@ -93,9 +90,9 @@ void telemSetup() {
     dfmemGetGeometryParams(&mem_geo); // Read memory chip sizing
 
     //Telemetry packet size is set at startupt time.
-    telemDataSize = orTelemGetSize();
+    telemDataSize = orTelemGetSize();  //OctoRoACH specific
     //Allocate telemetry packet data buffer on heap.
-    telemBuffer.telemData = telemBuffer = malloc(telemDataSize);
+    telemBuffer.telemData = (unsigned char*) malloc(telemDataSize);
 
     telemPacketSize = telemDataSize
             + sizeof(telemBuffer.sampleIndex) + sizeof(telemBuffer.timestamp);
@@ -125,12 +122,11 @@ void telemReadbackSamples(unsigned long numSamples) {
         //Retireve data from flash
         dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
         //Reliable send, with linear backoff
-        g_last_ackd = 0;
         do {
-            telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
+            telemSendDataDelay(delaytime_ms);
             //Linear backoff
             delaytime_ms += 2;
-        } while (g_last_ackd == 0);
+        } while (phyGetLastAckd() == 0);
 
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
@@ -139,20 +135,26 @@ void telemReadbackSamples(unsigned long numSamples) {
 
 }
 
-void telemSendDataDelay(unsigned char data_length, unsigned char* data, int delaytime_ms) {
+void telemSendDataDelay(int delaytime_ms) {
     // Create Payload, set status and type (don't cares)
-    Payload pld = payCreateEmpty(data_length);
-    //////    FIX THIS //////////
+    Payload pld = payCreateEmpty(telemPacketSize); //header + data size
+    
     paySetType(pld, CMD_SPECIAL_TELEMETRY); //this is the only dependance on cmd.h
-    paySetStatus(pld, 0); //
+    paySetStatus(pld, 0);
 
+    //payAppendData should be written differently, without a 'loc' argument
+    //Set the sample index and timestamp for the packet
+    payAppendData(pld, 0,  sizeof(telemBuffer.sampleIndex),
+            (unsigned char*)(&telemBuffer.sampleIndex) );
+    payAppendData(pld, sizeof(telemBuffer.sampleIndex), sizeof(telemBuffer.timestamp),
+            (unsigned char*)(&telemBuffer.timestamp) );
     // Set Payload data
-    paySetData(pld, data_length, data);
+    payAppendData(pld, TELEM_HEADER_SIZE, telemDataSize,
+            (unsigned char*)(telemBuffer.telemData) );
+    //Note that telemBuffer.telemData is already a pointer
 
-    // Send Payload WITH 15ms DELAY
     // Handles pld delete: Assigns pointer to payload in packet
     //    and radio command deletes payload, then packet.
-
     radioSendPayload(macGetDestAddr(), pld);
 
     delay_ms(delaytime_ms); // allow radio transmission time
@@ -162,9 +164,12 @@ void telemSendDataDelay(unsigned char data_length, unsigned char* data, int dela
 
 //Saves telemetry data structure into flash memory, in order
 
-void telemSaveData(telemU *data) {
+void telemSaveData(telemStruct_t * telemPkt) {
 
-    dfmemSave((unsigned char*) data, sizeof (telemU));
+    //Write the packet header info to the DFMEM
+    dfmemSave((unsigned char*) telemPkt, TELEM_HEADER_SIZE);
+    
+    dfmemSave(telemPkt->telemData, telemDataSize);
     samplesToSave--;
 
     //This is done here instead of the ISR because telemSaveData() will only be
@@ -176,7 +181,47 @@ void telemSaveData(telemU *data) {
 }
 
 void telemErase(unsigned long numSamples) {
-    dfmemEraseSectorsForSamples(numSamples, sizeof (telemU));
+    //dfmemEraseSectorsForSamples(numSamples, sizeof (telemU));
+    // TODO (apullin) : Add an explicit check to see if the number of saved
+    //                  samples will fit into memory!
+    LED_2 = 1;
+    unsigned int firstPageOfSector, i;
+
+    //avoid trivial case
+    if(numSamples == 0){ return;}
+
+    //Saves to dfmem will NOT overlap page boundaries, so we need to do this level by level:
+    unsigned int samplesPerPage = mem_geo.bytes_per_page / telemPacketSize; //round DOWN int division
+    unsigned int numPages = (numSamples + samplesPerPage - 1) / samplesPerPage; //round UP int division
+    unsigned int numSectors = ( numPages + mem_geo.pages_per_sector-1) / mem_geo.pages_per_sector;
+
+    //At this point, it is impossible for numSectors == 0
+    //Sector 0a and 0b will be erased together always, for simplicity
+    //Note that numSectors will be the actual number of sectors to erase,
+    //   even though the sectors themselves are numbered starting at '0'
+    dfmemEraseSector(0); //Erase Sector 0a
+    dfmemEraseSector(8); //Erase Sector 0b
+
+    //Start erasing the rest from Sector 1:
+    for(i=1; i <= numSectors; i++){
+        firstPageOfSector = mem_geo.pages_per_sector * i;
+        //hold off until dfmem is ready for secort erase command
+        while(!dfmemIsReady());
+        //LED should blink indicating progress
+        LED_2 = ~LED_2;
+        //Send actual erase command
+        dfmemEraseSector(firstPageOfSector);
+    }
+
+    //Leadout flash, should blink faster than above, indicating the last sector
+    while(!dfmemIsReady()){
+        LED_2 = ~LED_2;
+        delay_ms(75);
+    }
+    LED_2 = 0; //Green LED off
+
+    //Since we've erased, reset our place keeper vars
+    dfmemZeroIndex();
 }
 
 
@@ -184,18 +229,19 @@ void telemErase(unsigned long numSamples) {
 ////////////////////////
 
 static void telemISRHandler() {
-    telemU data;
 
     //skipcounter decrements to 0, triggering a telemetry save, and resets
     // value of skicounter
     if (skipcounter == 0) {
         if (samplesToSave > 0) {
             
-            orTelemGetData(telemBuffer);
-            tptr->timeStamp = sclockGetTime() - telemStartTime;
-            tptr->timeStamp = sclockGetTime() - telemStartTime;
+            //Write telemetry data into packet
+            orTelemGetData(telemBuffer.telemData); //OctoRoACH specfici
+            
+            telemBuffer.timestamp = sclockGetTime() - telemStartTime;
+            telemBuffer.sampleIndex = sampIdx;
            
-            telemSaveData(telemBuffer, telemSize);
+            telemSaveData(&telemBuffer);
             sampIdx++;
         }
         //Reset value of skip counter
@@ -206,21 +252,31 @@ static void telemISRHandler() {
     skipcounter--;
 
 
-
     ////////////////////   STREAMING SECTION
     if (telemStreamingFlag == TELEM_STREAM_ON) {
         if (streamSkipCounter == 0) {
             if (samplesToStream > 0) {
+                //Write telemetry data into packet
+                orTelemGetData((unsigned char*)(telemBuffer.telemData) ); //OctoRoACH specific
 
+                telemBuffer.timestamp = sclockGetTime() - telemStartTime;
+                telemBuffer.sampleIndex = sampIdx;
                 sampIdx++;
-                //Send back data:
+
+                //Build packet and send
                 Payload pld;
-                pld = payCreateEmpty(PACKETSIZE);
+                pld = payCreateEmpty(telemPacketSize);
                 paySetType(pld, CMD_STREAM_TELEMETRY); //requires cmd.h
                 paySetStatus(pld, 0);
-                //Is there a cleaner way to do this? The payload interface is confusing
-                memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH, &data, sizeof (data));
-                g_last_ackd = 0;
+                
+                    payAppendData(pld, 0,  sizeof(telemBuffer.sampleIndex),
+            (unsigned char*)(&telemBuffer.sampleIndex) );
+    payAppendData(pld, sizeof(telemBuffer.sampleIndex), sizeof(telemBuffer.timestamp),
+             (unsigned char*)(&telemBuffer.timestamp) );
+    // Set Payload data
+    payAppendData(pld, TELEM_HEADER_SIZE, telemDataSize,
+            (unsigned char*)(telemBuffer.telemData) );
+
                 radioSendPayload(macGetDestAddr(), pld);
                 samplesToStream--;
             } else {

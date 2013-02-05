@@ -17,7 +17,7 @@ typedef union packedTelemUnion {
 // Prototypes
 void telemSetup(); //To be called in main
 void telemReadbackSamples(unsigned long);
-void telemSendDataDelay(unsigned char, unsigned char*, int delaytime_ms);
+void telemSendDataDelay(int delaytime_ms);
 void telemSaveData(telemStruct_t *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);

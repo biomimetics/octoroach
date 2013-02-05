@@ -1,11 +1,19 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
+//or_telem.c , OctoRoACH specific telemetry packet format
+
+
 #include "or_telem.h"
 
+#include <xc.h>
 #include "pid.h"
 #include "gyro.h"
 #include "xl.h"
 #include "ams-enc.h"
 #include "imu.h"
 #include "leg_ctrl.h"
+#include "tail_ctrl.h"
+#include "adc_pid.h"
 #include "tail_ctrl.h"
 
 // TODO (apullin) : Remove externs by adding getters to other modules
@@ -14,14 +22,37 @@ extern int bemf[NUM_MOTOR_PIDS];
 extern pidObj steeringPID;
 extern pidObj tailPID;
 
+// Data structure type
+typedef struct {
+    unsigned long timeStamp;
+    int inputL;
+    int inputR;
+    int dcL;
+    int dcR;
+    int gyroX;
+    int gyroY;
+    int gyroZ;
+    int gyroAvg;
+    int accelX;
+    int accelY;
+    int accelZ;
+    int bemfL;
+    int bemfR;
+    float tailTorque;
+    int Vbatt;
+    int steerAngle;
+    float tailAngle;
+    float bodyPosition;
+    unsigned long motor_count[2];
+    int sOut;
+} orTelemStruct_t;
 
-void orTelemGetData(char* ptr) {
+void orTelemGetData(unsigned char* ptr) {
     /////// Get XL data
 
     orTelemStruct_t* tptr;
-    tptr = (orTelemStruct_t*)ptr;
+    tptr = (orTelemStruct_t*) ptr;
 
-    tptr->timeStamp = sclockGetTime() - telemStartTime;
     tptr->inputL = motor_pidObjs[0].input;
     tptr->inputR = motor_pidObjs[1].input;
     //tptr->dcL = PDC3; //For IP2.4 modified to use Hbridge
@@ -46,7 +77,7 @@ void orTelemGetData(char* ptr) {
 
     tptr->bemfL = bemf[0];
     tptr->bemfR = bemf[1];
-    tptr->tailTorque = tailTorque;
+    //tptr->tailTorque = tailTorque;
     tptr->Vbatt = adcGetVBatt();
     tptr->steerAngle = 0;
     tptr->tailAngle = 0.0;
@@ -56,6 +87,8 @@ void orTelemGetData(char* ptr) {
     tptr->sOut = steeringPID.output;
 }
 
-unsigned int orTelemGetSize() {
+//This may be unneccesary, since the telemtry type isn't totally anonymous
 
+unsigned int orTelemGetSize() {
+    return sizeof (orTelemStruct_t);
 }
