@@ -38,3 +38,5 @@ void debugpins5_set();
 void debugpins6_toggle();
 void debugpins6_clr();
 void debugpins6_set();
+
+void debugpins_wiggle();

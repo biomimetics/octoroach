@@ -24,13 +24,13 @@
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
+#define DEFAULT_SKIP_NUM    1 //Default to 150 Hz save rate
 //#define LSB2DEG    0.0695652174 //DEFINED IN TWO PLACES!
 
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 9
+#define READBACK_DELAY_TIME_MS 10
 #endif
 
 
@@ -114,37 +114,31 @@ void telemSetSamplesToSave(unsigned long n) {
 }
 
 void telemReadbackSamples(unsigned long numSamples) {
-    //unsigned int page, bufferByte;// maxpage;
-    //unsigned char dataPacket[PACKETSIZE];
-
     int delaytime_ms = READBACK_DELAY_TIME_MS;
-
     unsigned long i = 0; //will actually be the same as the sampleIndex
 
     LED_GREEN = 1;
     //Disable motion interrupts for readback
     //_T1IE = 0; _T5IE=0; //TODO: what is a cleaner way to do this?
 
-
     telemStruct_t sampleData;
 
     for (i = 0; i < numSamples; i++) {
         //Retireve data from flash
-        //dfmemReadSample(i, sizeof(sampleData), (unsigned char*)(&sampleData));
         dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
-
         //Reliable send, with linear backoff
         g_last_ackd = 0;
         do {
             telemSendDataDelay(PACKETSIZE, (unsigned char*) (&sampleData), delaytime_ms);
-            //trx_status = phyReadBit(SR_TRAC_STATUS);
             //Linear backoff
-            delaytime_ms += 1;
+            delaytime_ms += 2;
         } while (g_last_ackd == 0);
+
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
 
     LED_GREEN = 0;
+
 }
 
 void telemSendDataDelay(unsigned char data_length, unsigned char* data, int delaytime_ms) {
@@ -160,8 +154,11 @@ void telemSendDataDelay(unsigned char data_length, unsigned char* data, int dela
     // Send Payload WITH 15ms DELAY
     // Handles pld delete: Assigns pointer to payload in packet
     //    and radio command deletes payload, then packet.
+
     radioSendPayload(macGetDestAddr(), pld);
+
     delay_ms(delaytime_ms); // allow radio transmission time
+    
 }
 
 

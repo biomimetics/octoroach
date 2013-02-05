@@ -110,8 +110,8 @@ def main():
     
     numMoves = 2
     moveq1 = [numMoves, \
-        0, 0, 1000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0, 
-        0, 0, 1000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+        0, 0, 250, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0, 
+        0, 0, 250, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
