@@ -26,8 +26,9 @@
 #endif
 
 
-char* telemBuffer;
-unsigned int telemSize;
+telemStruct_t telemBuffer;
+unsigned int telemDataSize;
+unsigned int telemPacketSize;
 
 
 
@@ -90,10 +91,16 @@ static void SetupTimer5() {
 void telemSetup() {
     
     dfmemGetGeometryParams(&mem_geo); // Read memory chip sizing
-    
-    telemSize = orTelemGetSize();
-    telemBuffer = malloc(telemSize);
 
+    //Telemetry packet size is set at startupt time.
+    telemDataSize = orTelemGetSize();
+    //Allocate telemetry packet data buffer on heap.
+    telemBuffer.telemData = telemBuffer = malloc(telemDataSize);
+
+    telemPacketSize = telemDataSize
+            + sizeof(telemBuffer.sampleIndex) + sizeof(telemBuffer.timestamp);
+
+    //Install telemetry service handler
     int retval;
     retval = sysServiceInstallT5(telemServiceRoutine);
     SetupTimer5();
