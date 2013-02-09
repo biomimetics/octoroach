@@ -12,12 +12,13 @@
 #include "sys_service.h"
 #include "cmd.h" //for CMD codes
 #include <string.h> //for memcpy
+#include "debugpins.h"
 //This include will set the telemtry format
 #include "or_telem.h"
 
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define DEFAULT_SKIP_NUM    1 //Default to 150 Hz save rate
+#define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
 //#define LSB2DEG    0.0695652174 //DEFINED IN TWO PLACES!
 
 #if defined(__RADIO_HIGH_DATA_RATE)
@@ -92,7 +93,14 @@ void telemSetup() {
     //Telemetry packet size is set at startupt time.
     telemDataSize = orTelemGetSize();  //OctoRoACH specific
     //Allocate telemetry packet data buffer on heap.
-    telemBuffer.telemData = (unsigned char*) malloc(telemDataSize);
+    unsigned char* memptr = malloc(telemDataSize);
+    if(memptr){
+        telemBuffer.telemData = memptr;
+    }
+    else{
+        //Major failure, cannot allocate telemetry buffer
+        while(1);
+    }
 
     telemPacketSize = telemDataSize
             + sizeof(telemBuffer.sampleIndex) + sizeof(telemBuffer.timestamp);
@@ -123,9 +131,11 @@ void telemReadbackSamples(unsigned long numSamples) {
         dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
         //Reliable send, with linear backoff
         do {
+            debugpins1_set();
             telemSendDataDelay(delaytime_ms);
             //Linear backoff
             delaytime_ms += 2;
+            debugpins1_clr();
         } while (phyGetLastAckd() == 0);
 
         delaytime_ms = READBACK_DELAY_TIME_MS;
@@ -155,7 +165,9 @@ void telemSendDataDelay(int delaytime_ms) {
 
     // Handles pld delete: Assigns pointer to payload in packet
     //    and radio command deletes payload, then packet.
+    debugpins2_set();
     radioSendPayload(macGetDestAddr(), pld);
+    debugpins2_clr();
 
     delay_ms(delaytime_ms); // allow radio transmission time
     

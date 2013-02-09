@@ -320,7 +320,7 @@ class Robot:
         self.runtime = sum([moveq[i] for i in [(ind*MOVE_QUEUE_ENTRY_LEN)+3 for ind in range(0,moveq[0])]])
        
         #calculate the number of telemetry packets we expect
-        self.numSamples = int(ceil(300 * (self.runtime + self.leadinTime + self.leadoutTime) / 1000.0))
+        self.numSamples = int(ceil(150 * (self.runtime + self.leadinTime + self.leadoutTime) / 1000.0))
         #allocate an array to write the downloaded telemetry data into
         self.imudata = [ [] ] * self.numSamples
         self.clAnnounce()
