@@ -148,7 +148,7 @@ int main(void) {
     }
 		
     //should be asleep here, waiting for WTD wakeup
-    ClrWdt(); //clear wdt
+    ClrWdt(); //cleagr wdt
     _SWDTEN = 0; //software disable wdt
     LED_RED = 1;
 

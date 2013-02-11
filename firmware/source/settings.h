@@ -25,8 +25,8 @@
 //#define RADIO_TXPQ_MAX_SIZE	32
 
 
-#define RADIO_RXPQ_MAX_SIZE 	16
-#define RADIO_TXPQ_MAX_SIZE	16
+#define RADIO_RXPQ_MAX_SIZE 	4
+#define RADIO_TXPQ_MAX_SIZE	4
 
 /////// System Service settings ///////
 #define SYS_SERVICE_T1 // For legCtrl, hall
