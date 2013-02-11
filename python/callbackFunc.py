@@ -27,7 +27,7 @@ pktFormat = { \
     command.SET_MOVE_QUEUE:         '', \
     command.SET_STEERING_GAINS:     '6h', \
     command.SOFTWARE_RESET:         '', \
-    command.SPECIAL_TELEMETRY:      '=LL'+13*'h'+'fhhffLLh', \
+    command.SPECIAL_TELEMETRY:      '=LLhhhhhhhhhhhhhhhhLLf', \
     command.ERASE_SECTORS:          'L', \
     command.FLASH_READBACK:         '', \
     command.SLEEP:                  'b', \
@@ -131,8 +131,7 @@ def xbee_received(packet):
             datum = unpack(pattern, data)
             datum = list(datum)
             telem_index = datum.pop(0) #pop removes this from data array
-            #print "telem_index: ",telem_index
-            #print "Special Telemetry Data Packet #",telem_index
+            #print "got",telem_index,':',datum
             if (datum[0] != -1) and (telem_index) >= 0:
                 for r in shared.ROBOTS:
                     if r.DEST_ADDR_int == src_addr:

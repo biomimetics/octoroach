@@ -30,7 +30,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 10
+#define READBACK_DELAY_TIME_MS 11
 #endif
 
 
@@ -158,7 +158,7 @@ void telemSendDataDelay(unsigned char data_length, unsigned char* data, int dela
     radioSendPayload(macGetDestAddr(), pld);
 
     delay_ms(delaytime_ms); // allow radio transmission time
-    
+
 }
 
 
@@ -212,22 +212,18 @@ static void telemISRHandler() {
             /*data.telemStruct.accelX = xldata[0];
             data.telemStruct.accelY = xldata[1];
             data.telemStruct.accelZ = xldata[2]; */
-
             data.telemStruct.accelX = 0;
             data.telemStruct.accelY = 0;
             data.telemStruct.accelZ = 0;
 
-
             data.telemStruct.bemfL = bemf[0];
             data.telemStruct.bemfR = bemf[1];
-            data.telemStruct.tailTorque = tailTorque;
             data.telemStruct.Vbatt = adcGetVBatt();
-            data.telemStruct.steerAngle = 0;
-            data.telemStruct.tailAngle = 0.0;
-            data.telemStruct.bodyPosition = imuGetBodyZPositionDeg();
+            data.telemStruct.steerIn = steeringPID.input;
+            data.telemStruct.steerOut = steeringPID.output;
             data.telemStruct.motor_count[0] = 0;
             data.telemStruct.motor_count[1] = 0;
-            data.telemStruct.sOut = steeringPID.output;
+            data.telemStruct.yawAngle = imuGetBodyZPositionDeg();
             telemSaveData(&data);
             sampIdx++;
         }
@@ -252,22 +248,32 @@ static void telemISRHandler() {
                 data.telemStruct.timeStamp = sclockGetTime() - telemStartTime;
                 data.telemStruct.inputL = motor_pidObjs[0].input;
                 data.telemStruct.inputR = motor_pidObjs[1].input;
+                //data.telemStruct.dcL = PDC3; //For IP2.4 modified to use Hbridge
+                //data.telemStruct.dcR = PDC4; //For IP2.4 modified to use Hbridge
                 data.telemStruct.dcL = PDC1;
                 data.telemStruct.dcR = PDC2;
                 data.telemStruct.gyroX = imuGetGyroXValue();
                 data.telemStruct.gyroY = imuGetGyroYValue();
                 data.telemStruct.gyroZ = imuGetGyroZValue();
                 data.telemStruct.gyroAvg = imuGetGyroZValueAvgDeg();
+
                 //XL temprorarily disabled to prevent collision with AM encoder
                 // TODO (apullin, fgb, nkohut) : bring XL access into imu module
-                data.telemStruct.accelX = 0; //xldata[0];
-                data.telemStruct.accelY = 0; //xldata[1];
-                data.telemStruct.accelZ = 0; //xldata[2];
+                /*data.telemStruct.accelX = xldata[0];
+                data.telemStruct.accelY = xldata[1];
+                data.telemStruct.accelZ = xldata[2]; */
+                data.telemStruct.accelX = 0;
+                data.telemStruct.accelY = 0;
+                data.telemStruct.accelZ = 0;
+
                 data.telemStruct.bemfL = bemf[0];
                 data.telemStruct.bemfR = bemf[1];
-                data.telemStruct.sOut = steeringPID.output;
                 data.telemStruct.Vbatt = adcGetVBatt();
-                data.telemStruct.steerAngle = steeringPID.input;
+                data.telemStruct.steerIn = steeringPID.input;
+                data.telemStruct.steerOut = steeringPID.output;
+                data.telemStruct.motor_count[0] = 0;
+                data.telemStruct.motor_count[1] = 0;
+                data.telemStruct.yawAngle = imuGetBodyZPositionDeg();
                 sampIdx++;
                 //Send back data:
                 Payload pld;
