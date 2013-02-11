@@ -260,12 +260,17 @@ class Robot:
         shared.last_packet_time = dlStart
         #bytesIn = 0
         while self.imudata.count([]) > 0:
-            time.sleep(0.1)
+            time.sleep(0.15)
             dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
             if (time.time() - shared.last_packet_time) > timeout:
                 print ""
                 self.clAnnounce()
                 print "Readback timeout exceeded, restarting."
+                print "Missed", self.imudata.count([]), "packets."
+                for index,item in enumerate(self.imudata):
+                    if item == []:
+                        print "Didn't get packet#",index+1
+            
                 raw_input("Press Enter to start readback ...")
                 self.imudata = [ [] ] * self.numSamples
                 self.clAnnounce()
@@ -290,7 +295,7 @@ class Robot:
         self.findFileName()
         self.writeFileHeader()
         fileout = open(self.dataFileName, 'a')
-        np.savetxt(fileout , np.array(self.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')
+        np.savetxt(fileout , np.array(self.imudata), '%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f', delimiter = ',')
         fileout.close()
         self.clAnnounce()
         print "Telemtry data saved to", self.dataFileName
@@ -310,7 +315,7 @@ class Robot:
         fileout.write('%  numSamples    = ' + repr(self.numSamples) + '\n')
         fileout.write('%  moveq         = ' + repr(self.moveq) + '\n')
         fileout.write('% Columns: \n')
-        fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut | Vbatt | SteerAngle\n')
+        fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | Vbatt | SteerIn | SteerOut | HallL | HallR | YawAngle\n')
         fileout.close()
 
     def setupImudata(self, moveq):
@@ -356,6 +361,8 @@ def setupSerial(COMPORT , BAUDRATE , timeout = 3, rtscts = 0):
         sys.exit()
     
     shared.ser = ser
+    ser.flushInput()
+    ser.flushOutput()
     return XBee(ser, callback = xbee_received)
     
     
