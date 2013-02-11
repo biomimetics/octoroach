@@ -57,7 +57,7 @@ static void imuServiceRoutine(void){
 }
 
 static void imuISRHandler(){
-	
+	CRITICAL_SECTION_START
 	int gyroData[3];
 
 	/////// Get Gyro data and calc average via filter
@@ -93,6 +93,7 @@ static void imuISRHandler(){
         lastGyroZValueAvgDeg = (float)lastGyroZValueAvg*LSB2DEG;
 
         lastBodyZPositionDeg = lastBodyZPositionDeg + lastGyroZValueDeg*TIMER_PERIOD;
+        CRITICAL_SECTION_END
 }
 
 static void SetupTimer4(){
