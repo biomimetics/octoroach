@@ -38,20 +38,16 @@
 
 extern unsigned char id[4];
 
-volatile unsigned long wakeTime;
-extern volatile char g_radio_duty_cycle;
-extern volatile char inMotion;
+//volatile unsigned long wakeTime;
+//extern volatile char g_radio_duty_cycle;
+//extern volatile char inMotion;
 
 int dcCounter;
 
 int main(void) {
 
-    wakeTime = 0;
-    dcCounter = 0;
-
-    WordVal src_addr_init = {RADIO_SRC_ADDR};
-    WordVal src_pan_id_init = {RADIO_SRC_PAN_ID};
-    WordVal dst_addr_init = {RADIO_DST_ADDR};
+    //wakeTime = 0;
+    //dcCounter = 0;
 
     SetupClock();
     SwitchClocks();
@@ -60,29 +56,30 @@ int main(void) {
 
     int old_ipl;
     mSET_AND_SAVE_CPU_IP(old_ipl, 1)
-
     sclockSetup();
-    radioInit(src_addr_init, src_pan_id_init, RADIO_RXPQ_MAX_SIZE, RADIO_TXPQ_MAX_SIZE);
-    radioSetChannel(RADIO_CHANNEL); //Set to my channel
-    macSetDestAddr(dst_addr_init);
+
+    radioInit(RADIO_TXPQ_MAX_SIZE, RADIO_RXPQ_MAX_SIZE);
+    radioSetChannel(RADIO_CHANNEL);
+    radioSetSrcPanID(RADIO_PAN_ID);
+    radioSetSrcAddr(RADIO_SRC_ADDR);
 
     dfmemSetup();
     //xlSetup();
     gyroSetup();
     mcSetup();
-    cmdSetup();
+    cmdSetup(RADIO_RXPQ_MAX_SIZE);
     adcSetup();
     telemSetup(); //Timer 5
     //encSetup();
     imuSetup();
 
-    #ifdef  HALL_SENSORS
-    hallSetup();    // Timer 1, Timer 2
+#ifdef  HALL_SENSORS
+    hallSetup(); // Timer 1, Timer 2
     hallSteeringSetup(); //doesn't exist yet
-    #else //No hall sensors, standard BEMF control
+#else //No hall sensors, standard BEMF control
     legCtrlSetup(); // Timer 1
-    steeringSetup();  //Timer 5
-    #endif
+    steeringSetup(); //Timer 5
+#endif
 
     //Tail control is a special case
     //tailCtrlSetup();
@@ -95,7 +92,9 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    if(phyGetState() == 0x16)  { LED_GREEN = 1; }
+    if (phyGetState() == 0x16) {
+        LED_GREEN = 1;
+    }
 
     //Sleeping and low power options
     //_VREGS = 1;
@@ -103,10 +102,10 @@ int main(void) {
 
     while (1) {
         cmdHandleRadioRxBuffer();
-
+        radioProcess();
 #ifndef __DEBUG //Idle will not work with debug
         //Simple idle:
-        if (radioIsRxQueueEmpty()) {
+        if (radioRxQueueEmpty()) {
             Idle();
             //_T1IE = 0;
         }

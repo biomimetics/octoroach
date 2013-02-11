@@ -14,7 +14,7 @@
 #define RADIO_CHANNEL		0x19
 //#warning "You have changed the radio channel from 0x0E to something else"
 #define RADIO_SRC_ADDR 		0x2052
-#define RADIO_SRC_PAN_ID  	0x2050
+#define RADIO_PAN_ID  	0x2050
 //Hard-coded destination address, must match basestation or XBee addr
 #define RADIO_DST_ADDR		0x2051
 
@@ -37,5 +37,9 @@
 /////// Configuration options ///////
 //Configure project-wide for Hall Sensor operation
 //#define HALL_SENSORS
+
+#define TELEM_TYPE orTelemStruct_t
+#define TELEM_INCLUDE "or_telem.h"
+#define TELEMPACKFUNC(x) orTelemGetData(x)
 
 #endif //__SETTINGS_H

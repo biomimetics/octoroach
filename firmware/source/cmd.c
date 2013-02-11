@@ -19,11 +19,11 @@ is invalid and void.
 #include "sclock.h"
 #include "led.h"
 #include "motor_ctrl.h"
-#include "payload.h"
 #include "sensors.h"
 #include "dfmem.h"
 #include "pid.h"
 #include "radio.h"
+#include "payload.h"
 #include "move_queue.h"
 #include "steering.h"
 #include "telem.h"
@@ -51,10 +51,13 @@ extern tailCmdT currentTail, idleTail;
 
 extern volatile char g_radio_duty_cycle;
 
+
+
 // use an array of function pointer to avoid a number of case statements
 // CMD_VECTOR_SIZE is defined in cmd_const.h
 void (*cmd_func[CMD_VECTOR_SIZE])(unsigned char, unsigned char, unsigned char*);
-//char cmd_len[CMD_VECTOR_SIZE];
+
+static CircArray input_queue;
 
 /*-----------------------------------------------------------------------------
  *          Declaration of static functions
@@ -100,9 +103,14 @@ static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigne
 /*-----------------------------------------------------------------------------
  *          Public functions
 -----------------------------------------------------------------------------*/
-void cmdSetup(void) {
+unsigned int cmdSetup(unsigned int queue_size) {
 
     unsigned int i;
+
+    input_queue = carrayCreate(queue_size);
+    if(input_queue == NULL) {
+        return 0;
+    }
 
     // initialize the array of func pointers with Nop()
     for (i = 0; i < MAX_CMD_FUNC; ++i) {
@@ -142,42 +150,26 @@ void cmdSetup(void) {
     cmd_func[CMD_SET_TAIL_GAINS] = &cmdSetTailGains;
     cmd_func[CMD_SET_THRUST_HALL] = &cmdSetThrustHall;
 
-    //Set up command length vector
-    /*cmd_len[CMD_SET_THRUST_OPENLOOP] = LEN_CMD_SET_THRUST_OPENLOOP;
-    cmd_len[CMD_SET_THRUST_CLOSEDLOOP] = LEN_CMD_SET_THRUST_CLOSEDLOOP;
-    cmd_len[CMD_SET_PID_GAINS] = LEN_CMD_SET_PID_GAINS;
-    cmd_len[CMD_GET_PID_TELEMETRY] = LEN_CMD_GET_PID_TELEMETRY;
-    cmd_len[CMD_SET_CTRLD_TURN_RATE] = LEN_CMD_SET_CTRLD_TURN_RATE;
-    cmd_len[CMD_GET_IMU_LOOP_ZGYRO] = LEN_CMD_GET_IMU_LOOP_ZGYRO;
-    cmd_len[CMD_SET_MOVE_QUEUE] = LEN_CMD_SET_MOVE_QUEUE;
-    cmd_len[CMD_SET_STEERING_GAINS] = LEN_CMD_SET_STEERING_GAINS;
-    cmd_len[CMD_SOFTWARE_RESET] = LEN_CMD_SOFTWARE_RESET;
-    cmd_len[CMD_SPECIAL_TELEMETRY] = LEN_CMD_SPECIAL_TELEMETRY;
-    cmd_len[CMD_ERASE_SECTORS] = LEN_CMD_ERASE_SECTORS;
-    cmd_len[CMD_FLASH_READBACK] = LEN_CMD_FLASH_READBACK;
-    cmd_len[CMD_SLEEP] = LEN_CMD_SLEEP;
-     * */
+    return 1;
 }
 
 void cmdHandleRadioRxBuffer(void) {
-
+    
+    MacPacket packet;
     Payload pld;
-    unsigned char command, status;
+    unsigned char command;
 
-    if ((pld = radioReceivePayload()) != NULL) {
+    // Check for unprocessed packet
+    //packet = radioDequeueRxPacket();
+    packet = carrayPopTail(input_queue);
+    if(packet == NULL) { return; }
 
-        status = payGetStatus(pld);
-        command = payGetType(pld);
-
-        //Due to bugs, command may be a surprious value; check explicitly
-        if (command <= MAX_CMD_FUNC) {
-            cmd_func[command](status, pld->data_length, payGetData(pld));
-        }
-
-        payDelete(pld);
+    pld = macGetPayload(packet);
+    command = payGetType(pld);
+    if(command < MAX_CMD_FUNC_SIZE) {
+        cmd_func[command](packet);
     }
-
-    return;
+    radioReturnPacket(packet);
 }
 
 //////////////////////////////////
@@ -221,105 +213,6 @@ static void cmdSteer(unsigned char status, unsigned char length, unsigned char *
 /*-----------------------------------------------------------------------------
  *          IMU functions
 -----------------------------------------------------------------------------*/
-static void cmdGetImuData(unsigned char status, unsigned char length, unsigned char *frame) {
-
-	senGetIMUData(status, CMD_GET_IMU_DATA);
-    /*unsigned char *xl_data, *gyro_data;
-    unsigned char i;
-    Payload pld = payCreateEmpty(14);  // data length = 12
-
-    xlReadXYZ();
-    xl_data = xlGetsXYZ();
-    gyroReadXYZ();
-    gyro_data = gyroGetsXYZ();
-    for(i = 0; i < 6; ++i) {
-        pld->pld_data[i] = xl_data[i];
-        pld->pld_data[i+6] = gyro_data[i];
-    }
-
-    pld->status = status;
-    pld->type = CMD_GET_IMU_DATA;
-    radioTxPayload(pld);
-    */
-}
-
-
-// return packet format:
-// 4 bytes for time
-// 6 bytes for xl data
-// 6 bytes for gyro data
-
-static void cmdGetImuLoop(unsigned char status, unsigned char length, unsigned char *frame) {
-
-    unsigned int count;
-    unsigned long tic;
-    unsigned char *tic_char;
-    Payload pld;
-
-    LED_RED = 1;
-
-    count = frame[0] + (frame[1] << 8);
-
-    tic_char = (unsigned char*) &tic;
-    tic = sclockGetTime();
-
-    while (count) {
-
-        pld = payCreateEmpty(16); // data length = 16
-        paySetData(pld, 4, tic_char);
-        payAppendData(pld, 4, 6, xlReadXYZ());
-        payAppendData(pld, 10, 6, gyroReadXYZ());
-        paySetStatus(pld, status);
-        paySetType(pld, CMD_GET_IMU_DATA);
-
-        radioSendPayload(macGetDestAddr(), pld);
-        count--;
-        payDelete(pld);
-        delay_ms(4);
-        tic = sclockGetTime();
-    }
-
-    LED_RED = 0;
-
-}
-
-static void cmdStartImuDataSave(unsigned char status, unsigned char length, unsigned char *frame) {
-    
-}
-
-static void cmdStopImuDataSave(unsigned char status, unsigned char length, unsigned char *frame) {
-    
-}
-
-static void cmdTxSavedImuData(unsigned char status, unsigned char length, unsigned char *frame) {
-
-    unsigned int page, byte;
-    unsigned int i, j;
-    Payload pld;
-
-    //senGetMemLocIndex(&page, &byte);
-    page = 0x0200;
-    byte = 0;
-
-    LED_RED = 1;
-
-    dfmemEraseSector(0x0100); // erase Sector 1 (page 256 - 511)
-
-    for (i = 0x0100; i < 0x0200; ++i) {
-        j = 0;
-        while (j < 512) {
-            pld = payCreateEmpty(18); // data length = 16
-            dfmemRead(i, j, 16, pld->pld_data);
-            paySetStatus(pld, status);
-            paySetType(pld, CMD_GET_IMU_DATA);
-            while (!radioReceivePayload());
-            j += 16;
-        }
-        delay_ms(200);
-    }
-
-    LED_RED = 0;
-}
 
 static void cmdEraseMemSector(unsigned char status, unsigned char length, unsigned char *frame) {
     unsigned int page;

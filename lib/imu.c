@@ -1,7 +1,6 @@
 // Authors: nkohut
 
 #include "utils.h"
-#include "payload.h"
 #include "led.h"
 #include "gyro.h"
 #include "xl.h"

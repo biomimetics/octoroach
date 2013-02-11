@@ -110,7 +110,7 @@ def main():
     
     numMoves = 1
     moveq1 = [numMoves, \
-        0, 0, 2000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+        0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
@@ -118,8 +118,8 @@ def main():
     #    0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
         
     #Timing settings
-    R1.leadinTime = 500;
-    R1.leadoutTime = 500;
+    R1.leadinTime = 100;
+    R1.leadoutTime = 100;
     
     #Flash must be erased to save new data
     if SAVE_DATA1:
@@ -181,9 +181,9 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    #except Exception as args:
-    #    print "\nGeneral exception:",args
-    #    print "Attemping to exit cleanly..."
-    #    shared.xb.halt()
-    #    shared.ser.close()
-    #    sys.exit()
+    except Exception as args:
+        print "\nGeneral exception:",args
+        print "Attemping to exit cleanly..."
+        shared.xb.halt()
+        shared.ser.close()
+        sys.exit()

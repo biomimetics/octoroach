@@ -1,7 +1,6 @@
 // Contents of this file are copyright Andrew Pullin, 2013
 
 #include "tail_queue.h"
-#include "payload.h"
 #include "pid.h"
 #include "p33Fxxxx.h"
 #include <stdio.h>      // for NULL

@@ -3,12 +3,18 @@
 #ifndef __TELEM_H
 #define __TELEM_H
 
-//Telemetry packet structure
+#include "settings.h" //Required to set telemetry type
+#include TELEM_INCLUDE
 
-typedef union packedTelemUnion {
+#ifndef TELEM_TYPE
+#error "A telemtry type is not defined."
+#endif
+
+//Telemetry packet structure
+typedef struct {
     unsigned long sampleIndex;
     unsigned long timestamp;
-    unsigned char* telemData;
+    TELEM_TYPE telemData;
 } telemStruct_t;
 
 #define TELEM_STREAM_OFF  0
