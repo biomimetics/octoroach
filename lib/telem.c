@@ -22,7 +22,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 15
+#define READBACK_DELAY_TIME_MS 8
 #endif
 
 telemStruct_t telemBuffer;
@@ -79,7 +79,7 @@ static void SetupTimer5() {
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_4 & T5_INT_ON);
     //OpenTimer5(con_reg, period);
     //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
@@ -117,14 +117,13 @@ void telemReadbackSamples(unsigned long numSamples) {
         //Retireve data from flash
         telemGetSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
         //Reliable send, with linear backoff
-        //do {
+        do {
             //debugpins1_set();
             telemSendDataDelay(&sampleData, delaytime_ms);
             //Linear backoff
-            //delaytime_ms += 2;
+            delaytime_ms += 2;
             //debugpins1_clr();
-        //} while (trxGetLastACKd() == 0);
-            delay_ms(25);
+        } while (trxGetLastACKd() == 0);
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
 
@@ -135,6 +134,7 @@ void telemReadbackSamples(unsigned long numSamples) {
 void telemSendDataDelay(telemStruct_t* sample, int delaytime_ms) {
     // Create Payload, set status and type (don't cares)
     MacPacket pkt = radioRequestPacket(telemPacketSize);
+    if(pkt == NULL) { return; }
     macSetDestPan(pkt, RADIO_PAN_ID);
     macSetDestAddr(pkt, RADIO_DST_ADDR);
     Payload pld = macGetPayload(pkt);
@@ -144,8 +144,12 @@ void telemSendDataDelay(telemStruct_t* sample, int delaytime_ms) {
     paySetStatus(pld, 0);
 
     //Force immediate send
-    while(!radioEnqueueTxPacket(pkt))
-    
+    while(!radioEnqueueTxPacket(pkt)) { 
+        radioReturnPacket(pkt);	// Delete packet if append fails
+    }
+
+    radioProcess();
+
     delay_ms(delaytime_ms); // allow radio transmission time
 
 }

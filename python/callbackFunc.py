@@ -137,12 +137,15 @@ def xbee_received(packet):
             datum = unpack(pattern, data)
             datum = list(datum)
             telem_index = datum.pop(0) #pop removes this from data array
-            print "Special Telemetry Data Packet #",telem_index
-            print datum
+            #print "Special Telemetry Data Packet #",telem_index
+            #print datum
             if (datum[0] != -1) and (telem_index) >= 0:
                 for r in shared.ROBOTS:
                     if r.DEST_ADDR_int == src_addr:
-                        r.imudata[telem_index] = datum
+                        if telem_index <= r.numSamples:
+                            r.imudata[telem_index] = datum
+                        else:
+                            print "Got out of range telem_index =",telem_index
                 
         # ERASE_SECTORS
         elif type == command.ERASE_SECTORS:

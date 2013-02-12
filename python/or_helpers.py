@@ -249,7 +249,7 @@ class Robot:
             tries = tries + 1
             time.sleep(0.3)   
     
-    def downloadTelemetry(self, timeout = 10000):
+    def downloadTelemetry(self, timeout = 5):
         #supress callback output messages for the duration of download
         self.VERBOSE = False
         self.clAnnounce()
@@ -261,7 +261,7 @@ class Robot:
         #bytesIn = 0
         while self.imudata.count([]) > 0:
             time.sleep(0.1)
-            #dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
+            dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
             if (time.time() - shared.last_packet_time) > timeout:
                 print ""
                 self.clAnnounce()
@@ -275,9 +275,17 @@ class Robot:
                 self.tx( 0, command.FLASH_READBACK, pack('=L',self.numSamples))
 
         dlEnd = time.time()
+        dlTime = dlEnd - dlStart
         #Final update to download progress bar to make it show 100%
         dlProgress(self.numSamples-self.imudata.count([]) , self.numSamples)
-
+        totBytes = 52*self.numSamples
+        datarate = totBytes / dlTime / 1000.0
+        print '\n'
+        self.clAnnounce()
+        #print "Got ",self.numSamples,"samples in ",dlTime,"seconds"
+        self.clAnnounce()
+        print "DL rate: {0:.2f} KB/s".format(datarate)
+        
         #enable callback output messages
         self.VERBOSE = True
 
