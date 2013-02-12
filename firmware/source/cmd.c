@@ -57,19 +57,12 @@ extern volatile char g_radio_duty_cycle;
 // CMD_VECTOR_SIZE is defined in cmd_const.h
 void (*cmd_func[CMD_VECTOR_SIZE])(unsigned char, unsigned char, unsigned char*);
 
-static CircArray input_queue;
-
 /*-----------------------------------------------------------------------------
  *          Declaration of static functions
 -----------------------------------------------------------------------------*/
 static void cmdSetThrust(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdSteer(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdGetImuData(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdGetImuLoop(unsigned char status, unsigned char length, unsigned char *frame);
 
-static void cmdStartImuDataSave(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdStopImuDataSave(unsigned char status, unsigned char length, unsigned char *frame);
-static void cmdTxSavedImuData(unsigned char status, unsigned char length, unsigned char *frame);
 static void cmdEraseMemSector(unsigned char status, unsigned char length, unsigned char *frame);
 
 //static void cmdEcho(unsigned char status, unsigned char length, unsigned char *frame);
@@ -103,14 +96,10 @@ static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigne
 /*-----------------------------------------------------------------------------
  *          Public functions
 -----------------------------------------------------------------------------*/
-unsigned int cmdSetup(unsigned int queue_size) {
+unsigned int cmdSetup(void) {
 
     unsigned int i;
 
-    input_queue = carrayCreate(queue_size);
-    if(input_queue == NULL) {
-        return 0;
-    }
 
     // initialize the array of func pointers with Nop()
     for (i = 0; i < MAX_CMD_FUNC; ++i) {
@@ -121,11 +110,6 @@ unsigned int cmdSetup(unsigned int queue_size) {
     cmd_func[CMD_ECHO] = &cmdEcho;
     cmd_func[CMD_SET_THRUST] = &cmdSetThrust;
     cmd_func[CMD_SET_STEER] = &cmdSteer;
-    cmd_func[CMD_GET_IMU_DATA] = &cmdGetImuData;
-    cmd_func[CMD_GET_IMU_LOOP] = &cmdGetImuLoop;
-    cmd_func[CMD_START_IMU_SAVE] = &cmdStartImuDataSave;
-    cmd_func[CMD_STOP_IMU_SAVE] = &cmdStopImuDataSave;
-    cmd_func[CMD_TX_SAVED_IMU_DATA] = &cmdTxSavedImuData;
     cmd_func[CMD_ERASE_MEM_SECTOR] = &cmdEraseMemSector;
     //User commands
     cmd_func[CMD_SET_THRUST_OPENLOOP] = &cmdSetThrustOpenLoop;
@@ -154,22 +138,22 @@ unsigned int cmdSetup(unsigned int queue_size) {
 }
 
 void cmdHandleRadioRxBuffer(void) {
-    
     MacPacket packet;
     Payload pld;
-    unsigned char command;
-
-    // Check for unprocessed packet
-    //packet = radioDequeueRxPacket();
-    packet = carrayPopTail(input_queue);
-    if(packet == NULL) { return; }
-
-    pld = macGetPayload(packet);
-    command = payGetType(pld);
-    if(command < MAX_CMD_FUNC_SIZE) {
-        cmd_func[command](packet);
+    unsigned char command, status;
+    
+    if ((packet = radioDequeueRxPacket()) != NULL) {
+        LED_ORANGE = 1;
+        pld = macGetPayload(packet);
+        status = payGetStatus(pld);
+        command = payGetType(pld);
+        if (command < MAX_CMD_FUNC) {
+            cmd_func[command](status, payGetDataLength(pld), payGetData(pld));
+        }
+        radioReturnPacket(packet);
     }
-    radioReturnPacket(packet);
+    
+    return;
 }
 
 //////////////////////////////////
@@ -227,18 +211,13 @@ static void cmdEraseMemSector(unsigned char status, unsigned char length, unsign
 -----------------------------------------------------------------------------*/
 void cmdEcho(unsigned char status, unsigned char length, unsigned char *frame) {
 
-    char* temp = malloc(length*sizeof(char));
-    strncpy(temp,(char*)frame,length);
-
-    radioSendPayload(macGetDestAddr(), payCreate(length, frame, status, CMD_ECHO));
-    //Payload pld;
-    //pld = payCreateEmpty(1);
-    //paySetStatus(pld, status);
-    //paySetType(pld, CMD_ECHO);
-    //unsigned char temp = 99;
-    //paySetData(pld, 1, &temp);
-
-    //radioSendPayload((WordVal) macGetDestAddr(), pld);
+    Payload pld;
+    pld = payCreateEmpty(length);
+    pld->pld_data[0] = status;
+    pld->pld_data[1] = CMD_ECHO;
+    memcpy((pld->pld_data) + 2, frame, length);
+    radioSendPayload(RADIO_DST_ADDR, pld);
+    
 }
 
 static void cmdNop(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -280,7 +259,7 @@ static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned 
     pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_PID_GAINS;
     memcpy((pld->pld_data) + 2, frame, 20);
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -297,7 +276,7 @@ static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsi
     pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_CTRLD_TURN_RATE;
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetCtrldTurnRate));
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -342,14 +321,27 @@ static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsi
     pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_STEERING_GAINS;
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetSteeringGains));
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 
 }
 
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame) {
-    char* resetmsg = "RESET";
-    radioSendPayload(macGetDestAddr(), payCreate(6, (unsigned char*)resetmsg, status, CMD_ECHO));
-    delay_ms(10);
+    char resetmsg[] = "RESET";
+    int len = strlen(resetmsg);
+
+    MacPacket response;
+    response = radioRequestPacket(len);
+
+    macSetDestPan(response, RADIO_PAN_ID);
+    macSetDestAddr(response, RADIO_DST_ADDR);
+    Payload pld = macGetPayload(response);
+
+    paySetData(pld, len, (unsigned char*)resetmsg);
+    paySetType(pld, CMD_SOFTWARE_RESET);
+    paySetStatus(pld, 0);
+    
+    while(!radioEnqueueTxPacket(response)) { radioProcess(); }
+
 #ifndef __DEBUG
     __asm__ volatile ("reset");
 #endif
@@ -375,7 +367,7 @@ static void cmdEraseSector(unsigned char status, unsigned char length, unsigned 
     paySetData(pld, 4, (unsigned char*) (&(argsPtr->samples)));
     paySetStatus(pld, status);
     paySetType(pld, CMD_ERASE_SECTORS);
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -396,7 +388,7 @@ static void cmdSleep(unsigned char status, unsigned char length, unsigned char *
         paySetData(pld, 1, (unsigned char*) (&sleep)); //echo back a CMD_SLEEP with '0', incdicating a wakeup
         paySetStatus(pld, status);
         paySetType(pld, CMD_SLEEP);
-        radioSendPayload((WordVal) macGetDestAddr(), pld);
+        radioSendPayload(RADIO_DST_ADDR, pld);
     }
 }
 
@@ -416,14 +408,14 @@ static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigne
     paySetType(pld, CMD_SET_VEL_PROFILE);
     // packet length = 48 bytes (24 ints)
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetVelProfile));
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 // report motor position and  reset motor position (from Hall effect sensors)
 // note motor_count is long (4 bytes)
 void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame) {
 
-    radioSendPayload(macGetDestAddr(), payCreate(2*sizeof(long),
+    radioSendPayload(RADIO_DST_ADDR, payCreate(2*sizeof(long),
             (unsigned char *)(hallGetMotorCounts()), status, CMD_ZERO_POS));
     hallZeroPos(0);
     hallZeroPos(1);
@@ -444,9 +436,11 @@ void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame)
     // maximum string length to avoid packet size limit
     char* verstr = versionGetString();
     int verlen = strlen(verstr);
-    //The cast to unsigned char* is here to prevent a warning
-    Payload pld = payCreate(verlen, (unsigned char*)verstr, status, CMD_WHO_AM_I);
-    radioSendPayload(macGetDestAddr(), pld);
+
+    Payload pld;
+    pld = payCreate(verlen, (unsigned char*)verstr, 0, CMD_WHO_AM_I);
+
+    radioSendPayload(RADIO_DST_ADDR,pld);
 }
 
 static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -464,7 +458,7 @@ static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned
     paySetType(pld, CMD_SET_HALL_GAINS);
     paySetStatus(pld, status);
     memcpy((pld->pld_data) + 2, frame, 20);
-    radioSendPayload((WordVal) macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -504,7 +498,7 @@ static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned
     pld->pld_data[0] = status;
     pld->pld_data[1] = CMD_SET_TAIL_GAINS;
     memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetTailGains));
-    radioSendPayload(macGetDestAddr(), pld);
+    radioSendPayload(RADIO_DST_ADDR, pld);
 }
 
 

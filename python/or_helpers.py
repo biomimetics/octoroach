@@ -249,7 +249,7 @@ class Robot:
             tries = tries + 1
             time.sleep(0.3)   
     
-    def downloadTelemetry(self, timeout = 6):
+    def downloadTelemetry(self, timeout = 10000):
         #supress callback output messages for the duration of download
         self.VERBOSE = False
         self.clAnnounce()
@@ -261,7 +261,7 @@ class Robot:
         #bytesIn = 0
         while self.imudata.count([]) > 0:
             time.sleep(0.1)
-            dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
+            #dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
             if (time.time() - shared.last_packet_time) > timeout:
                 print ""
                 self.clAnnounce()
@@ -290,7 +290,7 @@ class Robot:
         self.findFileName()
         self.writeFileHeader()
         fileout = open(self.dataFileName, 'a')
-        np.savetxt(fileout , np.array(self.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')
+        np.savetxt(fileout , np.array(self.imudata), '%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f', delimiter = ',')
         fileout.close()
         self.clAnnounce()
         print "Telemtry data saved to", self.dataFileName

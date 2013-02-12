@@ -38,6 +38,7 @@
         <itemPath>../lib/imu.h</itemPath>
         <itemPath>../../imageproc-lib/spi_controller.h</itemPath>
         <itemPath>../lib/led.h</itemPath>
+        <itemPath>../lib/or_telem.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
       <itemPath>source/settings.h</itemPath>
@@ -69,6 +70,10 @@
         <itemPath>../../imageproc-lib/spi_controller.c</itemPath>
         <itemPath>../../imageproc-lib/ams-enc.c</itemPath>
         <itemPath>../../imageproc-lib/at86rf231_driver.c</itemPath>
+        <itemPath>../../imageproc-lib/payload.c</itemPath>
+        <itemPath>../../imageproc-lib/carray.c</itemPath>
+        <itemPath>../../imageproc-lib/ppool.c</itemPath>
+        <itemPath>../../imageproc-lib/mac_packet.c</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../../imageproc-lib/delay.s</itemPath>
@@ -665,6 +670,7 @@
         <appendMe value="-g "/>
       </C30-AS>
       <C30-LD>
+        <property key="additional-options-use-response-files" value="false"/>
         <property key="boot-eeprom" value="no_eeprom"/>
         <property key="boot-flash" value="no_flash"/>
         <property key="boot-ram" value="no_ram"/>
@@ -709,6 +715,90 @@
         <property key="output-file-format" value="elf"/>
       </C30Global>
       <RealICEPlatformTool>
+        <property key="ADC 1" value="true"/>
+        <property key="ADC 2" value="true"/>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze All Other Peripherals" value="true"/>
+        <property key="I2C1" value="true"/>
+        <property key="I2C2" value="true"/>
+        <property key="INPUT CAPTURE 1" value="true"/>
+        <property key="INPUT CAPTURE 2" value="true"/>
+        <property key="INPUT CAPTURE 3" value="true"/>
+        <property key="INPUT CAPTURE 4" value="true"/>
+        <property key="INPUT CAPTURE 5" value="true"/>
+        <property key="INPUT CAPTURE 6" value="true"/>
+        <property key="INPUT CAPTURE 7" value="true"/>
+        <property key="INPUT CAPTURE 8" value="true"/>
+        <property key="OUTPUT COMPARE 1" value="true"/>
+        <property key="OUTPUT COMPARE 2" value="true"/>
+        <property key="OUTPUT COMPARE 3" value="true"/>
+        <property key="OUTPUT COMPARE 4" value="true"/>
+        <property key="OUTPUT COMPARE 5" value="true"/>
+        <property key="OUTPUT COMPARE 6" value="true"/>
+        <property key="OUTPUT COMPARE 7" value="true"/>
+        <property key="OUTPUT COMPARE 8" value="true"/>
+        <property key="PWM" value="true"/>
+        <property key="QEI" value="true"/>
+        <property key="RIExTrigs.Five" value="OFF"/>
+        <property key="RIExTrigs.Four" value="OFF"/>
+        <property key="RIExTrigs.One" value="OFF"/>
+        <property key="RIExTrigs.Seven" value="OFF"/>
+        <property key="RIExTrigs.Six" value="OFF"/>
+        <property key="RIExTrigs.Three" value="OFF"/>
+        <property key="RIExTrigs.Two" value="OFF"/>
+        <property key="RIExTrigs.Zero" value="OFF"/>
+        <property key="SPI 1" value="true"/>
+        <property key="SPI 2" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="TIMER1" value="true"/>
+        <property key="TIMER2" value="true"/>
+        <property key="TIMER3" value="true"/>
+        <property key="TIMER4" value="true"/>
+        <property key="TIMER5" value="true"/>
+        <property key="TIMER6" value="true"/>
+        <property key="TIMER7" value="true"/>
+        <property key="TIMER8" value="true"/>
+        <property key="TIMER9" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="UART 1" value="true"/>
+        <property key="UART 2" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="hwtoolclock.instructionspeed" value="4"/>
+        <property key="hwtoolclock.units" value="mips"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.end" value="0x157ff"/>
+        <property key="memories.programmemory.start" value="0x0"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveprogramrange.end" value="0x157ff"/>
+        <property key="programoptions.preserveprogramrange.start" value="0x0"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="tracecontrol.collectioninterval" value="1"/>
+        <property key="tracecontrol.collectionunits" value="1"/>
+        <property key="tracecontrol.disablemacros" value="false"/>
+        <property key="tracecontrol.medium" value="0"/>
+        <property key="tracecontrol.portselect" value="0"/>
+        <property key="tracecontrol.select" value="0"/>
+        <property key="tracecontrol.spiselect" value="0"/>
+        <property key="tracecontrol.timerpriority" value="3"/>
+        <property key="tracecontrol.timerselect" value="0"/>
+        <property key="tracecontrol.tracebufmax" value="54600"/>
+        <property key="tracecontrol.tracefile" value="C:\Users\pullin\mpdeftrace.log"/>
+        <property key="tracecontrol.tracefilemax" value="1048510"/>
+        <property key="voltagevalue" value="${poweroptions.DefaultPower}"/>
       </RealICEPlatformTool>
     </conf>
   </confs>

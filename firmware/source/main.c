@@ -33,6 +33,8 @@
 #include "tail_ctrl.h"
 //#include "ams-enc.h"
 #include "imu.h"
+#include "spi_controller.h"
+#include "ppool.h"
 
 #include <stdlib.h>
 
@@ -50,26 +52,34 @@ int main(void) {
     //dcCounter = 0;
 
     SetupClock();
-    SwitchClocks();
+    
     SetupPorts();
     //batSetup();
 
-    int old_ipl;
-    mSET_AND_SAVE_CPU_IP(old_ipl, 1)
+    //int old_ipl;
+    //mSET_AND_SAVE_CPU_IP(old_ipl, 1);
+
+    cmdSetup();
+
+    SwitchClocks();
     sclockSetup();
 
+    spicSetupChannel1();
+    ppoolInit();
     radioInit(RADIO_TXPQ_MAX_SIZE, RADIO_RXPQ_MAX_SIZE);
     radioSetChannel(RADIO_CHANNEL);
     radioSetSrcPanID(RADIO_PAN_ID);
     radioSetSrcAddr(RADIO_SRC_ADDR);
-
+    
     dfmemSetup();
     //xlSetup();
     gyroSetup();
-    mcSetup();
-    cmdSetup(RADIO_RXPQ_MAX_SIZE);
-    adcSetup();
+    
+
     telemSetup(); //Timer 5
+    mcSetup();
+    adcSetup();
+ 
     //encSetup();
     imuSetup();
 
@@ -92,9 +102,9 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    if (phyGetState() == 0x16) {
-        LED_GREEN = 1;
-    }
+    //if (phyGetState() == 0x16) {
+    //    LED_GREEN = 1;
+    //}
 
     //Sleeping and low power options
     //_VREGS = 1;
@@ -103,12 +113,12 @@ int main(void) {
     while (1) {
         cmdHandleRadioRxBuffer();
         radioProcess();
+
 #ifndef __DEBUG //Idle will not work with debug
         //Simple idle:
-        if (radioRxQueueEmpty()) {
-            Idle();
-            //_T1IE = 0;
-        }
+        //if (radioRxQueueEmpty()) {
+            //Idle();
+        //}
 #endif
 
         //delay_ms(1000);

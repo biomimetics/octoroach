@@ -110,7 +110,7 @@ def main():
     
     numMoves = 1
     moveq1 = [numMoves, \
-        0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+        0, 0, 500, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
@@ -118,8 +118,8 @@ def main():
     #    0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
         
     #Timing settings
-    R1.leadinTime = 100;
-    R1.leadoutTime = 100;
+    R1.leadinTime = 0;
+    R1.leadoutTime = 0;
     
     #Flash must be erased to save new data
     if SAVE_DATA1:
@@ -158,7 +158,7 @@ def main():
         #Wait for robots to do runs
         time.sleep(maxtime / 1000.0)
         raw_input("Press Enter to start telemtry readback ...")
-        R1.downloadTelemetry()
+        R1.downloadTelemetry(timeout = 10000)
 
     if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
         while True:

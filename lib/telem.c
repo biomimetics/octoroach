@@ -22,7 +22,7 @@
 #if defined(__RADIO_HIGH_DATA_RATE)
 #define READBACK_DELAY_TIME_MS 3
 #else
-#define READBACK_DELAY_TIME_MS 10
+#define READBACK_DELAY_TIME_MS 15
 #endif
 
 telemStruct_t telemBuffer;
@@ -79,7 +79,7 @@ static void SetupTimer5() {
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_7 & T5_INT_ON);
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON);
     //OpenTimer5(con_reg, period);
     //ConfigIntTimer5(T5_INT_PRIOR_5 & T5_INT_ON);
 }
@@ -115,16 +115,16 @@ void telemReadbackSamples(unsigned long numSamples) {
 
     for (i = 0; i < numSamples; i++) {
         //Retireve data from flash
-        dfmemReadSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
+        telemGetSample(i, sizeof (sampleData), (unsigned char*) (&sampleData));
         //Reliable send, with linear backoff
-        do {
-            debugpins1_set();
-            telemSendDataDelay(delaytime_ms);
+        //do {
+            //debugpins1_set();
+            telemSendDataDelay(&sampleData, delaytime_ms);
             //Linear backoff
-            delaytime_ms += 2;
-            debugpins1_clr();
-        } while (trxGetLastACKd() == 0);
-
+            //delaytime_ms += 2;
+            //debugpins1_clr();
+        //} while (trxGetLastACKd() == 0);
+            delay_ms(25);
         delaytime_ms = READBACK_DELAY_TIME_MS;
     }
 
@@ -132,24 +132,20 @@ void telemReadbackSamples(unsigned long numSamples) {
 
 }
 
-void telemSendDataDelay(int delaytime_ms) {
+void telemSendDataDelay(telemStruct_t* sample, int delaytime_ms) {
     // Create Payload, set status and type (don't cares)
-    Payload pld = payCreateEmpty(telemPacketSize); //header + data size
+    MacPacket pkt = radioRequestPacket(telemPacketSize);
+    macSetDestPan(pkt, RADIO_PAN_ID);
+    macSetDestAddr(pkt, RADIO_DST_ADDR);
+    Payload pld = macGetPayload(pkt);
 
-    paySetType(pld, CMD_SPECIAL_TELEMETRY); //this is the only dependance on cmd.h
+    paySetData(pld, telemPacketSize, (unsigned char*) sample);
+    paySetType(pld, CMD_SPECIAL_TELEMETRY); 
     paySetStatus(pld, 0);
 
-    //payAppendData should be written differently, without a 'loc' argument
-    //Set the sample index and timestamp for the packet
-    payAppendData(pld, 0, telemPacketSize,
-            (unsigned char*) (&telemBuffer));
-
-    // Handles pld delete: Assigns pointer to payload in packet
-    //    and radio command deletes payload, then packet.
-    debugpins2_set();
-    radioSendPayload(macGetDestAddr(), pld);
-    debugpins2_clr();
-
+    //Force immediate send
+    while(!radioEnqueueTxPacket(pkt))
+    
     delay_ms(delaytime_ms); // allow radio transmission time
 
 }
@@ -158,8 +154,6 @@ void telemSendDataDelay(int delaytime_ms) {
 //Saves telemetry data structure into flash memory, in order
 
 void telemSaveData(telemStruct_t * telemPkt) {
-
-    unsigned int temp =  sizeof(telemStruct_t);
     
     //Write the packet header info to the DFMEM
     dfmemSave((unsigned char*) telemPkt, sizeof(telemStruct_t));
@@ -168,11 +162,8 @@ void telemSaveData(telemStruct_t * telemPkt) {
     //This is done here instead of the ISR because telemSaveData() will only be
     //executed if samplesToSave > 0 upon entry.
     if (samplesToSave == 0) {
-        //delay_ms(100);
         //Done sampling, commit last buffer
         dfmemSync();
-        //Nop();
-        //Nop();
     }
 }
 
@@ -204,7 +195,7 @@ void telemErase(unsigned long numSamples) {
     for (i = 1; i <= numSectors; i++) {
         firstPageOfSector = mem_geo.pages_per_sector * i;
         //hold off until dfmem is ready for secort erase command
-        while (!dfmemIsReady());
+        //while (!dfmemIsReady());
         //LED should blink indicating progress
         LED_2 = ~LED_2;
         //Send actual erase command
@@ -212,16 +203,25 @@ void telemErase(unsigned long numSamples) {
     }
 
     //Leadout flash, should blink faster than above, indicating the last sector
-    while (!dfmemIsReady()) {
-        LED_2 = ~LED_2;
-        delay_ms(75);
-    }
+    //while (!dfmemIsReady()) {
+    //    LED_2 = ~LED_2;
+    //    delay_ms(75);
+    //}
     LED_2 = 0; //Green LED off
 
     //Since we've erased, reset our place keeper vars
-    dfmemZeroIndex();
+    //dfmemZeroIndex();
 }
 
+
+void telemGetSample(unsigned long sampNum, unsigned int sampLen, unsigned char *data)
+{
+    unsigned int samplesPerPage = mem_geo.bytes_per_page / sampLen; //round DOWN int division
+    unsigned int pagenum = sampNum / samplesPerPage;
+    unsigned int byteOffset = (sampNum - pagenum*samplesPerPage)*sampLen;
+
+    dfmemRead(pagenum, byteOffset, sampLen, data);
+}
 
 ////   Private functions
 ////////////////////////
@@ -267,7 +267,7 @@ static void telemISRHandler() {
                 payAppendData(pld, 0, telemPacketSize,
                         (unsigned char*) (&telemBuffer));
 
-                radioSendPayload(macGetDestAddr(), pld);
+                radioSendPayload(RADIO_DST_ADDR, pld);
                 samplesToStream--;
             } else {
                 telemStreamingFlag = TELEM_STREAM_OFF;

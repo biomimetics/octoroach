@@ -23,11 +23,12 @@ typedef struct {
 // Prototypes
 void telemSetup(); //To be called in main
 void telemReadbackSamples(unsigned long);
-void telemSendDataDelay(int delaytime_ms);
+void telemSendDataDelay(telemStruct_t* sample, int delaytime_ms);
 void telemSaveData(telemStruct_t *data);
 void telemSetSamplesToSave(unsigned long n);
 void telemErase(unsigned long);
 void telemSetSkip(unsigned int skipnum);
 void telemSetStartTime(void);
+void telemGetSample(unsigned long sampNum, unsigned int sampLen, unsigned char *data);
 
 #endif  // __TELEM_H

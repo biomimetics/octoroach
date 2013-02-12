@@ -62,7 +62,7 @@ is invalid and void.
 #define LEN_CMD_SLEEP			1   //1 char
 */
 
-void cmdSetup(void);
+unsigned int cmdSetup(void);
 void cmdHandleRadioRxBuffer(void);
 void cmdEcho(unsigned char status, unsigned char length, unsigned char *frame);
 

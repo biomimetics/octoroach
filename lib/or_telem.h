@@ -4,7 +4,6 @@
 
 // Data structure type
 typedef struct {
-    unsigned long timeStamp;
     int inputL;
     int inputR;
     int dcL;
@@ -18,13 +17,11 @@ typedef struct {
     int accelZ;
     int bemfL;
     int bemfR;
-    float tailTorque;
+    int steerIn;
+    int steerOut;
     int Vbatt;
-    int steerAngle;
-    float tailAngle;
-    float bodyPosition;
     unsigned long motor_count[2];
-    int sOut;
+    float yawAngle;
 } orTelemStruct_t;
 
 void orTelemGetData(unsigned char* ptr);
