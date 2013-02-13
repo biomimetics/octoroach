@@ -260,7 +260,7 @@ class Robot:
         shared.last_packet_time = dlStart
         #bytesIn = 0
         while self.imudata.count([]) > 0:
-            time.sleep(0.15)
+            time.sleep(0.02)
             dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
             if (time.time() - shared.last_packet_time) > timeout:
                 print ""
@@ -280,8 +280,16 @@ class Robot:
                 self.tx( 0, command.FLASH_READBACK, pack('=L',self.numSamples))
 
         dlEnd = time.time()
+        dlTime = dlEnd - dlStart
         #Final update to download progress bar to make it show 100%
         dlProgress(self.numSamples-self.imudata.count([]) , self.numSamples)
+        totBytes = 52*self.numSamples
+        datarate = totBytes / dlTime / 1000.0
+        print '\n'
+        self.clAnnounce()
+        #print "Got ",self.numSamples,"samples in ",dlTime,"seconds"
+        self.clAnnounce()
+        print "DL rate: {0:.2f} KB/s".format(datarate)
 
         #enable callback output messages
         self.VERBOSE = True

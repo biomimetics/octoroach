@@ -4,8 +4,9 @@
 \author Andrew Pullin <pullin@berkeley.edu>, January 2013.
  */
 
-#include "p33fj128mc706a.h"
+#include <xc.h>
 #include "debugpins.h"
+#include "utils.h"
 
 //Pins are ordinally numbers from outboard (1) to inboard (6)
 
