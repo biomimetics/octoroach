@@ -16,7 +16,7 @@
 //Timer parameters
 #define TIMER_FREQUENCY     300                 // 400 Hz
 #define TIMER_PERIOD        1/TIMER_FREQUENCY
-#define DEFAULT_SKIP_NUM    2 //Default to 150 Hz save rate
+#define DEFAULT_SKIP_NUM    1 //Default to 150 Hz save rate
 
 
 #if defined(__RADIO_HIGH_DATA_RATE)
@@ -121,7 +121,7 @@ void telemReadbackSamples(unsigned long numSamples) {
             //debugpins1_set();
             telemSendDataDelay(&sampleData, delaytime_ms);
             //Linear backoff
-            delaytime_ms += 2;
+            delaytime_ms += 0;
             //debugpins1_clr();
         } while (trxGetLastACKd() == 0);
         delaytime_ms = READBACK_DELAY_TIME_MS;

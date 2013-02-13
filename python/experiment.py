@@ -108,11 +108,9 @@ def main():
     #    85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
     #    85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
     
-    numMoves = 3
+    numMoves = 1
     moveq1 = [numMoves, \
-        0, 0, 250, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,
-        900, 0, 500, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0,         
-        0, 0, 250, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+        0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
@@ -120,8 +118,8 @@ def main():
     #    0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
         
     #Timing settings
-    R1.leadinTime = 250;
-    R1.leadoutTime = 250;
+    R1.leadinTime = 0;
+    R1.leadoutTime = 0;
     
     #Flash must be erased to save new data
     if SAVE_DATA1:
