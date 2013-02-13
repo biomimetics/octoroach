@@ -31,58 +31,65 @@
 #include "telem.h"
 #include "hall.h"
 #include "tail_ctrl.h"
-#include "ams-enc.h"
+//#include "ams-enc.h"
 #include "imu.h"
+#include "spi_controller.h"
+#include "ppool.h"
 
 #include <stdlib.h>
 
 extern unsigned char id[4];
 
-volatile unsigned long wakeTime;
-extern volatile char g_radio_duty_cycle;
-extern volatile char inMotion;
+//volatile unsigned long wakeTime;
+//extern volatile char g_radio_duty_cycle;
+//extern volatile char inMotion;
 
 int dcCounter;
 
 int main(void) {
 
-    wakeTime = 0;
-    dcCounter = 0;
-
-    WordVal src_addr_init = {RADIO_SRC_ADDR};
-    WordVal src_pan_id_init = {RADIO_SRC_PAN_ID};
-    WordVal dst_addr_init = {RADIO_DST_ADDR};
+    //wakeTime = 0;
+    //dcCounter = 0;
 
     SetupClock();
-    SwitchClocks();
+    
     SetupPorts();
     //batSetup();
 
-    int old_ipl;
-    mSET_AND_SAVE_CPU_IP(old_ipl, 1)
+    //int old_ipl;
+    //mSET_AND_SAVE_CPU_IP(old_ipl, 1);
 
+    cmdSetup();
+
+    SwitchClocks();
     sclockSetup();
-    radioInit(src_addr_init, src_pan_id_init, RADIO_RXPQ_MAX_SIZE, RADIO_TXPQ_MAX_SIZE);
-    radioSetChannel(RADIO_CHANNEL); //Set to my channel
-    macSetDestAddr(dst_addr_init);
 
+    spicSetupChannel1();
+    ppoolInit();
+    radioInit(RADIO_TXPQ_MAX_SIZE, RADIO_RXPQ_MAX_SIZE);
+    radioSetChannel(RADIO_CHANNEL);
+    radioSetSrcPanID(RADIO_PAN_ID);
+    radioSetSrcAddr(RADIO_SRC_ADDR);
+    
     dfmemSetup();
     //xlSetup();
     gyroSetup();
-    mcSetup();
-    cmdSetup();
-    adcSetup();
+    
+
     telemSetup(); //Timer 5
-    encSetup();
+    mcSetup();
+    adcSetup();
+ 
+    //encSetup();
     imuSetup();
 
-    #ifdef  HALL_SENSORS
-    hallSetup();    // Timer 1, Timer 2
+#ifdef  HALL_SENSORS
+    hallSetup(); // Timer 1, Timer 2
     hallSteeringSetup(); //doesn't exist yet
-    #else //No hall sensors, standard BEMF control
+#else //No hall sensors, standard BEMF control
     legCtrlSetup(); // Timer 1
-    steeringSetup();  //Timer 5
-    #endif
+    steeringSetup(); //Timer 5
+#endif
 
     //Tail control is a special case
     //tailCtrlSetup();
@@ -95,7 +102,9 @@ int main(void) {
     LED_YELLOW = 0;
 
     //Radio startup verification
-    if(phyGetState() == 0x16)  { LED_GREEN = 1; }
+    //if (phyGetState() == 0x16) {
+    //    LED_GREEN = 1;
+    //}
 
     //Sleeping and low power options
     //_VREGS = 1;
@@ -103,13 +112,13 @@ int main(void) {
 
     while (1) {
         cmdHandleRadioRxBuffer();
+        radioProcess();
 
 #ifndef __DEBUG //Idle will not work with debug
         //Simple idle:
-        if (radioIsRxQueueEmpty()) {
-            Idle();
-            //_T1IE = 0;
-        }
+        //if (radioRxQueueEmpty()) {
+            //Idle();
+        //}
 #endif
 
         //delay_ms(1000);
@@ -148,7 +157,7 @@ int main(void) {
     }
 		
     //should be asleep here, waiting for WTD wakeup
-    ClrWdt(); //clear wdt
+    ClrWdt(); //cleagr wdt
     _SWDTEN = 0; //software disable wdt
     LED_RED = 1;
 

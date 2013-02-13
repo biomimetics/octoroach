@@ -1,7 +1,6 @@
 // Authors: nkohut
 
 #include "utils.h"
-#include "payload.h"
 #include "led.h"
 #include "gyro.h"
 #include "xl.h"
@@ -10,7 +9,7 @@
 #include "adc_pid.h"
 #include "leg_ctrl.h"
 #include "sys_service.h"
-#include "ams-enc.h"
+//#include "ams-enc.h"
 #include "imu.h"
 
 #define TIMER_FREQUENCY     300.0                 // 300 Hz

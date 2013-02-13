@@ -249,7 +249,7 @@ class Robot:
             tries = tries + 1
             time.sleep(0.3)   
     
-    def downloadTelemetry(self, timeout = 6):
+    def downloadTelemetry(self, timeout = 5):
         #supress callback output messages for the duration of download
         self.VERBOSE = False
         self.clAnnounce()
@@ -290,7 +290,7 @@ class Robot:
         #print "Got ",self.numSamples,"samples in ",dlTime,"seconds"
         self.clAnnounce()
         print "DL rate: {0:.2f} KB/s".format(datarate)
-
+        
         #enable callback output messages
         self.VERBOSE = True
 

@@ -18,6 +18,12 @@ void debugpins_init() {
     TRISDbits.TRISD2 = 0;
     TRISDbits.TRISD3 = 0;
     TRISDbits.TRISD4 = 0;
+    debugpins1_set();
+    debugpins2_set();
+    debugpins3_set();
+    debugpins4_set();
+    debugpins5_set();
+    debugpins6_set();
     debugpins1_clr();
     debugpins2_clr();
     debugpins3_clr();

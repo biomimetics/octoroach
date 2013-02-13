@@ -183,9 +183,9 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    #except Exception as args:
-    #    print "\nGeneral exception:",args
-    #    print "Attemping to exit cleanly..."
-    #    shared.xb.halt()
-    #    shared.ser.close()
-    #    sys.exit()
+    except Exception as args:
+        print "\nGeneral exception:",args
+        print "Attemping to exit cleanly..."
+        shared.xb.halt()
+        shared.ser.close()
+        sys.exit()

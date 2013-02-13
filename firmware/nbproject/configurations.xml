@@ -10,19 +10,15 @@
         <itemPath>../../imageproc-lib/xl.h</itemPath>
         <itemPath>../../imageproc-lib/utils.h</itemPath>
         <itemPath>../../imageproc-lib/payload.h</itemPath>
-        <itemPath>../../imageproc-lib/payload_queue.h</itemPath>
-        <itemPath>../../imageproc-lib/packet_queue.h</itemPath>
         <itemPath>../../imageproc-lib/queue.h</itemPath>
-        <itemPath>../../imageproc-lib/at86rf.h</itemPath>
         <itemPath>../../imageproc-lib/at86rf231.h</itemPath>
-        <itemPath>../../imageproc-lib/ipspi1.h</itemPath>
         <itemPath>../../imageproc-lib/radio.h</itemPath>
         <itemPath>../../imageproc-lib/init_default.h</itemPath>
         <itemPath>../../imageproc-lib/dfilter_avg.h</itemPath>
         <itemPath>../../imageproc-lib/gyro.h</itemPath>
         <itemPath>../../imageproc-lib/pid_hw.h</itemPath>
         <itemPath>../../imageproc-lib/pid.h</itemPath>
-        <itemPath>../../imageproc-lib/ams-enc.h</itemPath>
+        <itemPath>../../imageproc-lib/ppool.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../lib/motor_ctrl.h</itemPath>
@@ -30,7 +26,6 @@
         <itemPath>../lib/flashmem.h</itemPath>
         <itemPath>../lib/move_queue.h</itemPath>
         <itemPath>../lib/steering.h</itemPath>
-        <itemPath>../lib/sensors.h</itemPath>
         <itemPath>../lib/estop.h</itemPath>
         <itemPath>../lib/telem.h</itemPath>
         <itemPath>../../imageproc-lib/dfmem.h</itemPath>
@@ -41,7 +36,9 @@
         <itemPath>../lib/sys_service.h</itemPath>
         <itemPath>../lib/hall.h</itemPath>
         <itemPath>../lib/imu.h</itemPath>
-        <itemPath>../../imageproc-lib/sclock.h</itemPath>
+        <itemPath>../../imageproc-lib/spi_controller.h</itemPath>
+        <itemPath>../lib/led.h</itemPath>
+        <itemPath>../lib/or_telem.h</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.h</itemPath>
       <itemPath>source/settings.h</itemPath>
@@ -58,13 +55,8 @@
                      projectFiles="true">
         <itemPath>../../imageproc-lib/xl.c</itemPath>
         <itemPath>../../imageproc-lib/battery.c</itemPath>
-        <itemPath>../../imageproc-lib/packet_queue.c</itemPath>
         <itemPath>../../imageproc-lib/queue.c</itemPath>
-        <itemPath>../../imageproc-lib/at86rf.c</itemPath>
-        <itemPath>../../imageproc-lib/payload.c</itemPath>
-        <itemPath>../../imageproc-lib/ipspi1.c</itemPath>
         <itemPath>../../imageproc-lib/radio.c</itemPath>
-        <itemPath>../../imageproc-lib/payload_queue.c</itemPath>
         <itemPath>../../imageproc-lib/init_default.c</itemPath>
         <itemPath>../../imageproc-lib/dfmem.c</itemPath>
         <itemPath>../../imageproc-lib/i2c_driver.c</itemPath>
@@ -74,14 +66,20 @@
         <itemPath>../../imageproc-lib/pid.c</itemPath>
         <itemPath>../../imageproc-lib/version.c</itemPath>
         <itemPath>../../imageproc-lib/sclock.c</itemPath>
+        <itemPath>../lib/debugpins.c</itemPath>
+        <itemPath>../../imageproc-lib/spi_controller.c</itemPath>
         <itemPath>../../imageproc-lib/ams-enc.c</itemPath>
+        <itemPath>../../imageproc-lib/at86rf231_driver.c</itemPath>
+        <itemPath>../../imageproc-lib/payload.c</itemPath>
+        <itemPath>../../imageproc-lib/carray.c</itemPath>
+        <itemPath>../../imageproc-lib/ppool.c</itemPath>
+        <itemPath>../../imageproc-lib/mac_packet.c</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>../../imageproc-lib/delay.s</itemPath>
         <itemPath>../lib/motor_ctrl.c</itemPath>
         <itemPath>../lib/traps.c</itemPath>
         <itemPath>../lib/move_queue.c</itemPath>
-        <itemPath>../lib/sensors.c</itemPath>
         <itemPath>../lib/estop.c</itemPath>
         <itemPath>../lib/telem.c</itemPath>
         <itemPath>../lib/steering.c</itemPath>
@@ -91,6 +89,7 @@
         <itemPath>../lib/sys_service.c</itemPath>
         <itemPath>../lib/hall.c</itemPath>
         <itemPath>../lib/imu.c</itemPath>
+        <itemPath>../lib/or_telem.c</itemPath>
         <itemPath>../lib/adc_pid.c</itemPath>
       </logicalFolder>
       <itemPath>source/cmd.c</itemPath>
@@ -403,36 +402,6 @@
           <property key="output-file-format" value="elf"/>
         </C30Global>
       </item>
-      <item path="../lib/sensors.c" ex="false" overriding="false">
-        <C30>
-          <property key="code-model" value="default"/>
-          <property key="const-model" value="default"/>
-          <property key="data-model" value="large-data"/>
-          <property key="enable-all-warnings" value="false"/>
-          <property key="enable-ansi-std" value="false"/>
-          <property key="enable-ansi-warnings" value="false"/>
-          <property key="enable-fatal-warnings" value="false"/>
-          <property key="enable-large-arrays" value="false"/>
-          <property key="enable-omit-frame-pointer" value="false"/>
-          <property key="enable-procedural-abstraction" value="false"/>
-          <property key="enable-short-double" value="false"/>
-          <property key="enable-symbols" value="true"/>
-          <property key="enable-unroll-loops" value="false"/>
-          <property key="extra-include-directories" value=""/>
-          <property key="isolate-each-function" value="false"/>
-          <property key="optimization-level" value="0"/>
-          <property key="post-instruction-scheduling" value="default"/>
-          <property key="pre-instruction-scheduling" value="default"/>
-          <property key="preprocessor-macros" value=""/>
-          <property key="scalar-model" value="default"/>
-        </C30>
-        <C30-AS>
-        </C30-AS>
-        <C30-LD>
-        </C30-LD>
-        <C30Global>
-        </C30Global>
-      </item>
       <item path="../lib/steering.c" ex="false" overriding="true">
         <C30>
           <property key="code-model" value="default"/>
@@ -701,6 +670,7 @@
         <appendMe value="-g "/>
       </C30-AS>
       <C30-LD>
+        <property key="additional-options-use-response-files" value="false"/>
         <property key="boot-eeprom" value="no_eeprom"/>
         <property key="boot-flash" value="no_flash"/>
         <property key="boot-ram" value="no_ram"/>
@@ -745,6 +715,90 @@
         <property key="output-file-format" value="elf"/>
       </C30Global>
       <RealICEPlatformTool>
+        <property key="ADC 1" value="true"/>
+        <property key="ADC 2" value="true"/>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze All Other Peripherals" value="true"/>
+        <property key="I2C1" value="true"/>
+        <property key="I2C2" value="true"/>
+        <property key="INPUT CAPTURE 1" value="true"/>
+        <property key="INPUT CAPTURE 2" value="true"/>
+        <property key="INPUT CAPTURE 3" value="true"/>
+        <property key="INPUT CAPTURE 4" value="true"/>
+        <property key="INPUT CAPTURE 5" value="true"/>
+        <property key="INPUT CAPTURE 6" value="true"/>
+        <property key="INPUT CAPTURE 7" value="true"/>
+        <property key="INPUT CAPTURE 8" value="true"/>
+        <property key="OUTPUT COMPARE 1" value="true"/>
+        <property key="OUTPUT COMPARE 2" value="true"/>
+        <property key="OUTPUT COMPARE 3" value="true"/>
+        <property key="OUTPUT COMPARE 4" value="true"/>
+        <property key="OUTPUT COMPARE 5" value="true"/>
+        <property key="OUTPUT COMPARE 6" value="true"/>
+        <property key="OUTPUT COMPARE 7" value="true"/>
+        <property key="OUTPUT COMPARE 8" value="true"/>
+        <property key="PWM" value="true"/>
+        <property key="QEI" value="true"/>
+        <property key="RIExTrigs.Five" value="OFF"/>
+        <property key="RIExTrigs.Four" value="OFF"/>
+        <property key="RIExTrigs.One" value="OFF"/>
+        <property key="RIExTrigs.Seven" value="OFF"/>
+        <property key="RIExTrigs.Six" value="OFF"/>
+        <property key="RIExTrigs.Three" value="OFF"/>
+        <property key="RIExTrigs.Two" value="OFF"/>
+        <property key="RIExTrigs.Zero" value="OFF"/>
+        <property key="SPI 1" value="true"/>
+        <property key="SPI 2" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="TIMER1" value="true"/>
+        <property key="TIMER2" value="true"/>
+        <property key="TIMER3" value="true"/>
+        <property key="TIMER4" value="true"/>
+        <property key="TIMER5" value="true"/>
+        <property key="TIMER6" value="true"/>
+        <property key="TIMER7" value="true"/>
+        <property key="TIMER8" value="true"/>
+        <property key="TIMER9" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="UART 1" value="true"/>
+        <property key="UART 2" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="hwtoolclock.instructionspeed" value="4"/>
+        <property key="hwtoolclock.units" value="mips"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.end" value="0x157ff"/>
+        <property key="memories.programmemory.start" value="0x0"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveprogramrange.end" value="0x157ff"/>
+        <property key="programoptions.preserveprogramrange.start" value="0x0"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="tracecontrol.collectioninterval" value="1"/>
+        <property key="tracecontrol.collectionunits" value="1"/>
+        <property key="tracecontrol.disablemacros" value="false"/>
+        <property key="tracecontrol.medium" value="0"/>
+        <property key="tracecontrol.portselect" value="0"/>
+        <property key="tracecontrol.select" value="0"/>
+        <property key="tracecontrol.spiselect" value="0"/>
+        <property key="tracecontrol.timerpriority" value="3"/>
+        <property key="tracecontrol.timerselect" value="0"/>
+        <property key="tracecontrol.tracebufmax" value="54600"/>
+        <property key="tracecontrol.tracefile" value="C:\Users\pullin\mpdeftrace.log"/>
+        <property key="tracecontrol.tracefilemax" value="1048510"/>
+        <property key="voltagevalue" value="${poweroptions.DefaultPower}"/>
       </RealICEPlatformTool>
     </conf>
   </confs>
