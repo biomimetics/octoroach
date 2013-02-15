@@ -210,14 +210,9 @@ static void cmdEraseMemSector(unsigned char status, unsigned char length, unsign
  *          AUX functions
 -----------------------------------------------------------------------------*/
 void cmdEcho(unsigned char status, unsigned char length, unsigned char *frame) {
-
-    Payload pld;
-    pld = payCreateEmpty(length);
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_ECHO;
-    memcpy((pld->pld_data) + 2, frame, length);
-    radioSendPayload(RADIO_DST_ADDR, pld);
-    
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_ECHO, length, frame, 0);
 }
 
 static void cmdNop(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -228,6 +223,7 @@ static void cmdNop(unsigned char status, unsigned char length, unsigned char *fr
  *         User function
 -----------------------------------------------------------------------------*/
 static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetThrustOpenLoop, argsPtr, frame);
 
     //set motor duty cycles
@@ -238,6 +234,7 @@ static void cmdSetThrustOpenLoop(unsigned char status, unsigned char length, uns
 }
 
 static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetThrustClosedLoop, argsPtr, frame);
 
     legCtrlSetInput(LEG_CTRL_LEFT, argsPtr->chan1);
@@ -248,18 +245,17 @@ static void cmdSetThrustClosedLoop(unsigned char status, unsigned char length, u
 }
 
 static void cmdSetPIDGains(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetPIDGains, argsPtr, frame);
 
     legCtrlSetGains(0, argsPtr->Kp1, argsPtr->Ki1, argsPtr->Kd1, argsPtr->Kaw1, argsPtr->Kff1);
     legCtrlSetGains(1, argsPtr->Kp2, argsPtr->Ki2, argsPtr->Kd2, argsPtr->Kaw2, argsPtr->Kff2);
 
-    //Send confirmation packet
-    Payload pld;
-    pld = payCreateEmpty(20);
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_SET_PID_GAINS;
-    memcpy((pld->pld_data) + 2, frame, 20);
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Send confirmation packet, which is the exact same data payload as what was sent
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_PID_GAINS, length, frame, 0);
+
 }
 
 static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -268,15 +264,14 @@ static void cmdGetPIDTelemetry(unsigned char status, unsigned char length, unsig
 }
 
 static void cmdSetCtrldTurnRate(unsigned char status, unsigned char length, unsigned char *frame) {
-    Payload pld;
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetCtrldTurnRate, argsPtr, frame);
     steeringSetInput(argsPtr->steerInput);
 
-    pld = payCreateEmpty(sizeof(_args_cmdSetCtrldTurnRate));
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_SET_CTRLD_TURN_RATE;
-    memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetCtrldTurnRate));
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Send confirmation packet, which is the exact same data payload as what was sent
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_CTRLD_TURN_RATE, length, frame, 0);
 }
 
 static void cmdGetImuLoopZGyro(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -290,7 +285,7 @@ static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned
 
     //Unpack unsigned char* frame into structured values
     //Here, unpacking happens in the loop below.
-    //_args_cmdSetMoveQueue* argsPtr;
+    //Due to variable length, PKT_UNPACK is not used here
     int idx = sizeof (count); //should be an unsigned int, sizeof(uint) = 2
 
     moveCmdT move;
@@ -310,19 +305,16 @@ static void cmdSetMoveQueue(unsigned char status, unsigned char length, unsigned
 //
 
 static void cmdSetSteeringGains(unsigned char status, unsigned char length, unsigned char *frame) {
-    Payload pld;
-
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetSteeringGains, argsPtr, frame);
 
     steeringSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->Kff);
     steeringSetMode(argsPtr->steerMode);
 
-    pld = payCreateEmpty(sizeof(_args_cmdSetSteeringGains));
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_SET_STEERING_GAINS;
-    memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetSteeringGains));
-    radioSendPayload(RADIO_DST_ADDR, pld);
-
+    //Send confirmation packet, which is the exact same data payload as what was sent
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_STEERING_GAINS, length, frame, 0);
 }
 
 static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -348,6 +340,7 @@ static void cmdSoftwareReset(unsigned char status, unsigned char length, unsigne
 }
 
 static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSpecialTelemetry, argsPtr, frame);
 
     if (argsPtr->count != 0) {
@@ -357,17 +350,15 @@ static void cmdSpecialTelemetry(unsigned char status, unsigned char length, unsi
 }
 
 static void cmdEraseSector(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdEraseSector, argsPtr, frame);
 
     telemErase(argsPtr->samples);
 
-    //Send a confirmation packet
-    Payload pld;
-    pld = payCreateEmpty(4);
-    paySetData(pld, 4, (unsigned char*) (&(argsPtr->samples)));
-    paySetStatus(pld, status);
-    paySetType(pld, CMD_ERASE_SECTORS);
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Send confirmation packet; this only happens when flash erase is completed.
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_ERASE_SECTORS, length, frame, 0);
 }
 
 static void cmdFlashReadback(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -378,7 +369,9 @@ static void cmdFlashReadback(unsigned char status, unsigned char length, unsigne
 }
 
 static void cmdSleep(unsigned char status, unsigned char length, unsigned char *frame) {
-    char sleep = frame[0];
+    //Currently unused
+    //todo : review power reduction organization
+    /*char sleep = frame[0];
     if (sleep) {
         //g_radio_duty_cycle = 1;
     } else {
@@ -389,36 +382,37 @@ static void cmdSleep(unsigned char status, unsigned char length, unsigned char *
         paySetStatus(pld, status);
         paySetType(pld, CMD_SLEEP);
         radioSendPayload(RADIO_DST_ADDR, pld);
-    }
+    }*/
 }
 
 // set up velocity profile structure  - assume 4 set points for now, generalize later
 static void cmdSetVelProfile(unsigned char status, unsigned char length, unsigned char *frame) {
-    Payload pld;
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetVelProfile, argsPtr, frame);
 
     hallSetVelProfile(0, argsPtr->intervalsL, argsPtr->deltaL, argsPtr->velL);
     hallSetVelProfile(1, argsPtr->intervalsR, argsPtr->deltaR, argsPtr->velR);
 
-    //Send confirmation packet
-    pld = payCreateEmpty(sizeof(_args_cmdSetVelProfile));
-    //pld->pld_data[0] = status;
-    paySetStatus(pld, status);
-    //pld->pld_data[1] = CMD_SET_VEL_PROFILE;
-    paySetType(pld, CMD_SET_VEL_PROFILE);
-    // packet length = 48 bytes (24 ints)
-    memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetVelProfile));
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Send confirmation packet; this only happens when flash erase is completed.
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_VEL_PROFILE, length, frame, 0);
 }
 
 // report motor position and  reset motor position (from Hall effect sensors)
 // note motor_count is long (4 bytes)
 void cmdZeroPos(unsigned char status, unsigned char length, unsigned char *frame) {
 
-    radioSendPayload(RADIO_DST_ADDR, payCreate(2*sizeof(long),
-            (unsigned char *)(hallGetMotorCounts()), status, CMD_ZERO_POS));
     hallZeroPos(0);
     hallZeroPos(1);
+
+    // This function in unsafe. Passing pointers between modules is disallowed.
+    long* hallCounts = hallGetMotorCounts();
+
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_ZERO_POS, 2*sizeof(unsigned long), (unsigned char*)hallCounts, 0);
+
 }
 
 // alternative telemetry which runs at 1 kHz rate inside PID loop
@@ -437,10 +431,9 @@ void cmdWhoAmI(unsigned char status, unsigned char length, unsigned char *frame)
     char* verstr = versionGetString();
     int verlen = strlen(verstr);
 
-    Payload pld;
-    pld = payCreate(verlen, (unsigned char*)verstr, 0, CMD_WHO_AM_I);
-
-    radioSendPayload(RADIO_DST_ADDR,pld);
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_WHO_AM_I, verlen, (unsigned char*)verstr, 0);
 }
 
 static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -450,15 +443,9 @@ static void cmdSetHallGains(unsigned char status, unsigned char length, unsigned
     hallSetGains(0, argsPtr->Kp1, argsPtr->Ki1, argsPtr->Kd1, argsPtr->Kaw1, argsPtr->Kff1);
     hallSetGains(1, argsPtr->Kp2, argsPtr->Ki2, argsPtr->Kd2, argsPtr->Kaw2, argsPtr->Kff2);
 
-    //Send confirmation packet
-    Payload pld;
-    pld = payCreateEmpty(20);
-    //pld->pld_data[0] = status;
-    //pld->pld_data[1] = CMD_SET_HALL_GAINS;
-    paySetType(pld, CMD_SET_HALL_GAINS);
-    paySetStatus(pld, status);
-    memcpy((pld->pld_data) + 2, frame, 20);
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_HALL_GAINS, length, frame, 0);
 }
 
 static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned char *frame) {
@@ -468,7 +455,7 @@ static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned
 
     //Unpack unsigned char* frame into structured values
     //Here, unpacking happens in the loop below.
-    //_args_cmdSetMoveQueue* argsPtr;
+    //Due to variable size, PKT_UNPACK is not used in this CMD
     int idx = sizeof (count); //should be an unsigned int, sizeof(uint) = 2
 
     tailCmdT tailSeg;
@@ -484,25 +471,19 @@ static void cmdSetTailQueue(unsigned char status, unsigned char length, unsigned
 }
 
 static void cmdSetTailGains(unsigned char status, unsigned char length, unsigned char *frame) {
-
     //Unpack unsigned char* frame into structured values
-    //_args_cmdSetPIDGains* argsPtr = (_args_cmdSetPIDGains*) (frame);
     PKT_UNPACK(_args_cmdSetTailGains, argsPtr, frame);
 
     tailCtrlSetGains(argsPtr->Kp, argsPtr->Ki, argsPtr->Kd, argsPtr->Kaw, argsPtr->Kff);
-	//tailCtrlSetGains(0,0,0,0,0);
 
-    //Send confirmation packet
-    Payload pld;
-    pld = payCreateEmpty(sizeof(_args_cmdSetTailGains));
-    pld->pld_data[0] = status;
-    pld->pld_data[1] = CMD_SET_TAIL_GAINS;
-    memcpy((pld->pld_data) + 2, frame, sizeof(_args_cmdSetTailGains));
-    radioSendPayload(RADIO_DST_ADDR, pld);
+    //Note that the destination is the hard-coded RADIO_DST_ADDR
+    //todo : extract the destination address properly.
+    radioSendData(RADIO_DST_ADDR, 0, CMD_SET_TAIL_GAINS, length, frame, 0);
 }
 
 
 static void cmdSetThrustHall(unsigned char status, unsigned char length, unsigned char *frame) {
+    //Unpack unsigned char* frame into structured values
     PKT_UNPACK(_args_cmdSetThrustHall, argsPtr, frame);
 
     hallPIDSetInput(0 , argsPtr->chan1, argsPtr->runtime1);

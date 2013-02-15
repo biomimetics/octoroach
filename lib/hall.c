@@ -542,6 +542,7 @@ void hallInitPIDObj(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int Kff) {
     pid->error = 0;
 }
 
+//todo: a getter should not return a pointer; this is unsafe behavior.
 long* hallGetMotorCounts() {
     return motor_count;
 }

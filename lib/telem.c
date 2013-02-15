@@ -261,17 +261,10 @@ static void telemISRHandler() {
                 //Write telemetry data into packet
                 TELEMPACKFUNC((unsigned char*) &(telemBuffer.telemData));
                 sampIdx++;
+                
+                radioSendData(RADIO_DST_ADDR, 0, CMD_STREAM_TELEMETRY,
+                        telemPacketSize, (unsigned char*)(&telemBuffer), 0);
 
-                //Build packet and send
-                Payload pld;
-                pld = payCreateEmpty(telemPacketSize);
-                paySetType(pld, CMD_STREAM_TELEMETRY); //requires cmd.h
-                paySetStatus(pld, 0);
-
-                payAppendData(pld, 0, telemPacketSize,
-                        (unsigned char*) (&telemBuffer));
-
-                radioSendPayload(RADIO_DST_ADDR, pld);
                 samplesToStream--;
             } else {
                 telemStreamingFlag = TELEM_STREAM_OFF;

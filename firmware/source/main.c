@@ -56,15 +56,14 @@ int main(void) {
     SetupPorts();
     //batSetup();
 
-    //int old_ipl;
-    //mSET_AND_SAVE_CPU_IP(old_ipl, 1);
+    int old_ipl;
+    mSET_AND_SAVE_CPU_IP(old_ipl, 1);
 
     cmdSetup();
 
     SwitchClocks();
     sclockSetup();
 
-    spicSetupChannel1();
     ppoolInit();
     radioInit(RADIO_TXPQ_MAX_SIZE, RADIO_RXPQ_MAX_SIZE);
     radioSetChannel(RADIO_CHANNEL);
