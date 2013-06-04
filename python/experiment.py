@@ -14,7 +14,7 @@ from or_helpers import *
 
 
 ###### Operation Flags ####
-SAVE_DATA1 = True 
+SAVE_DATA1 = False 
 RESET_R1 = True  
 
 EXIT_WAIT   = False
@@ -108,15 +108,19 @@ def main():
     #    85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
     #    85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
     
-    numMoves = 1
-    moveq1 = [numMoves, \
-        0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
+    #numMoves = 1
+    #moveq1 = [numMoves, \
+    #    0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
     #moveq1 = [numMoves, \
     #    0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
-        
+     
+    #trapezoidal velocity profile
+    [numMoves, moveq1] = trapRun(topspeed = 300, tstime = 1000, acceltime=1000, deceltime=1000,steertype = STEER_MODE_YAW_SPLIT)
+    
+
     #Timing settings
     R1.leadinTime = 0;
     R1.leadoutTime = 0;
@@ -169,6 +173,29 @@ def main():
 
     print "Done"
     xb_safe_exit()
+
+
+def trapRun(topspeed = 0, tstime = 0, acceltime = 0, deceltime = 0, steertype = STEER_MODE_YAW_DEC):
+    moveq = []
+    numMoves = 0
+    if acceltime != 0:
+        ramprate = int(topspeed / ( acceltime/1000.0))
+        moveq.extend( [ 0, 0, acceltime,   MOVE_SEG_RAMP, ramprate, ramprate,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    if tstime != 0:
+        ramprate = int(topspeed / ( acceltime/1000.0))
+        moveq.extend( [ topspeed, topspeed, tstime,   MOVE_SEG_CONSTANT, 0, 0,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    if deceltime != 0:
+        ramprate = -int(topspeed / ( deceltime/1000.0))
+        moveq.extend( [ topspeed, topspeed, deceltime,   MOVE_SEG_RAMP, ramprate, ramprate,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    moveq.insert(0,numMoves)
+    
+    return [numMoves, moveq]
 
 
 #Provide a try-except over the whole main function

@@ -64,7 +64,7 @@ def main():
             pygame.event.pump()
             
             thrustInput = -j.get_axis(1)
-            turnInput = -j.get_axis(4)
+            turnInput = -j.get_axis(2)
             
             if j.get_button(BUTTON_L1) == 1 and MAXTHROT > 0:
                 MAXTHROT = MAXTHROT - tinc
