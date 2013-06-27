@@ -1,4 +1,4 @@
-//tail_ctrl.c
+// Contents of this file are copyright Andrew Pullin, 2013
 
 #include "tail_ctrl.h"
 #include "pid.h"
@@ -9,7 +9,7 @@
 #include "math.h"
 #include "sys_service.h"
 #include "move_queue.h"
-#include "ams-enc.h"
+//#include "ams-enc.h"
 #include "motor_ctrl.h"
 #include "gyro.h"
 #include "dfilter_avg.h"
@@ -276,7 +276,7 @@ void tailCtrlSetInput(int val){
 static void serviceTailPID() {
 
 	//update tail position
-	lastTailPos = encGetAux1Pos();
+	//lastTailPos = encGetFloatPos(4);
 	
 	int encAngle = (int) (lastTailPos*10.0);
 	//Update the setpoints

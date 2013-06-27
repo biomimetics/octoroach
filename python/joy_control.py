@@ -1,3 +1,10 @@
+"""
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
+
+"""
+
 from lib import command
 import time,sys
 import serial

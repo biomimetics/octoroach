@@ -1,10 +1,11 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 /* Queue (FIFO) for moveCmdT
 
  */
 
 #include "queue.h"
 #include "move_queue.h"
-#include "payload.h"
 #include "pid.h"
 #include "p33Fxxxx.h"
 //#include <stdio.h>      // for NULL

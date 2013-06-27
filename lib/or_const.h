@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 /******************************************************************************
 * Name: or_const.h
 * Desc: Constants used for the OctoRoACH robot are listed here.

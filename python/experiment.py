@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
-authors: stanbaek, apullin
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
 
 """
 from lib import command
@@ -12,7 +14,7 @@ from or_helpers import *
 
 
 ###### Operation Flags ####
-SAVE_DATA1 = True 
+SAVE_DATA1 = False 
 RESET_R1 = True  
 
 EXIT_WAIT   = False
@@ -44,7 +46,8 @@ def main():
     #  [ Kp , Ki , Kd , Kaw , Kff     ,  Kp , Ki , Kd , Kaw , Kff ]
     #    ----------LEFT----------        ---------_RIGHT----------
     
-    motorgains = [15000,5,0,0,10 , 15000,5,0,0,10] #Hardware PID
+    #motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0] #Hardware PID
+    motorgains = [15000,50,1000,0,0,    15000,50,1000,0,0]
 
     R1.setMotorGains(motorgains, retries = 8)
     #Verify all robots have motor gains set
@@ -52,7 +55,7 @@ def main():
 
     #Steering gains format:
     #  [ Kp , Ki , Kd , Kaw , Kff]
-    steeringGains = [5000,10,0,0,0,  STEER_MODE_DECREASE] # Hardware PID
+    steeringGains = [15000,5,0,0,0,  STEER_MODE_SPLIT] # Hardware PID
 
     R1.setSteeringGains(steeringGains, retries = 8)
     #Verify all robots have steering gains set
@@ -88,27 +91,39 @@ def main():
     # MOVE_SEG_LOOP_DECL: Turns on move queue looping. value1,value2, and params have no effect.
     # MOVE_SEG_LOOP_CLEAR: Turns off move queue looping.value1,value2, and params have no effect.
     # MOVE_SEG_QFLUSH  : Flushes all following items in move queue. value1,value2, and params have no effect.
-
-    #Constant example
-    #moves = 1
-    #moveq = [moves, \
-    #         135, 135, 10000,   MOVE_SEG_CONSTANT, 0, 0, 0]
              
     #YAW control: Straight then -90 degree turn 
-    numMoves = 3
-    moveq1 = [numMoves, \
-        150, 150, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
-        150, 150, 10000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*-90.0)),
-        150, 150, 10000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0))]
+    #numMoves = 5
+    #moveq1 = [numMoves, \
+    #    0, 0, 500,   MOVE_SEG_RAMP, 30, 30,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+    #    60, 60, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*0.0)),
+    #    60, 60, 4000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0)),
+    #    60, 60, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0)),
+    #    60, 60, 500,   MOVE_SEG_RAMP, -30,  -30,  0, STEER_MODE_YAW_SPLIT, int(round(shared.deg2count*90.0))]
+    
+    #numMoves = 4
+    #moveq1 = [numMoves, \
+    #    85, 85, 5300,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*0.0)),
+    #    85, 85, 5900,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*80.0)),
+    #    85, 85, 6500,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*160.0)),
+    #    85, 85, 6200,   MOVE_SEG_CONSTANT, 0, 0,  0, STEER_MODE_YAW_DEC, int(round(shared.deg2count*240.0))]
+    
+    #numMoves = 1
+    #moveq1 = [numMoves, \
+    #    0, 0, 5000, MOVE_SEG_CONSTANT, 0, 0, 0, STEER_MODE_OFF, 0]
     
     #No movements, just for static telemetry capture
     #numMoves = 1
     #moveq1 = [numMoves, \
     #    0, 0, 2000,   MOVE_SEG_CONSTANT, 0,  0,  0, STEER_MODE_OFF, 0]    
-        
+     
+    #trapezoidal velocity profile
+    [numMoves, moveq1] = trapRun(topspeed = 300, tstime = 1000, acceltime=1000, deceltime=1000,steertype = STEER_MODE_YAW_SPLIT)
+    
+
     #Timing settings
-    R1.leadinTime = 500;
-    R1.leadoutTime = 500;
+    R1.leadinTime = 0;
+    R1.leadoutTime = 0;
     
     #Flash must be erased to save new data
     if SAVE_DATA1:
@@ -131,24 +146,22 @@ def main():
     
     if SAVE_DATA1:
         R1.startTelemetrySave()
-
+        
     time.sleep(R1.leadinTime / 1000.0)
     #Send the move queue to the robot; robot will start processing it
     #as soon as it is received
     R1.sendMoveQueue(moveq1)
     
-    maxtime = 0
-    for r in shared.ROBOTS:
-        tottime =  r.runtime + r.leadoutTime
-        if tottime > maxtime:
-            maxtime = tottime
-    
-    #Wait for robots to do runs
-    time.sleep(maxtime / 1000.0)
-    
-    raw_input("Press Enter to start telemtry readback ...")
-    
     if SAVE_DATA1:
+        maxtime = 0
+        for r in shared.ROBOTS:
+            tottime =  r.runtime + r.leadoutTime
+            if tottime > maxtime:
+                maxtime = tottime
+    
+        #Wait for robots to do runs
+        time.sleep(maxtime / 1000.0)
+        raw_input("Press Enter to start telemtry readback ...")
         R1.downloadTelemetry()
 
     if EXIT_WAIT:  #Pause for a Ctrl + Cif specified
@@ -162,6 +175,29 @@ def main():
     xb_safe_exit()
 
 
+def trapRun(topspeed = 0, tstime = 0, acceltime = 0, deceltime = 0, steertype = STEER_MODE_YAW_DEC):
+    moveq = []
+    numMoves = 0
+    if acceltime != 0:
+        ramprate = int(topspeed / ( acceltime/1000.0))
+        moveq.extend( [ 0, 0, acceltime,   MOVE_SEG_RAMP, ramprate, ramprate,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    if tstime != 0:
+        ramprate = int(topspeed / ( acceltime/1000.0))
+        moveq.extend( [ topspeed, topspeed, tstime,   MOVE_SEG_CONSTANT, 0, 0,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    if deceltime != 0:
+        ramprate = -int(topspeed / ( deceltime/1000.0))
+        moveq.extend( [ topspeed, topspeed, deceltime,   MOVE_SEG_RAMP, ramprate, ramprate,  0, steertype, 0])
+        numMoves = numMoves + 1
+        
+    moveq.insert(0,numMoves)
+    
+    return [numMoves, moveq]
+
+
 #Provide a try-except over the whole main function
 # for clean exit. The Xbee module should have better
 # provisions for handling a clean exit, but it doesn't.
@@ -172,9 +208,9 @@ if __name__ == '__main__':
         print "\nRecieved Ctrl+C, exiting."
         shared.xb.halt()
         shared.ser.close()
-    #except Exception as args:
-    #    print "\nGeneral exception:",args
-    #    print "Attemping to exit cleanly..."
-    #    shared.xb.halt()
-    #    shared.ser.close()
-    #    sys.exit()
+    except Exception as args:
+        print "\nGeneral exception:",args
+        print "Attemping to exit cleanly..."
+        shared.xb.halt()
+        shared.ser.close()
+        sys.exit()

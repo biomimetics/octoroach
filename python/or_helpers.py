@@ -1,3 +1,12 @@
+"""
+authors: apullin
+
+Contents of this file are copyright Andrew Pullin, 2013
+
+Portions of this file were derived from exp.py, author Stan Baek.
+
+"""
+
 import glob
 import time
 import sys
@@ -240,7 +249,7 @@ class Robot:
             tries = tries + 1
             time.sleep(0.3)   
     
-    def downloadTelemetry(self, timeout = 6):
+    def downloadTelemetry(self, timeout = 5):
         #supress callback output messages for the duration of download
         self.VERBOSE = False
         self.clAnnounce()
@@ -251,12 +260,17 @@ class Robot:
         shared.last_packet_time = dlStart
         #bytesIn = 0
         while self.imudata.count([]) > 0:
-            time.sleep(0.1)
+            time.sleep(0.02)
             dlProgress(self.numSamples - self.imudata.count([]) , self.numSamples)
             if (time.time() - shared.last_packet_time) > timeout:
                 print ""
                 self.clAnnounce()
                 print "Readback timeout exceeded, restarting."
+                print "Missed", self.imudata.count([]), "packets."
+                for index,item in enumerate(self.imudata):
+                    if item == []:
+                        print "Didn't get packet#",index+1
+            
                 raw_input("Press Enter to start readback ...")
                 self.imudata = [ [] ] * self.numSamples
                 self.clAnnounce()
@@ -266,9 +280,17 @@ class Robot:
                 self.tx( 0, command.FLASH_READBACK, pack('=L',self.numSamples))
 
         dlEnd = time.time()
+        dlTime = dlEnd - dlStart
         #Final update to download progress bar to make it show 100%
         dlProgress(self.numSamples-self.imudata.count([]) , self.numSamples)
-
+        totBytes = 52*self.numSamples
+        datarate = totBytes / dlTime / 1000.0
+        print '\n'
+        self.clAnnounce()
+        #print "Got ",self.numSamples,"samples in ",dlTime,"seconds"
+        self.clAnnounce()
+        print "DL rate: {0:.2f} KB/s".format(datarate)
+        
         #enable callback output messages
         self.VERBOSE = True
 
@@ -281,7 +303,7 @@ class Robot:
         self.findFileName()
         self.writeFileHeader()
         fileout = open(self.dataFileName, 'a')
-        np.savetxt(fileout , np.array(self.imudata), '%d,'*14+'%f,%d,%d,%f,%f,%d,%d,%d', delimiter = ',')
+        np.savetxt(fileout , np.array(self.imudata), '%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f', delimiter = ',')
         fileout.close()
         self.clAnnounce()
         print "Telemtry data saved to", self.dataFileName
@@ -301,7 +323,7 @@ class Robot:
         fileout.write('%  numSamples    = ' + repr(self.numSamples) + '\n')
         fileout.write('%  moveq         = ' + repr(self.moveq) + '\n')
         fileout.write('% Columns: \n')
-        fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | SteerOut | Vbatt | SteerAngle\n')
+        fileout.write('% time | Llegs | Rlegs | DCL | DCR | GyroX | GyroY | GyroZ | GryoZAvg | AccelX | AccelY |AccelZ | LBEMF | RBEMF | Vbatt | SteerIn | SteerOut | HallL | HallR | YawAngle\n')
         fileout.close()
 
     def setupImudata(self, moveq):
@@ -311,7 +333,7 @@ class Robot:
         self.runtime = sum([moveq[i] for i in [(ind*MOVE_QUEUE_ENTRY_LEN)+3 for ind in range(0,moveq[0])]])
        
         #calculate the number of telemetry packets we expect
-        self.numSamples = int(ceil(150 * (self.runtime + self.leadinTime + self.leadoutTime) / 1000.0))
+        self.numSamples = int(ceil(300 * (self.runtime + self.leadinTime + self.leadoutTime) / 1000.0))
         #allocate an array to write the downloaded telemetry data into
         self.imudata = [ [] ] * self.numSamples
         self.clAnnounce()
@@ -347,6 +369,8 @@ def setupSerial(COMPORT , BAUDRATE , timeout = 3, rtscts = 0):
         sys.exit()
     
     shared.ser = ser
+    ser.flushInput()
+    ser.flushOutput()
     return XBee(ser, callback = xbee_received)
     
     

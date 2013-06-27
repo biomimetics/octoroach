@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __TAIL_QUEUE_H
 #define __TAIL_QUEUE_H
 

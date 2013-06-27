@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #include "settings.h"
 
 #include "pid.h"
@@ -28,7 +30,8 @@ fractional steering_controlHists[3] __attribute__((section(".ybss, bss, ymemory"
 
 static unsigned int steeringMode;
 
-float steeringInitialYaw;
+float steeringInitialYaw = 0.0;
+float lastHeading = 0.0;
 
 extern moveCmdT currentMove, idleMove;
 extern char inMotion;
@@ -65,7 +68,7 @@ static void SetupTimer5(){
     //period = 3125; // 200Hz
     T5PERvalue = 2083; // ~300Hz
     int retval;
-    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_5 & T5_INT_ON); 
+    retval = sysServiceConfigT5(T5CON1value, T5PERvalue, T5_INT_PRIOR_4 & T5_INT_ON);
 }
 
 
@@ -103,6 +106,11 @@ void steeringSetup(void) {
 
 void steeringSetInput(int steerInput) {
     steeringPID.input = steerInput;
+    
+    //This is a terrible hack:
+    //For the cast of STEER_MODE_YAW_* , we'll save the commanded heading,
+    //
+    lastHeading = steerInput;
 }
 
 void steeringSetGains(int Kp, int Ki, int Kd, int Kaw, int ff) {

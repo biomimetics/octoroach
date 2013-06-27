@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 #ifndef __TAIL_CTRL_H
 #define __TAIL_CTRL_H
 

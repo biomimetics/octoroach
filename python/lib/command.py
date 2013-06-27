@@ -2,8 +2,11 @@
 """
 cmd module
 authors: stanbaek, apullin
-Created on 2010-07-07:
-Modified by Andrew Pullin for OctoROACH
+
+Modifications and additions to this file made by Andrew Pullin are copyright, 2013
+Copyrights are acknowledged for portions of this code extant before modifications by Andrew Pullin 
+Any application of BSD or other license to copyright content without the authors express approval
+is invalid and void.
 
 """
 

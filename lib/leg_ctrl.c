@@ -1,3 +1,5 @@
+// Contents of this file are copyright Andrew Pullin, 2013
+
 //leg_ctrl.c
 
 #include "pid.h"
@@ -203,12 +205,8 @@ void serviceMotionPID() {
             //Set PWM duty cycle
             SetDCMCPWM(legCtrlOutputChannels[j], motor_pidObjs[j].output, 0);
             if(motor_pidObjs[j].output > 0){
-                Nop();
-                Nop();
             }
             if((PDC1 > 0) || (PDC2 > 0)){
-                Nop();
-                Nop();
             }
         }//end of if (on / off)
         else if (PID_ZEROING_ENABLE) { //if PID loop is off
